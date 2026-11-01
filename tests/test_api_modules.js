@@ -42,6 +42,7 @@ async function main() {
     assert.equal((await transport.command('status', [])).value, 7);
     assert.equal(JSON.stringify(calls[0].args), JSON.stringify(['status']));
     assert.match(transport.errorText(new Error('XHR request timed out')), /waktu habis|latar belakang/i);
+    assert.equal(transport.transientError(new Error('Operasi kehabisan waktu: sing-box')), true);
     assert.equal(transport.errorInfo(new Error('Verifikasi checksum SHA256 kernel gagal')).kind, 'kernel');
     assert.equal(transport.errorInfo(new Error('File kernel tidak ditemukan')).kind, 'kernel');
     assert.equal(transport.errorInfo(new Error('Clash API memiliki Nomor port tidak valid')).kind, 'clash');

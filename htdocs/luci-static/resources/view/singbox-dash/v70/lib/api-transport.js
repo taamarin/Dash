@@ -43,7 +43,7 @@ function sleep(ms) {
 }
 
 function transientError(error) {
-    return errorText(error).search(/timed out|timeout|waktu habis|aborted|Resource temporarily unavailable/i) >= 0;
+    return errorText(error).search(/timed out|timeout|waktu habis|kehabisan waktu|aborted|Resource temporarily unavailable/i) >= 0;
 }
 
 async function commandOnce(action, args) {

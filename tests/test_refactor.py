@@ -37,7 +37,7 @@ try:
     missing_api = m.api_details({'outbounds': []})
     assert not missing_api['enabled'] and not missing_api['valid'], missing_api
     bad_endpoint = m.api_details(api_config('127.0.0.1'))
-    assert not bad_endpoint['valid'] and '端口' in bad_endpoint['error'], bad_endpoint
+    assert not bad_endpoint['valid'] and 'Nomor port' in bad_endpoint['error'], bad_endpoint
     try:
         m.validated_api_details(api_config('127.0.0.1'))
         raise AssertionError('invalid Clash API endpoint was accepted')
@@ -93,7 +93,7 @@ try:
         m.prepare_config_for_core(json.dumps(easytier_cfg).encode())
         raise AssertionError('stable core accepted unsupported DNS transport')
     except mod.Failure as exc:
-        assert 'easytier' in str(exc) and '升级内核' in str(exc), exc
+        assert 'easytier' in str(exc) and 'Tingkatkan kernel' in str(exc), exc
     ebpf_cfg = dict(compatible_cfg)
     ebpf_cfg['inbounds'] = [{'type': 'ebpf', 'tag': 'in', 'network': ['tcp', 'udp']}]
     try:
@@ -206,7 +206,7 @@ try:
     m.platform = lambda: {'core_arch': 'arm64', 'libc': 'musl'}
     chosen, reason = m.choose_asset(ref_release)
     assert chosen['name'].endswith('-linux-arm64-musl.tar.gz'), chosen
-    assert reason.startswith('统一 eBPF 构建'), reason
+    assert reason.startswith('Build eBPF terpadu'), reason
     fetched_urls = []
     def fake_github(url):
         fetched_urls.append(url)
@@ -295,9 +295,9 @@ try:
     assert captured['candidate'] == async_candidate, captured
     async_job_folder = m.jobs / ('c' * 32)
     async_job_folder.mkdir(parents=True, exist_ok=True)
-    m._apply_config_job = lambda job, folder: (_ for _ in ()).throw(mod.Failure('模拟异步校验失败'))
+    m._apply_config_job = lambda job, folder: (_ for _ in ()).throw(mod.Failure('Validasi asinkron simulasi gagal'))
     failed = m.apply_config_job({'id': 'c' * 32, 'action': 'save', 'target': async_target.name})
-    assert failed['phase'] == 'failed' and '模拟异步校验失败' in failed['error'], failed
+    assert failed['phase'] == 'failed' and 'Validasi asinkron simulasi gagal' in failed['error'], failed
     m.validate = validate_before_async
     print('async validation and task failure tests OK')
     links = '\n'.join([
@@ -347,7 +347,7 @@ try:
     print('structured eBPF probe parser tests OK')
     invalid_plane = m.parse_ebpf_report('FATAL invalid eBPF local data plane: socket_assign', 1)
     assert not invalid_plane['supported'], invalid_plane
-    assert invalid_plane['issues'][0]['title'] == '当前内核不支持 TC / socket_assign 本地数据面', invalid_plane
+    assert invalid_plane['issues'][0]['title'] == 'Kernel saat ini tidak mendukung data plane lokal TC / socket_assign', invalid_plane
     m.ebpf_local_plane = type(m).ebpf_local_plane.__get__(m, type(m))
     modern_bin = root / 'usr/bin/sing-box-modern'
     modern_bin.parent.mkdir(parents=True, exist_ok=True)
@@ -403,7 +403,7 @@ try:
     annotated = m.annotate_runtime_evidence(runtime_caps)
     assert annotated['ebpf']['runtime_state'] == 'failed', annotated
     assert annotated['ebpf']['available'] is False, annotated
-    assert '实际启动失败' in annotated['ebpf']['reason'], annotated
+    assert 'gagal memulai secara aktual' in annotated['ebpf']['reason'], annotated
     m.reset_failed_runtime_modes()
     warning_mode = m.annotate_runtime_evidence({
         'ebpf_local_plane': 'tc',

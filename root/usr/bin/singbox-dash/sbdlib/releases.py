@@ -72,7 +72,7 @@ class ReleaseMixin:
                     elif isinstance(payload, dict) and isinstance(payload.get('assets'), list):
                         payload = [payload]
                     if not isinstance(payload, list):
-                        raise Failure('GitHub Release 数据格式异常')
+                        raise Failure('Format data GitHub Release tidak valid')
                     cache_time = int(time.time())
                     write_json(cache, payload)
                     write_json(cache_meta_path, {'time': cache_time, 'repo': repo})
@@ -137,9 +137,9 @@ class ReleaseMixin:
             }
             name_arch = aliases.get(arch)
             if arch == 'armv6':
-                raise Failure('设备为 ARMv6，Release 不提供兼容内核')
+                raise Failure('Perangkat menggunakan ARMv6; Release tidak menyediakan kernel yang kompatibel')
             if not name_arch:
-                raise Failure('无法为架构选择内核：' + arch)
+                raise Failure('Tidak dapat memilih kernel untuk arsitektur: ' + arch)
 
             def valid_platform_asset(name, manual=False):
                 if not re.fullmatch(r'sing-box-[A-Za-z0-9._-]+-linux-[A-Za-z0-9._-]+\.tar\.gz', name):
@@ -165,15 +165,15 @@ class ReleaseMixin:
 
             if requested:
                 if requested not in available:
-                    raise Failure('所选内核资产不属于该 Release')
+                    raise Failure('Aset kernel yang dipilih bukan bagian dari Release tersebut')
                 if not valid_platform_asset(requested, manual=True):
-                    raise Failure('所选资产与当前设备架构或 libc 不兼容')
-                return available[requested], '手动选择'
+                    raise Failure('Aset yang dipilih tidak kompatibel dengan arsitektur perangkat atau libc saat ini')
+                return available[requested], 'Pemilihan manual'
             profile = self.uci_get('prefer_ebpf', 'auto')
             ebpf = self.mode_capabilities_snapshot().get('ebpf', {}).get('available', False) if profile != 'off' else False
             if profile == 'on' and not ebpf:
-                reason = self.mode_capabilities_snapshot().get('ebpf', {}).get('reason') or '系统未通过 eBPF 能力检查'
-                raise Failure('已选择 eBPF 内核，但' + reason)
+                reason = self.mode_capabilities_snapshot().get('ebpf', {}).get('reason') or 'Sistem tidak lulus pemeriksaan kemampuan eBPF'
+                raise Failure('Kernel eBPF telah dipilih, tetapi ' + reason)
             candidates = []
             for name, asset in available.items():
                 if not valid_platform_asset(name):
@@ -190,15 +190,15 @@ class ReleaseMixin:
                     score += 20
                 candidates.append((score, name, asset))
             if not candidates:
-                raise Failure('该 Release 没有适用于 %s/%s 的内核' % (arch, platform['libc']))
+                raise Failure('Release ini tidak memiliki kernel untuk %s/%s' % (arch, platform['libc']))
             score, name, asset = max(candidates, key=lambda item: (item[0], natural_key(item[1])))
             tokens = name[:-len('.tar.gz')].split('-')
             if release.get('source') == 'ref1nd':
-                reason = '统一 eBPF 构建'
+                reason = 'Build eBPF terpadu'
             else:
-                reason = 'eBPF 构建' if 'ebpf' in tokens else '标准构建'
+                reason = 'Build eBPF' if 'ebpf' in tokens else 'Build standar'
             libc_token = 'musl' if 'musl' in tokens else ('glibc' if 'glibc' in tokens else '')
-            reason += ' / ' + (libc_token if libc_token else '静态兼容')
+            reason += ' / ' + (libc_token if libc_token else 'Kompatibilitas statis')
             return asset, reason
 
     def release_view(self, channel='all', refresh=False, source=None):
@@ -309,17 +309,17 @@ class ReleaseMixin:
 
     def set_kernel_update_notice(self, request):
             if not isinstance(request, dict):
-                raise Failure('提醒设置格式错误')
+                raise Failure('Format pengaturan pemberitahuan tidak valid')
             action = str(request.get('action') or '').strip().lower()
             if action not in ('skip', 'disable', 'enable'):
-                raise Failure('不支持的提醒操作')
+                raise Failure('Tindakan pemberitahuan tidak didukung')
             source = str(request.get('source') or '').strip().lower()
             tag = str(request.get('tag') or '').strip()
             if action == 'skip':
                 source = source or self.core_family()
                 families = {item['id'] for item in self.core_sources()}
                 if source not in families or not re.fullmatch(r'[A-Za-z0-9._+\-]{1,128}', tag):
-                    raise Failure('更新提醒标识无效')
+                    raise Failure('ID pemberitahuan pembaruan tidak valid')
             self.uci_file.parent.mkdir(parents=True, exist_ok=True)
             if not self.uci_file.exists():
                 atomic(self.uci_file, b'', 0o600)
@@ -379,5 +379,4 @@ class ReleaseMixin:
                 if name.lower() == (asset_name + '.sha256').lower() or name.lower() == (asset_name + '.sha256sum').lower():
                     if len(standalone) == 1:
                         return standalone[0]
-            raise Failure('未找到目标内核的 SHA256 校验值')
-
+            raise Failure('Checksum SHA256 untuk kernel target tidak ditemukan')

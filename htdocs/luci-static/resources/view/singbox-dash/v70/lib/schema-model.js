@@ -2,72 +2,72 @@
 'require baseclass';
 
 const FIELD_LABELS = {
-    type: '类型', tag: '标签', listen: '监听地址', listen_port: '监听端口',
-    disabled: '禁用', level: '日志级别', output: '输出文件', timestamp: '时间戳',
-    log: '日志', ntp: 'NTP', dns: 'DNS', route: '路由', experimental: '实验性配置',
-    http_clients: 'HTTP 客户端', network_namespaces: '网络命名空间', certificate_providers: '证书提供者',
-    bind_interface: '绑定接口', routing_mark: '路由标记', reuse_addr: '端口复用',
-    netns: '网络命名空间', users: '用户', detour: '前置出站', domain_resolver: '域名解析器',
-    server: '服务器', server_port: '服务器端口', method: '加密方式', password: '密码',
-    username: '用户名', uuid: 'UUID', network: '网络', udp_timeout: 'UDP 超时',
-    udp_fragment: 'UDP 分片', udp_gso: 'UDP GSO', interface: '接口',
-    interface_name: '接口名称', address: '地址', auto_route: '自动路由',
-    strict_route: '严格路由', stack: '协议栈', route_exclude_address: '路由排除地址',
-    route_address: '路由地址', auto_redirect: '自动重定向', endpoint: '端点',
-    tls: 'TLS', transport: '传输方式', multiplex: '多路复用', inbound: '入站',
-    outbound: '出站', outbounds: '出站列表', providers: '提供者', provider: '提供者',
-    include: '包含', exclude: '排除', hidden: '隐藏', health_check: '健康检查',
-    url: '测试地址', interval: '检测间隔', tolerance: '容差', idle_timeout: '空闲超时',
-    servers: 'DNS 服务器', rules: '规则', final: '最终出站', reverse_mapping: '反向映射',
-    strategy: '解析策略', timeout: '超时', disable_cache: '禁用缓存', disable_expire: '禁用过期',
-    round_robin_cache: '轮询缓存', cache_capacity: '缓存容量', min_cache_ttl: '最小 TTL',
-    max_cache_ttl: '最大 TTL', optimistic: '乐观缓存', client_subnet: '客户端子网',
-    tcp_concurrent: 'TCP 并发', predefined: '预定义', rule_set: '规则集',
-    auto_detect_interface: '自动检测接口', override_android_vpn: '覆盖 Android VPN',
-    default_domain_resolver: '默认域名解析器', default_network_strategy: '默认网络策略',
-    find_process: '查找进程', process_name: '进程名', process_path: '进程路径',
-    package_name: '包名', user: '用户', user_id: '用户 ID', clash_mode: 'Clash 模式',
-    network_type: '网络类型', network_is_expensive: '计费网络', network_is_constrained: '受限网络',
-    wifi_ssid: 'Wi-Fi SSID', wifi_bssid: 'Wi-Fi BSSID', source_mac_address: '源 MAC 地址',
-    source_hostname: '源主机名', preferred_by: '优选来源', ip_cidr: 'IP 网段',
-    ip_is_private: '私有 IP', domain: '域名', domain_suffix: '域名后缀',
-    domain_keyword: '域名关键字', domain_regex: '域名正则', protocol: '协议',
-    port: '端口', port_range: '端口范围', action: '动作', no_drop: '不丢弃',
-    override_address: '重写地址', override_port: '重写端口', enabled: '启用',
-    server_name: '服务器名称', insecure: '跳过证书校验', alpn: 'ALPN',
-    min_version: '最低版本', max_version: '最高版本', cipher_suites: '加密套件',
-    certificate: '证书', certificate_path: '证书路径', key: '私钥', key_path: '私钥路径',
-    client_certificate: '客户端证书', client_key: '客户端私钥', ech: 'ECH', utls: 'uTLS',
-    reality: 'REALITY', acme: 'ACME', path: '路径', headers: '请求头', host: '主机',
-    service_name: '服务名称', ping_timeout: 'Ping 超时', max_early_data: '最大早期数据',
-    early_data_header_name: '早期数据头名称', local: '本机接管', shared: '共享接管',
-    data_plane: '数据平面', dns_mode: 'DNS 模式', ipv6: 'IPv6', h3_congestion_control: 'HTTP/3 拥塞控制',
-    bypass_private_address: '绕过私有地址', fakeip_icmp: 'FakeIP ICMP',
-    external_controller: '外部控制器', external_ui: '外部面板', secret: '密钥',
-    default_mode: '默认模式', cache_file: '缓存文件', store_fakeip: '保存 FakeIP',
-    clash_api: 'Clash API', observability: '可观测性', debug: '调试', smart: 'Smart',
-    geox: 'GeoX', rule: '规则', final_outbound: '最终出站', format: '格式',
-    fallback: '回退', fallback_for_alpn: 'ALPN 回退', platform: '平台', invert: '反选',
-    ip_accept_any: '接受任意 IP', match_response: '匹配响应', rule_set_ip_cidr_match_source: '匹配规则集源 IP',
-    network_interface_address: '网络接口地址', default_interface_address: '默认接口地址',
-    dns_server_address: 'DNS 服务器地址', dns_search_domain: 'DNS 搜索域',
-    override_dialer: '覆盖拨号器', override_tls: '覆盖 TLS', health_check_url: '健康检查地址',
-    tag_prefix: '标签前缀', group: '分组', region: '地区', private_key: '私钥',
-    pre_shared_key: '预共享密钥', server_public_key: '服务端公钥', server_disco_key: '服务端发现密钥',
-    derp_map_url: 'DERP 地图地址', token: '令牌', ha_connections: '高可用连接数',
-    post_quantum: '后量子加密', edge_ip_version: '边缘 IP 版本', datagram_version: '数据报版本',
-    obfs_mode: '混淆模式', mode: '模式', version: '版本', tcp_fast_open: 'TCP Fast Open',
-    tcp_multi_path: 'TCP Multipath', proxy_protocol: 'Proxy Protocol', proxy_protocol_accept_no_header: 'Proxy Protocol 允许无头',
-    disable_tcp_keep_alive: '禁用 TCP Keep-Alive', tcp_keep_alive: 'TCP Keep-Alive',
-    tcp_keep_alive_interval: 'Keep-Alive 间隔', tcp_keep_alive_count: 'Keep-Alive 次数', tc_priority: '流量控制优先级',
-    dns_hijack: 'DNS 劫持'
+    type: 'Jenis', tag: 'Label', listen: 'Alamat listen', listen_port: 'Port listen',
+    disabled: 'Nonaktif', level: 'Level log', output: 'File output', timestamp: 'Stempel waktu',
+    log: 'Log', ntp: 'NTP', dns: 'DNS', route: 'Rute', experimental: 'Konfigurasi eksperimental',
+    http_clients: 'Klien HTTP', network_namespaces: 'Namespace jaringan', certificate_providers: 'Provider sertifikat',
+    bind_interface: 'Ikat antarmuka', routing_mark: 'Tanda perutean', reuse_addr: 'Penggunaan ulang port',
+    netns: 'Namespace jaringan', users: 'Pengguna', detour: 'Outbound perantara', domain_resolver: 'Resolver domain',
+    server: 'Server', server_port: 'Port server', method: 'Metode enkripsi', password: 'Kata sandi',
+    username: 'Nama pengguna', uuid: 'UUID', network: 'Jaringan', udp_timeout: 'Batas waktu UDP',
+    udp_fragment: 'Fragmentasi UDP', udp_gso: 'UDP GSO', interface: 'Antarmuka',
+    interface_name: 'Nama antarmuka', address: 'Alamat', auto_route: 'Rute otomatis',
+    strict_route: 'Rute ketat', stack: 'Stack protokol', route_exclude_address: 'Alamat yang dikecualikan dari rute',
+    route_address: 'Alamat rute', auto_redirect: 'Pengalihan otomatis', endpoint: 'Endpoint',
+    tls: 'TLS', transport: 'Transport', multiplex: 'Multiplex', inbound: 'Inbound',
+    outbound: 'Outbound', outbounds: 'Daftar outbound', providers: 'Provider', provider: 'Provider',
+    include: 'Sertakan', exclude: 'Kecualikan', hidden: 'Tersembunyi', health_check: 'Pemeriksaan kesehatan',
+    url: 'Alamat pengujian', interval: 'Interval pemeriksaan', tolerance: 'Toleransi', idle_timeout: 'Batas waktu idle',
+    servers: 'Server DNS', rules: 'Aturan', final: 'Outbound akhir', reverse_mapping: 'Pemetaan balik',
+    strategy: 'Strategi resolusi', timeout: 'Batas waktu', disable_cache: 'Nonaktifkan cache', disable_expire: 'Nonaktifkan kedaluwarsa',
+    round_robin_cache: 'Cache round-robin', cache_capacity: 'Kapasitas cache', min_cache_ttl: 'TTL cache minimum',
+    max_cache_ttl: 'TTL cache maksimum', optimistic: 'Cache optimistis', client_subnet: 'Subnet klien',
+    tcp_concurrent: 'TCP konkuren', predefined: 'Pradefinisi', rule_set: 'Kumpulan aturan',
+    auto_detect_interface: 'Deteksi antarmuka otomatis', override_android_vpn: 'Timpa Android VPN',
+    default_domain_resolver: 'Resolver domain default', default_network_strategy: 'Strategi jaringan default',
+    find_process: 'Cari proses', process_name: 'Nama proses', process_path: 'Path proses',
+    package_name: 'Nama paket', user: 'Pengguna', user_id: 'ID pengguna', clash_mode: 'Mode Clash',
+    network_type: 'Jenis jaringan', network_is_expensive: 'Jaringan berbiaya', network_is_constrained: 'Jaringan terbatas',
+    wifi_ssid: 'SSID Wi-Fi', wifi_bssid: 'BSSID Wi-Fi', source_mac_address: 'Alamat MAC sumber',
+    source_hostname: 'Nama host sumber', preferred_by: 'Sumber pilihan', ip_cidr: 'Rentang IP',
+    ip_is_private: 'IP privat', domain: 'Domain', domain_suffix: 'Sufiks domain',
+    domain_keyword: 'Kata kunci domain', domain_regex: 'Regex domain', protocol: 'Protokol',
+    port: 'Port', port_range: 'Rentang port', action: 'Tindakan', no_drop: 'Jangan buang',
+    override_address: 'Timpa alamat', override_port: 'Timpa port', enabled: 'Aktifkan',
+    server_name: 'Nama server', insecure: 'Lewati verifikasi sertifikat', alpn: 'ALPN',
+    min_version: 'Versi minimum', max_version: 'Versi maksimum', cipher_suites: 'Cipher suite',
+    certificate: 'Sertifikat', certificate_path: 'Path sertifikat', key: 'Kunci privat', key_path: 'Path kunci privat',
+    client_certificate: 'Sertifikat klien', client_key: 'Kunci privat klien', ech: 'ECH', utls: 'uTLS',
+    reality: 'REALITY', acme: 'ACME', path: 'Path', headers: 'Header permintaan', host: 'Host',
+    service_name: 'Nama layanan', ping_timeout: 'Batas waktu ping', max_early_data: 'Data awal maksimum',
+    early_data_header_name: 'Nama header data awal', local: 'Pengambilalihan lokal', shared: 'Pengambilalihan bersama',
+    data_plane: 'Data plane', dns_mode: 'Mode DNS', ipv6: 'IPv6', h3_congestion_control: 'Kontrol kongesti HTTP/3',
+    bypass_private_address: 'Lewati alamat privat', fakeip_icmp: 'FakeIP ICMP',
+    external_controller: 'Controller eksternal', external_ui: 'Panel eksternal', secret: 'Secret',
+    default_mode: 'Mode default', cache_file: 'File cache', store_fakeip: 'Simpan FakeIP',
+    clash_api: 'Clash API', observability: 'Observabilitas', debug: 'Debug', smart: 'Smart',
+    geox: 'GeoX', rule: 'Aturan', final_outbound: 'Outbound akhir', format: 'Format',
+    fallback: 'Fallback', fallback_for_alpn: 'Fallback ALPN', platform: 'Platform', invert: 'Balikkan',
+    ip_accept_any: 'Terima IP apa pun', match_response: 'Cocokkan respons', rule_set_ip_cidr_match_source: 'Cocokkan IP sumber kumpulan aturan',
+    network_interface_address: 'Alamat antarmuka jaringan', default_interface_address: 'Alamat antarmuka default',
+    dns_server_address: 'Alamat server DNS', dns_search_domain: 'Domain pencarian DNS',
+    override_dialer: 'Timpa dialer', override_tls: 'Timpa TLS', health_check_url: 'URL pemeriksaan kesehatan',
+    tag_prefix: 'Awalan label', group: 'Grup', region: 'Wilayah', private_key: 'Kunci privat',
+    pre_shared_key: 'Kunci prabagi', server_public_key: 'Kunci publik server', server_disco_key: 'Kunci discovery server',
+    derp_map_url: 'URL peta DERP', token: 'Token', ha_connections: 'Koneksi ketersediaan tinggi',
+    post_quantum: 'Enkripsi pascakuantum', edge_ip_version: 'Versi IP edge', datagram_version: 'Versi datagram',
+    obfs_mode: 'Mode obfuscation', mode: 'Mode', version: 'Versi', tcp_fast_open: 'TCP Fast Open',
+    tcp_multi_path: 'TCP Multipath', proxy_protocol: 'Proxy Protocol', proxy_protocol_accept_no_header: 'Proxy Protocol menerima tanpa header',
+    disable_tcp_keep_alive: 'Nonaktifkan TCP Keep-Alive', tcp_keep_alive: 'TCP Keep-Alive',
+    tcp_keep_alive_interval: 'Interval Keep-Alive', tcp_keep_alive_count: 'Jumlah Keep-Alive', tc_priority: 'Prioritas kontrol lalu lintas',
+    dns_hijack: 'Pembajakan DNS'
 };
 
 const TOP_LEVEL_TITLES = {
-    log: '日志', dns: 'DNS', ntp: 'NTP', certificate: '证书', certificate_providers: '证书提供者',
-    http_clients: 'HTTP 客户端', network_namespaces: '网络命名空间', endpoints: '端点',
-    inbounds: '入站', outbounds: '出站', providers: '提供者', route: '路由',
-    services: '服务', experimental: '实验性配置'
+    log: 'Log', dns: 'DNS', ntp: 'NTP', certificate: 'Sertifikat', certificate_providers: 'Provider sertifikat',
+    http_clients: 'Klien HTTP', network_namespaces: 'Namespace jaringan', endpoints: 'Endpoint',
+    inbounds: 'Inbound', outbounds: 'Outbound', providers: 'Provider', route: 'Rute',
+    services: 'Layanan', experimental: 'Konfigurasi eksperimental'
 };
 
 const PRIORITY_KEYS = new Set([
@@ -184,7 +184,7 @@ function variantType(root, schema) {
 
 function variantLabel(root, schema) {
     schema = resolveSchema(root, schema);
-    const type = variantType(root, schema) || schema.title || '对象';
+    const type = variantType(root, schema) || schema.title || 'Objek';
     const props = schema.properties || {};
     const extras = [];
     ['version', 'mode'].forEach(key => {
@@ -205,14 +205,14 @@ function chooseVariant(root, variants, value) {
 
 
 const KIND_LABELS = {
-    string: '文本', integer: '整数', number: '数字', boolean: '开关',
-    array: '列表', object: '对象', null: '空值'
+    string: 'Teks', integer: 'Bilangan bulat', number: 'Angka', boolean: 'Sakelar',
+    array: 'Daftar', object: 'Objek', null: 'Nilai kosong'
 };
 
 function variantLabelText(root, variant) {
     const kind = schemaKind(root, variant);
     if (kind === 'object') return variantLabel(root, variant);
-    let label = KIND_LABELS[kind] || kind || '值';
+    let label = KIND_LABELS[kind] || kind || 'Nilai';
     if (variant && variant.const !== undefined)
         label += ' · ' + String(variant.const);
     else if (variant && Array.isArray(variant.enum) && variant.enum.length)

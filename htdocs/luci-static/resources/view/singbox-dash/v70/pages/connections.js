@@ -76,54 +76,53 @@ async function render(host, ctx) {
     host.appendChild(root);
 
     const activeValue = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
-    const activeSub = ui.E('div', { 'class': 'sbd-stat-sub' }, '当前快照');
+    const activeSub = ui.E('div', { 'class': 'sbd-stat-sub' }, 'Snapshot saat ini');
     const upValue = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
-    const upSub = ui.E('div', { 'class': 'sbd-stat-sub' }, '累计上传 —');
+    const upSub = ui.E('div', { 'class': 'sbd-stat-sub' }, 'Total unggahan —');
     const downValue = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
-    const downSub = ui.E('div', { 'class': 'sbd-stat-sub' }, '累计下载 —');
+    const downSub = ui.E('div', { 'class': 'sbd-stat-sub' }, 'Total unduhan —');
     const memoryValue = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
     const memorySub = ui.E('div', { 'class': 'sbd-stat-sub' }, 'Clash API');
-    const sampleText = ui.E('div', { 'class': 'sbd-conn-sample' }, '等待第一次采样');
-
-    const summaryCard = ui.card('连接概览', [
+    const sampleText = ui.E('div', { 'class': 'sbd-conn-sample' }, 'Menunggu sampel pertama');
+    const summaryCard = ui.card('Ringkasan koneksi', [
         ui.E('div', { 'class': 'sbd-stat-grid sbd-stat-grid-4 sbd-conn-stats' }, [
-            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, '活动连接'), activeValue, activeSub]),
-            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, '上传速率'), upValue, upSub]),
-            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, '下载速率'), downValue, downSub]),
-            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, '内核内存'), memoryValue, memorySub])
+            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, 'Koneksi aktif'), activeValue, activeSub]),
+            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, 'Kecepatan unggah'), upValue, upSub]),
+            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, 'Kecepatan unduh'), downValue, downSub]),
+            ui.E('div', { 'class': 'sbd-stat' }, [ui.E('div', { 'class': 'sbd-stat-label' }, 'Memori kernel'), memoryValue, memorySub])
         ]),
         sampleText
     ], { icon: 'activity', iconTone: 'blue', className: 'sbd-conn-summary' });
 
     const searchInput = ui.E('input', {
         type: 'search', 'class': 'sbd-input',
-        placeholder: '搜索目标、来源、代理链、进程或规则...',
+        placeholder: 'Cari target, sumber, rantai proxy, proses, atau aturan...',
         input: event => { filter = String(event.target.value || '').trim().toLowerCase(); page = 0; paint(); }
     });
-    const sourceSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': '来源筛选', change: event => { sourceFilter = event.target.value; page = 0; paint(); } });
-    const networkSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': '网络类型筛选', change: event => { networkFilter = event.target.value; page = 0; paint(); } });
-    const chainSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': '代理链筛选', change: event => { chainFilter = event.target.value; page = 0; paint(); } });
-    const sortSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': '连接排序', change: event => { sort = event.target.value; page = 0; paint(); } }, [
-        ui.E('option', { value: 'started' }, '最新连接'),
-        ui.E('option', { value: 'downloadRate' }, '下载速率'),
-        ui.E('option', { value: 'uploadRate' }, '上传速率'),
-        ui.E('option', { value: 'traffic' }, '累计流量'),
-        ui.E('option', { value: 'destination' }, '目标地址')
+    const sourceSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': 'Filter sumber', change: event => { sourceFilter = event.target.value; page = 0; paint(); } });
+    const networkSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': 'Filter jenis jaringan', change: event => { networkFilter = event.target.value; page = 0; paint(); } });
+    const chainSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': 'Filter rantai proxy', change: event => { chainFilter = event.target.value; page = 0; paint(); } });
+    const sortSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': 'Urutkan koneksi', change: event => { sort = event.target.value; page = 0; paint(); } }, [
+        ui.E('option', { value: 'started' }, 'Koneksi terbaru'),
+        ui.E('option', { value: 'downloadRate' }, 'Kecepatan unduh'),
+        ui.E('option', { value: 'uploadRate' }, 'Kecepatan unggah'),
+        ui.E('option', { value: 'traffic' }, 'Total lalu lintas'),
+        ui.E('option', { value: 'destination' }, 'Alamat tujuan')
     ]);
 
-    const pauseButton = ui.btn('暂停刷新', {
+    const pauseButton = ui.btn('Jeda penyegaran', {
         icon: 'stop', small: true, onClick: () => {
             paused = !paused;
             const label = pauseButton.querySelector('span:not(.sbd-icon)');
-            if (label) label.textContent = paused ? '继续刷新' : '暂停刷新';
+            if (label) label.textContent = paused ? 'Lanjutkan penyegaran' : 'Jeda penyegaran';
             paint();
         }
     });
-    const refreshButton = ui.btn('', { icon: 'refresh', iconOnly: true, title: '立即刷新连接', onClick: () => load(false) });
-    const closeFilteredButton = ui.btn('关闭筛选结果', {
+    const refreshButton = ui.btn('', { icon: 'refresh', iconOnly: true, title: 'Segarkan koneksi sekarang', onClick: () => load(false) });
+    const closeFilteredButton = ui.btn('Tutup hasil filter', {
         icon: 'trash', small: true, variant: 'danger', onClick: () => closeVisible()
     });
-    const closeAllButton = ui.btn('关闭全部', {
+    const closeAllButton = ui.btn('Tutup semua', {
         icon: 'trash', small: true, variant: 'danger', onClick: () => closeAll()
     });
 
@@ -134,14 +133,14 @@ async function render(host, ctx) {
     ]);
 
     const listHost = ui.E('div', { 'class': 'sbd-connection-list' });
-    const pageLabel = ui.E('span', { 'class': 'sbd-conn-page-label' }, '0 条');
-    const prevButton = ui.btn('', { icon: 'chevronRight', iconOnly: true, title: '上一页', onClick: () => { page = Math.max(0, page - 1); paint(); } });
-    const nextButton = ui.btn('', { icon: 'chevronRight', iconOnly: true, title: '下一页', onClick: () => { page += 1; paint(); } });
+    const pageLabel = ui.E('span', { 'class': 'sbd-conn-page-label' }, '0 koneksi');
+    const prevButton = ui.btn('', { icon: 'chevronRight', iconOnly: true, title: 'Halaman sebelumnya', onClick: () => { page = Math.max(0, page - 1); paint(); } });
+    const nextButton = ui.btn('', { icon: 'chevronRight', iconOnly: true, title: 'Halaman berikutnya', onClick: () => { page += 1; paint(); } });
     prevButton.querySelector('.sbd-icon').style.transform = 'rotate(180deg)';
     const pager = ui.E('div', { 'class': 'sbd-conn-pager' }, [pageLabel, ui.E('div', { 'class': 'sbd-btn-row' }, [prevButton, nextButton])]);
-    const listCard = ui.card('活动连接', [toolbar, listHost, pager], {
+    const listCard = ui.card('Koneksi aktif', [toolbar, listHost, pager], {
         icon: 'link', iconTone: 'purple', flush: true,
-        subtitle: '实时快照 · 速率来自连续两次采样'
+        subtitle: 'Snapshot langsung · kecepatan dihitung dari dua sampel berurutan'
     });
 
     summaryCard.querySelector('.sbd-card-head').appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, [pauseButton, refreshButton]));
@@ -200,44 +199,44 @@ async function render(host, ctx) {
         const networks = Array.from(new Set(connections.map(item => item.network).filter(Boolean))).sort();
         const chains = Array.from(new Set(connections.flatMap(item => item.chains).filter(Boolean))).sort((a, b) =>
             String(a).localeCompare(String(b), 'zh-CN', { numeric: true }));
-        sourceFilter = setOptions(sourceSelect, sources, '全部来源', sourceFilter);
-        networkFilter = setOptions(networkSelect, networks, '全部协议', networkFilter);
-        chainFilter = setOptions(chainSelect, chains, '全部代理链', chainFilter);
+        sourceFilter = setOptions(sourceSelect, sources, 'Semua sumber', sourceFilter);
+        networkFilter = setOptions(networkSelect, networks, 'Semua protokol', networkFilter);
+        chainFilter = setOptions(chainSelect, chains, 'Semua rantai proxy', chainFilter);
     }
 
     function updateMetrics() {
         const connections = currentConnections();
         const upload = snapshot ? snapshot.uploadTotal : 0;
         const download = snapshot ? snapshot.downloadTotal : 0;
-        activeValue.textContent = connections.length + ' 条';
-        activeSub.textContent = paused ? '刷新已暂停' : '每 3 秒刷新';
+        activeValue.textContent = connections.length + ' koneksi';
+        activeSub.textContent = paused ? 'Penyegaran dijeda' : 'Segarkan setiap 3 detik';
         upValue.textContent = rateText(totalRates.upload);
-        upSub.textContent = '累计上传 ' + api.formatBytes(upload);
+        upSub.textContent = 'Total unggahan ' + api.formatBytes(upload);
         downValue.textContent = rateText(totalRates.download);
-        downSub.textContent = '累计下载 ' + api.formatBytes(download);
+        downSub.textContent = 'Total unduhan ' + api.formatBytes(download);
         memoryValue.textContent = snapshot ? api.formatBytes(snapshot.memory) : '—';
         memorySub.textContent = 'Clash API';
         if (snapshot) {
             const sample = new Date(snapshot.sampledAt).toLocaleTimeString('zh-CN', { hour12: false });
             sampleText.textContent = error
-                ? '读取失败，显示 ' + sample + ' 的上次快照'
-                : (paused ? '已暂停 · ' : '') + '最后采样 ' + sample;
+                ? 'Gagal membaca; menampilkan snapshot terakhir dari ' + sample
+                : (paused ? 'Dijeda · ' : '') + 'Sampel terakhir ' + sample;
             sampleText.classList.toggle('bad', !!error);
         }
     }
 
     function infoButton(item) {
         return ui.btn('', {
-            icon: 'info', iconOnly: true, small: true, title: '查看连接详情',
+            icon: 'info', iconOnly: true, small: true, title: 'Lihat detail koneksi',
             onClick: () => showDetails(item)
         });
     }
 
     function closeButton(item) {
         return ui.btn('', {
-            icon: 'x', iconOnly: true, small: true, variant: 'danger', title: '关闭此连接',
+            icon: 'x', iconOnly: true, small: true, variant: 'danger', title: 'Tutup koneksi ini',
             disabled: closing,
-            onClick: () => closeConnections([item], '关闭此连接')
+            onClick: () => closeConnections([item], 'Tutup koneksi ini')
         });
     }
 
@@ -252,19 +251,19 @@ async function render(host, ctx) {
             ui.E('span', { 'class': 'sbd-conn-icon' }, ui.icon(item.network === 'udp' ? 'activity' : 'link')),
             ui.E('div', { 'class': 'sbd-conn-main' }, [
                 ui.E('div', { 'class': 'sbd-conn-dest', title: destination }, destination),
-                ui.E('div', { 'class': 'sbd-conn-sub', title: sub || item.id }, sub || '连接 ' + item.id.slice(0, 8))
+                ui.E('div', { 'class': 'sbd-conn-sub', title: sub || item.id }, sub || 'Koneksi ' + item.id.slice(0, 8))
             ])
         ]);
         const source = ui.E('div', { 'class': 'sbd-conn-cell' }, [
-            ui.E('span', { 'class': 'sbd-conn-label' }, '来源'),
+            ui.E('span', { 'class': 'sbd-conn-label' }, 'Sumber'),
             ui.E('span', { 'class': 'sbd-conn-value' }, endpoint(item.source, item.sourcePort))
         ]);
         const chain = ui.E('div', { 'class': 'sbd-conn-cell sbd-conn-chain' }, [
-            ui.E('span', { 'class': 'sbd-conn-label' }, '代理链'),
-            ui.E('span', { 'class': 'sbd-conn-value', title: item.chains.join(' → ') }, item.chains.length ? item.chains.join(' → ') : '直连')
+            ui.E('span', { 'class': 'sbd-conn-label' }, 'Rantai proxy'),
+            ui.E('span', { 'class': 'sbd-conn-value', title: item.chains.join(' → ') }, item.chains.length ? item.chains.join(' → ') : 'Langsung')
         ]);
         const traffic = ui.E('div', { 'class': 'sbd-conn-cell sbd-conn-traffic' }, [
-            ui.E('span', { 'class': 'sbd-conn-label' }, '速率 / 累计'),
+            ui.E('span', { 'class': 'sbd-conn-label' }, 'Kecepatan / total'),
             ui.E('span', { 'class': 'sbd-conn-value' }, [
                 ui.E('span', {}, '↑ ' + rateText(rate.upload) + ' · ' + api.formatBytes(item.upload)),
                 ui.E('span', {}, '↓ ' + rateText(rate.download) + ' · ' + api.formatBytes(item.download))
@@ -283,24 +282,24 @@ async function render(host, ctx) {
         const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
         page = Math.min(page, pageCount - 1);
         listHost.innerHTML = '';
-        pageLabel.textContent = '匹配 ' + filtered.length + ' / ' + currentConnections().length + ' 条 · 第 ' + (page + 1) + ' / ' + pageCount + ' 页';
+        pageLabel.textContent = 'Cocok ' + filtered.length + ' / ' + currentConnections().length + ' · Halaman ' + (page + 1) + ' / ' + pageCount;
         prevButton.disabled = page <= 0;
         nextButton.disabled = page >= pageCount - 1;
         closeFilteredButton.disabled = closing || !filtered.length;
         closeAllButton.disabled = closing || !currentConnections().length;
         if (loading && !snapshot) {
-            listHost.appendChild(ui.loading('读取活动连接'));
+            listHost.appendChild(ui.loading('Memuat koneksi aktif'));
             return;
         }
         if (error && !snapshot) {
-            listHost.appendChild(ui.note('连接读取失败：' + error, 'bad'));
-            listHost.appendChild(ui.E('div', { 'class': 'sbd-btn-row sbd-conn-retry' }, ui.btn('重试', {
+            listHost.appendChild(ui.note('Gagal membaca koneksi: ' + error, 'bad'));
+            listHost.appendChild(ui.E('div', { 'class': 'sbd-btn-row sbd-conn-retry' }, ui.btn('Coba lagi', {
                 icon: 'refresh', onClick: () => load(false)
             })));
             return;
         }
         if (!filtered.length) {
-            listHost.appendChild(ui.empty(currentConnections().length ? '没有匹配当前筛选条件的连接' : '当前没有活动连接'));
+            listHost.appendChild(ui.empty(currentConnections().length ? 'Tidak ada koneksi yang cocok dengan filter saat ini' : 'Tidak ada koneksi aktif saat ini'));
             return;
         }
         const start = page * PAGE_SIZE;
@@ -354,21 +353,21 @@ async function render(host, ctx) {
 
     function showDetails(item) {
         const rate = rates.get(item.id) || { upload: 0, download: 0 };
-        ui.modal('连接详情', [
+        ui.modal('Detail koneksi', [
             ui.E('dl', { 'class': 'sbd-conn-detail-grid' }, [
-                ...detailPair('目标域名', item.host),
-                ...detailPair('目标地址', endpoint(item.destination, item.destinationPort)),
-                ...detailPair('来源', endpoint(item.source, item.sourcePort)),
-                ...detailPair('网络', item.network ? item.network.toUpperCase() : ''),
-                ...detailPair('协议', item.protocol),
-                ...detailPair('代理链', item.chains.length ? item.chains.join(' → ') : '直连'),
-                ...detailPair('进程', item.process),
-                ...detailPair('规则命中', item.rule),
-                ...detailPair('开始时间', item.start ? api.formatDate(item.start) : ''),
-                ...detailPair('连接时长', durationText(item.start)),
-                ...detailPair('实时速率', '↑ ' + rateText(rate.upload) + ' / ↓ ' + rateText(rate.download)),
-                ...detailPair('累计流量', '↑ ' + api.formatBytes(item.upload) + ' / ↓ ' + api.formatBytes(item.download)),
-                ...detailPair('连接 ID', item.id)
+                ...detailPair('Domain tujuan', item.host),
+                ...detailPair('Alamat tujuan', endpoint(item.destination, item.destinationPort)),
+                ...detailPair('Sumber', endpoint(item.source, item.sourcePort)),
+                ...detailPair('Jaringan', item.network ? item.network.toUpperCase() : ''),
+                ...detailPair('Protokol', item.protocol),
+                ...detailPair('Rantai proxy', item.chains.length ? item.chains.join(' → ') : 'Langsung'),
+                ...detailPair('Proses', item.process),
+                ...detailPair('Aturan yang cocok', item.rule),
+                ...detailPair('Waktu mulai', item.start ? api.formatDate(item.start) : ''),
+                ...detailPair('Durasi koneksi', durationText(item.start)),
+                ...detailPair('Kecepatan langsung', '↑ ' + rateText(rate.upload) + ' / ↓ ' + rateText(rate.download)),
+                ...detailPair('Total lalu lintas', '↑ ' + api.formatBytes(item.upload) + ' / ↓ ' + api.formatBytes(item.download)),
+                ...detailPair('ID koneksi', item.id)
             ])
         ], { width: '680px' });
     }
@@ -376,8 +375,8 @@ async function render(host, ctx) {
     async function closeConnections(items, label) {
         const ids = Array.from(new Set(items.map(item => item.id).filter(Boolean)));
         if (!ids.length || closing) return;
-        const ok = await ui.confirm(label || '关闭连接',
-            '将关闭 ' + ids.length + ' 条连接。应用可能自动重连，确认后新建的连接不会被关闭。', '关闭', true);
+        const ok = await ui.confirm(label || 'Tutup koneksi',
+            ids.length + ' koneksi akan ditutup. Aplikasi mungkin tersambung kembali secara otomatis; koneksi baru setelah konfirmasi tidak akan ditutup.', 'Tutup', true);
         if (!ok) return;
         closing = true;
         paint();
@@ -386,10 +385,10 @@ async function render(host, ctx) {
                 await Promise.allSettled(ids.slice(index, index + 6).map(id =>
                     api.clash('DELETE', '/connections/' + encodeURIComponent(id))));
             }
-            ui.notify('已请求关闭 ' + ids.length + ' 条连接', 'success');
+            ui.notify('Permintaan menutup ' + ids.length + ' koneksi telah dikirim', 'success');
             await load(true);
         } catch (reason) {
-            ui.notify('关闭连接失败：' + api.errorText(reason), 'error', 7000);
+            ui.notify('Gagal menutup koneksi: ' + api.errorText(reason), 'error', 7000);
         } finally {
             closing = false;
             paint();
@@ -397,11 +396,11 @@ async function render(host, ctx) {
     }
 
     function closeVisible() {
-        return closeConnections(sorted(), '关闭筛选结果');
+        return closeConnections(sorted(), 'Tutup hasil filter');
     }
 
     function closeAll() {
-        return closeConnections(currentConnections(), '关闭全部连接');
+        return closeConnections(currentConnections(), 'Tutup semua koneksi');
     }
 
     function clashReady() {
@@ -415,8 +414,8 @@ async function render(host, ctx) {
             const status = ctx.status || {};
             const apiInfo = status.api || {};
             loading = false;
-            error = !status.running ? 'sing-box 未运行，无法读取连接'
-                : (apiInfo.error || '当前配置中未启用 Clash API');
+            error = !status.running ? 'sing-box tidak berjalan, koneksi tidak dapat dibaca'
+                : (apiInfo.error || 'Clash API tidak diaktifkan dalam konfigurasi saat ini');
             paint();
             return;
         }
@@ -425,7 +424,7 @@ async function render(host, ctx) {
         try {
             const value = await Promise.race([
                 api.clashFresh('GET', '/connections'),
-                new Promise((_, reject) => window.setTimeout(() => reject(new Error('读取连接超时')), 10000))
+                new Promise((_, reject) => window.setTimeout(() => reject(new Error('Waktu baca koneksi habis')), 10000))
             ]);
             if (token !== request) return;
             ingest(value || {});
@@ -452,6 +451,5 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
 
 

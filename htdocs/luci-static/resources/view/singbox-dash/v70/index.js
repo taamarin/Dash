@@ -5,49 +5,49 @@
 const pageModule = id => 'view.singbox-dash.v70.pages.' + id;
 const ASSET_VERSION = 'db3288810c6a';
 const PAGES = [
-    { id: 'overview', label: '主页', icon: 'overview', module: pageModule('overview') },
-    { id: 'proxies', label: '代理', icon: 'proxies', module: pageModule('proxies') },
-    { id: 'subscriptions', label: '订阅', icon: 'database', module: pageModule('subscriptions') },
-    { id: 'connections', label: '连接', icon: 'activity', module: pageModule('connections') },
-    { id: 'trace', label: '链路', icon: 'link', module: pageModule('trace') },
-    { id: 'rules', label: '规则', icon: 'rules', module: pageModule('rules') },
-    { id: 'config', label: '配置', icon: 'config', module: pageModule('config') },
-    { id: 'kernel', label: '内核', icon: 'kernel', module: pageModule('kernel') },
-    { id: 'tools', label: '诊断与日志', icon: 'tools', module: pageModule('tools') },
-    { id: 'settings', label: '设置', icon: 'settings', module: pageModule('settings'), hidden: true }
+    { id: 'overview', label: 'Beranda', icon: 'overview', module: pageModule('overview') },
+    { id: 'proxies', label: 'Proxy', icon: 'proxies', module: pageModule('proxies') },
+    { id: 'subscriptions', label: 'Langganan', icon: 'database', module: pageModule('subscriptions') },
+    { id: 'connections', label: 'Koneksi', icon: 'activity', module: pageModule('connections') },
+    { id: 'trace', label: 'Penelusuran', icon: 'link', module: pageModule('trace') },
+    { id: 'rules', label: 'Aturan', icon: 'rules', module: pageModule('rules') },
+    { id: 'config', label: 'Konfigurasi', icon: 'config', module: pageModule('config') },
+    { id: 'kernel', label: 'Kernel', icon: 'kernel', module: pageModule('kernel') },
+    { id: 'tools', label: 'Diagnostik & Log', icon: 'tools', module: pageModule('tools') },
+    { id: 'settings', label: 'Pengaturan', icon: 'settings', module: pageModule('settings'), hidden: true }
 ];
 const NAV_GROUPS = [
-    { id: 'overview', label: '主页', icon: 'overview', items: ['overview'] },
-    { id: 'network', label: '网络', icon: 'network', items: ['proxies', 'subscriptions', 'connections', 'trace'] },
-    { id: 'rules', label: '规则', icon: 'rules', items: ['rules'] },
-    { id: 'config', label: '配置', icon: 'config', items: ['config'] },
-    { id: 'system', label: '系统', icon: 'settings', items: ['kernel', 'tools', 'settings'] },
-    { id: 'panel', label: '面板', icon: 'globe', external: true }
+    { id: 'overview', label: 'Beranda', icon: 'overview', items: ['overview'] },
+    { id: 'network', label: 'Jaringan', icon: 'network', items: ['proxies', 'subscriptions', 'connections', 'trace'] },
+    { id: 'rules', label: 'Aturan', icon: 'rules', items: ['rules'] },
+    { id: 'config', label: 'Konfigurasi', icon: 'config', items: ['config'] },
+    { id: 'system', label: 'Sistem', icon: 'settings', items: ['kernel', 'tools', 'settings'] },
+    { id: 'panel', label: 'Panel', icon: 'globe', external: true }
 ];
 const PAGE_LABELS = Object.fromEntries(PAGES.map(page => [page.id, page.label]));
 const PAGE_TITLES = {
-    overview: '仪表盘控制台',
-    proxies: '代理',
-    subscriptions: '节点与订阅',
-    connections: '连接',
-    trace: '链路',
-    rules: '规则',
-    config: '配置',
-    kernel: '内核管理',
-    tools: '诊断与日志',
-    settings: '面板设置'
+    overview: 'Dasbor',
+    proxies: 'Proxy',
+    subscriptions: 'Node dan langganan',
+    connections: 'Koneksi',
+    trace: 'Penelusuran',
+    rules: 'Aturan',
+    config: 'Konfigurasi',
+    kernel: 'Pengelolaan kernel',
+    tools: 'Diagnostik & log',
+    settings: 'Pengaturan panel'
 };
 const PAGE_SUBTITLES = {
-    overview: '实时流量 · 服务控制 · 运行概览',
-    proxies: '代理组与节点',
-    subscriptions: '订阅源、节点与导入',
-    connections: '活动连接与实时流量',
-    trace: '规则匹配与最终出站链路',
-    rules: '路由规则与规则集',
-    config: '全局 · DNS · 入站 · 出站',
-    kernel: '内核下载与切换',
-    tools: '环境诊断 · 实时日志 · 服务控制',
-    settings: '界面与更新设置'
+    overview: 'Lalu lintas langsung · Kontrol layanan · Ringkasan operasi',
+    proxies: 'Grup proxy dan node',
+    subscriptions: 'Sumber langganan, node, dan impor',
+    connections: 'Koneksi aktif dan lalu lintas langsung',
+    trace: 'Pencocokan aturan dan rute outbound akhir',
+    rules: 'Aturan perutean dan kumpulan aturan',
+    config: 'Global · DNS · Inbound · Outbound',
+    kernel: 'Unduh dan alih kernel',
+    tools: 'Diagnostik lingkungan · Log langsung · Kontrol layanan',
+    settings: 'Pengaturan antarmuka dan pembaruan'
 };
 
 function panelUrl(status) {
@@ -64,30 +64,30 @@ function panelUrl(status) {
 }
 const TERMINAL = ['done', 'failed', 'rolled_back', 'rollback_failed'];
 const PHASES = {
-    queued: ['已排队', 5], preparing: ['准备中', 12], downloading: ['下载内核', 24],
-    installing: ['安装内核', 42], writing: ['写入配置', 58], network: ['应用网络规则', 68],
-    restarting: ['重启服务', 80], verifying: ['运行检查', 92], rolling_back: ['正在回滚', 94],
-    done: ['已完成', 100], failed: ['失败', 100], rolled_back: ['已回滚', 100],
-    rollback_failed: ['回滚失败', 100]
+    queued: ['Dalam antrean', 5], preparing: ['Menyiapkan', 12], downloading: ['Mengunduh kernel', 24],
+    installing: ['Memasang kernel', 42], writing: ['Menulis konfigurasi', 58], network: ['Menerapkan aturan jaringan', 68],
+    restarting: ['Memulai ulang layanan', 80], verifying: ['Memeriksa operasi', 92], rolling_back: ['Melakukan rollback', 94],
+    done: ['Selesai', 100], failed: ['Gagal', 100], rolled_back: ['Rollback selesai', 100],
+    rollback_failed: ['Rollback gagal', 100]
 };
 
 
 function enhanceDocumentLandmarks(header, main) {
     if (!document.querySelector('main, [role="main"]')) {
         main.setAttribute('role', 'main');
-        main.setAttribute('aria-label', 'SingBox-Dash 主内容');
+        main.setAttribute('aria-label', 'Konten utama SingBox-Dash');
     }
     if (!document.querySelector('header, [role="banner"]')) {
         header.setAttribute('role', 'banner');
         header.setAttribute('aria-label', 'SingBox-Dash');
     } else {
         header.setAttribute('role', 'region');
-        header.setAttribute('aria-label', 'SingBox-Dash 工具栏');
+        header.setAttribute('aria-label', 'Bilah alat SingBox-Dash');
     }
     const themeNav = document.querySelector('#mainmenu.main-left, .sidenav');
     if (themeNav && !themeNav.matches('nav, [role="navigation"]')) {
         themeNav.setAttribute('role', 'navigation');
-        themeNav.setAttribute('aria-label', 'LuCI 主导航');
+        themeNav.setAttribute('aria-label', 'Navigasi utama LuCI');
     }
 }
 
@@ -147,7 +147,7 @@ function initialPage(settings) {
 }
 
 function jobError(job) {
-    return (job && (job.error || job.rollback_error || job.message)) || '任务执行失败';
+    return (job && (job.error || job.rollback_error || job.message)) || 'Eksekusi tugas gagal';
 }
 
 return view.extend({
@@ -198,7 +198,7 @@ return view.extend({
         let statusPending = null;
 
         const statusDot = ui.E('span', { 'class': 'sbd-dot ' + (status && status.running ? 'on' : 'off') });
-        const statusText = ui.E('span', { 'aria-live': 'polite', 'aria-atomic': 'true' }, status ? (status.running ? '运行中' : '已停止') : '未连接');
+        const statusText = ui.E('span', { 'aria-live': 'polite', 'aria-atomic': 'true' }, status ? (status.running ? 'Berjalan' : 'Berhenti') : 'Tidak terhubung');
         const pageTitle = ui.E('h1', { 'class': 'sbd-page-title' }, PAGE_TITLES[state.page]);
         const pageSubtitle = ui.E('div', { 'class': 'sbd-page-subtitle' }, PAGE_SUBTITLES[state.page] || '');
         const pageHost = ui.E('div', { 'class': 'sbd-page-host' });
@@ -212,13 +212,13 @@ return view.extend({
         kernelUpdateNotice.hidden = true;
 
         const refreshButton = ui.btn('', {
-            icon: 'refresh', iconOnly: true, title: '刷新页面',
+            icon: 'refresh', iconOnly: true, title: 'Muat ulang halaman',
             onClick: () => requestPageReload()
         });
         refreshButton.classList.add('sbd-header-settings');
 
         const settingsButton = ui.btn('', {
-            icon: 'settings', iconOnly: true, title: '面板设置',
+            icon: 'settings', iconOnly: true, title: 'Pengaturan panel',
             onClick: () => navigate('settings')
         });
         settingsButton.classList.add('sbd-header-settings');
@@ -234,15 +234,15 @@ return view.extend({
                     ui.E('div', { 'class': 'sbd-brand-title' }, 'SingBox-Dash')
                 ]),
                 ui.E('div', { 'class': 'sbd-header-grow' }),
-                ui.E('div', { 'class': 'sbd-header-status', title: 'sing-box 服务状态' }, [statusDot, statusText]),
+                ui.E('div', { 'class': 'sbd-header-status', title: 'Status layanan sing-box' }, [statusDot, statusText]),
                 refreshButton,
                 settingsButton
             ])
         ]);
 
-        const desktopTabs = ui.E('nav', { 'class': 'sbd-tabs', 'aria-label': '主导航' });
-        const subTabs = ui.E('nav', { 'class': 'sbd-filter-pills sbd-subtabs', 'aria-label': '功能分类' });
-        const bottomTabs = ui.E('nav', { 'class': 'sbd-bottom', 'aria-label': '移动导航' });
+        const desktopTabs = ui.E('nav', { 'class': 'sbd-tabs', 'aria-label': 'Navigasi utama' });
+        const subTabs = ui.E('nav', { 'class': 'sbd-filter-pills sbd-subtabs', 'aria-label': 'Kategori fitur' });
+        const bottomTabs = ui.E('nav', { 'class': 'sbd-bottom', 'aria-label': 'Navigasi seluler' });
         let lastGroupPage = Object.create(null);
         try { lastGroupPage = JSON.parse(window.localStorage.getItem('singbox-dash-nav-groups') || '{}') || {}; } catch (_) {}
 
@@ -284,14 +284,14 @@ return view.extend({
                     href: isExternal ? (externalUrl || null) : null,
                     target: isExternal && externalUrl ? '_blank' : null,
                     rel: isExternal && externalUrl ? 'noopener noreferrer' : null,
-                    title: isExternal ? (externalUrl ? '打开面板' : '配置中未启用 Clash API 或内核未运行') : group.label,
+                    title: isExternal ? (externalUrl ? 'Buka panel' : 'Clash API tidak diaktifkan dalam konfigurasi atau kernel tidak berjalan') : group.label,
                     'aria-current': !isExternal && target === state.page ? 'page' : null,
                     'aria-disabled': isExternal && !externalUrl ? 'true' : null,
                     click: isExternal ? event => {
                         const url = panelUrl(state.status);
                         if (!url) {
                             event.preventDefault();
-                            ui.notify('配置中未启用 Clash API 或内核未运行', 'warn');
+                            ui.notify('Clash API tidak diaktifkan dalam konfigurasi atau kernel tidak berjalan', 'warn');
                             return;
                         }
                         event.preventDefault();
@@ -338,10 +338,10 @@ return view.extend({
             if (currentStatus) state.status = currentStatus;
             const running = !!(state.status && state.status.running);
             statusDot.className = 'sbd-dot ' + (running ? 'on' : 'off');
-            statusText.textContent = state.status ? (running ? '运行中' : '已停止') : '未连接';
+            statusText.textContent = state.status ? (running ? 'Berjalan' : 'Berhenti') : 'Tidak terhubung';
             const jobs = state.status && state.status.job;
             if (jobs && !TERMINAL.includes(jobs.phase)) {
-                statusText.textContent = (PHASES[jobs.phase] || [jobs.phase || '任务中'])[0];
+                statusText.textContent = (PHASES[jobs.phase] || [jobs.phase || 'Sedang memproses tugas'])[0];
                 statusDot.className = 'sbd-dot ' + (jobs.phase === 'failed' ? 'off' : '');
             }
         }
@@ -361,9 +361,9 @@ return view.extend({
         }
 
         function showKernelUpdateNotice(info) {
-            const sourceLabel = info.source_label || '当前';
-            const currentVersion = info.current_version || '未知版本';
-            const latestVersion = info.latest_version || info.latest_tag || '新版本';
+            const sourceLabel = info.source_label || 'Saat ini';
+            const currentVersion = info.current_version || 'Versi tidak diketahui';
+            const latestVersion = info.latest_version || info.latest_tag || 'Versi baru';
             const actionButtons = [];
             const setActionsBusy = busy => actionButtons.forEach(button => { button.disabled = !!busy; });
             async function persist(action) {
@@ -372,22 +372,22 @@ return view.extend({
                     await api.setKernelUpdateNotice(action, info.source || '', info.latest_tag || '');
                     hideKernelUpdateNotice();
                 } catch (error) {
-                    ui.notify('更新提醒设置保存失败：' + api.errorText(error), 'error', 6000);
+                    ui.notify('Gagal menyimpan pengaturan pemberitahuan pembaruan: ' + api.errorText(error), 'error', 6000);
                     setActionsBusy(false);
                 }
             }
-            const viewButton = ui.btn('查看更新', {
+            const viewButton = ui.btn('Lihat pembaruan', {
                 icon: 'kernel', variant: 'primary', small: true,
                 onClick: () => {
                     hideKernelUpdateNotice();
                     navigate('kernel');
                 }
             });
-            const skipButton = ui.btn('跳过本次', {
+            const skipButton = ui.btn('Lewati kali ini', {
                 variant: 'ghost', small: true,
                 onClick: () => persist('skip')
             });
-            const disableButton = ui.btn('不再提醒', {
+            const disableButton = ui.btn('Jangan ingatkan lagi', {
                 variant: 'ghost', small: true,
                 onClick: () => persist('disable')
             });
@@ -396,10 +396,10 @@ return view.extend({
             kernelUpdateNotice.appendChild(ui.E('div', { 'class': 'sbd-kernel-update-surface' }, [
                 ui.E('div', { 'class': 'sbd-kernel-update-icon', 'aria-hidden': 'true' }, ui.icon('bell')),
                 ui.E('div', { 'class': 'sbd-kernel-update-copy' }, [
-                    ui.E('div', { 'class': 'sbd-kernel-update-title' }, sourceLabel + ' 内核有更新'),
+                    ui.E('div', { 'class': 'sbd-kernel-update-title' }, 'Pembaruan kernel tersedia untuk ' + sourceLabel),
                     ui.E('div', { 'class': 'sbd-kernel-update-meta' },
                         currentVersion + ' → ' + latestVersion + (info.latest_tag && info.latest_tag !== latestVersion ? ' · ' + info.latest_tag : '')),
-                    ui.E('div', { 'class': 'sbd-kernel-update-hint' }, '仅在打开面板时检查，不影响当前运行')
+                    ui.E('div', { 'class': 'sbd-kernel-update-hint' }, 'Pemeriksaan hanya dilakukan saat panel dibuka dan tidak memengaruhi operasi saat ini')
                 ]),
                 ui.E('div', { 'class': 'sbd-kernel-update-actions' }, actionButtons)
             ]));
@@ -443,7 +443,7 @@ return view.extend({
                 buildNavigation();
                 return value;
             }, error => {
-                statusText.textContent = '连接失败';
+                statusText.textContent = 'Koneksi gagal';
                 statusDot.className = 'sbd-dot off';
                 throw error;
             }).finally(() => {
@@ -458,11 +458,11 @@ return view.extend({
         }
 
         async function watchJob(job, title) {
-            if (!job || !job.id) throw new Error('没有生成后台任务');
-            const statusLine = ui.E('div', { 'class': 'sbd-job-status' }, '已创建任务');
+            if (!job || !job.id) throw new Error('Tugas latar belakang tidak dibuat');
+            const statusLine = ui.E('div', { 'class': 'sbd-job-status' }, 'Tugas dibuat');
             const detail = ui.E('div', { 'class': 'sbd-modal-text' }, '');
             const bar = ui.E('div', { 'class': 'sbd-progress' }, ui.E('i'));
-            const ref = ui.modal(title || '执行任务', [statusLine, detail, bar], {
+            const ref = ui.modal(title || 'Menjalankan tugas', [statusLine, detail, bar], {
                 dismissable: false,
                 width: '480px'
             });
@@ -481,7 +481,7 @@ return view.extend({
                     await ui.sleep(700);
                     continue;
                 }
-                const meta = PHASES[latest.phase] || [latest.phase || '执行中', 50];
+                const meta = PHASES[latest.phase] || [latest.phase || 'Sedang berjalan', 50];
                 statusLine.textContent = meta[0];
                 detail.textContent = [latest.message, latest.target, latest.reason].filter(Boolean).join(' · ');
                 bar.firstChild.style.width = meta[1] + '%';
@@ -559,15 +559,15 @@ return view.extend({
                 if (!state.status)
                     await refreshStatus(true).catch(() => {});
                 const definition = PAGES.find(page => page.id === state.page);
-                if (!definition) throw new Error('页面不存在');
+                if (!definition) throw new Error('Halaman tidak ditemukan');
                 const page = await L.require(definition.module);
                 pageHost.innerHTML = '';
                 await page.render(pageHost, ctx);
             } catch (error) {
                 pageHost.innerHTML = '';
-                pageHost.appendChild(ui.card('加载失败', [
+                pageHost.appendChild(ui.card('Gagal memuat', [
                     ui.note(api.errorText(error), 'bad'),
-                    ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重试', { icon: 'refresh', onClick: () => renderCurrent(true) }))
+                    ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Coba lagi', { icon: 'refresh', onClick: () => renderCurrent(true) }))
                 ]));
             }
         }
@@ -599,7 +599,7 @@ return view.extend({
         }
 
         if (loadError && !status) {
-            pageHost.appendChild(ui.note('管理服务不可用：' + loadError, 'bad'));
+            pageHost.appendChild(ui.note('Layanan pengelolaan tidak tersedia: ' + loadError, 'bad'));
         }
         buildNavigation();
         updateHeader();
@@ -646,7 +646,6 @@ return view.extend({
         return app;
     }
 });
-
 
 
 

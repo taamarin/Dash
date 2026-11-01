@@ -41,7 +41,7 @@ function shortUrl(value) {
 
 function endpoint(node) {
     const server = String(node.server || '');
-    return server ? server + (node.port ? ':' + node.port : '') : '本地/内联';
+    return server ? server + (node.port ? ':' + node.port : '') : 'Lokal/inline';
 }
 
 function trafficTone(percent) {
@@ -52,29 +52,29 @@ function trafficTone(percent) {
 
 function expiryText(value) {
     const seconds = Number(value || 0);
-    if (!seconds) return '到期时间未知';
-    if (seconds > Date.now() / 1000 + 20 * 365 * 86400) return '长期有效';
-    return api.formatDate(seconds, false) + ' 到期';
+    if (!seconds) return 'Waktu kedaluwarsa tidak diketahui';
+    if (seconds > Date.now() / 1000 + 20 * 365 * 86400) return 'Berlaku jangka panjang';
+    return 'Kedaluwarsa ' + api.formatDate(seconds, false);
 }
 
 function trafficBlock(provider) {
     if (provider.kind === 'local') {
         return ui.E('div', { 'class': 'sbd-sub-traffic local' }, [
-            ui.E('span', { 'class': 'sbd-sub-traffic-label' }, '本地节点'),
-            ui.E('span', { 'class': 'sbd-sub-traffic-unknown' }, '无订阅流量信息')
+            ui.E('span', { 'class': 'sbd-sub-traffic-label' }, 'Node lokal'),
+            ui.E('span', { 'class': 'sbd-sub-traffic-unknown' }, 'Tidak ada informasi lalu lintas langganan')
         ]);
     }
     const traffic = provider.traffic;
     if (!traffic || !Number(traffic.total)) {
         return ui.E('div', { 'class': 'sbd-sub-traffic unknown' }, [
-            ui.E('span', { 'class': 'sbd-sub-traffic-label' }, '订阅流量'),
-            ui.E('span', { 'class': 'sbd-sub-traffic-unknown' }, '服务端未返回流量信息')
+            ui.E('span', { 'class': 'sbd-sub-traffic-label' }, 'Lalu lintas langganan'),
+            ui.E('span', { 'class': 'sbd-sub-traffic-unknown' }, 'Server tidak mengembalikan informasi lalu lintas')
         ]);
     }
     const percent = Math.max(0, Math.min(100, Number(traffic.percent) || 0));
     return ui.E('div', { 'class': 'sbd-sub-traffic' }, [
         ui.E('div', { 'class': 'sbd-sub-traffic-head' }, [
-            ui.E('span', { 'class': 'sbd-sub-traffic-label' }, '订阅流量'),
+            ui.E('span', { 'class': 'sbd-sub-traffic-label' }, 'Lalu lintas langganan'),
             ui.E('strong', {}, api.formatBytes(traffic.used) + ' / ' + api.formatBytes(traffic.total)),
             ui.E('span', { 'class': 'sbd-sub-traffic-percent ' + trafficTone(percent) }, percent.toFixed(1) + '%')
         ]),
@@ -82,7 +82,7 @@ function trafficBlock(provider) {
             ui.E('i', { style: 'width:' + percent + '%' })
         ]),
         ui.E('div', { 'class': 'sbd-sub-traffic-meta' }, [
-            ui.E('span', { title: '上传 ' + api.formatBytes(traffic.upload) + ' · 下载 ' + api.formatBytes(traffic.download) }, '剩余 ' + api.formatBytes(traffic.remaining)),
+            ui.E('span', { title: 'Unggah ' + api.formatBytes(traffic.upload) + ' · Unduh ' + api.formatBytes(traffic.download) }, 'Tersisa ' + api.formatBytes(traffic.remaining)),
             ui.E('span', {}, expiryText(traffic.expire))
         ])
     ]);
@@ -121,7 +121,7 @@ async function render(host, ctx) {
             error: item.error || ''
         }));
         if (data && Array.isArray(data.manual_nodes) && data.manual_nodes.length) {
-            list.push({ tag: '手动节点', kind: 'manual', nodes: data.manual_nodes, error: '' });
+            list.push({ tag: 'Node manual', kind: 'manual', nodes: data.manual_nodes, error: '' });
         }
         return list;
     }
@@ -138,10 +138,10 @@ async function render(host, ctx) {
         summary.innerHTML = '';
         const counts = data && data.counts ? data.counts : {};
         const interval = data && data.subscription ? Number(data.subscription.interval || 0) : 0;
-        summary.appendChild(summaryTile('订阅源', String(counts.providers || 0), (counts.remote || 0) + ' 远程 · ' + (counts.local || 0) + ' 本地', 'blue'));
-        summary.appendChild(summaryTile('节点总数', String(counts.nodes || 0), '来自订阅与手动节点', 'green'));
-        summary.appendChild(summaryTile('自动更新', interval ? interval + ' 分钟' : '已关闭', interval ? '定时拉取订阅源' : '可在设置中开启', interval ? 'orange' : ''));
-        summary.appendChild(summaryTile('最近更新', data && data.latest_update ? api.formatDate(data.latest_update) : '—', 'Provider 文件时间', 'purple'));
+        summary.appendChild(summaryTile('Sumber langganan', String(counts.providers || 0), (counts.remote || 0) + ' jarak jauh · ' + (counts.local || 0) + ' lokal', 'blue'));
+        summary.appendChild(summaryTile('Total node', String(counts.nodes || 0), 'Dari langganan dan node manual', 'green'));
+        summary.appendChild(summaryTile('Pembaruan otomatis', interval ? interval + ' menit' : 'Nonaktif', interval ? 'Mengambil sumber langganan secara berkala' : 'Dapat diaktifkan di pengaturan', interval ? 'orange' : ''));
+        summary.appendChild(summaryTile('Pembaruan terakhir', data && data.latest_update ? api.formatDate(data.latest_update) : '—', 'Waktu file Provider', 'purple'));
     }
 
     function switchTab(next) {
@@ -153,19 +153,19 @@ async function render(host, ctx) {
         toolbar.innerHTML = '';
         const tabs = ui.E('div', { 'class': 'sbd-sub-tabs' }, [
             ui.E('button', { type: 'button', 'class': 'sbd-sub-tab ' + (tab === 'subscriptions' ? 'active' : ''), click: () => switchTab('subscriptions') }, [
-                ui.icon('database'), ui.E('span', {}, '订阅源'), ui.E('span', { 'class': 'sbd-sub-tab-count' }, String(providers().length))
+                ui.icon('database'), ui.E('span', {}, 'Sumber langganan'), ui.E('span', { 'class': 'sbd-sub-tab-count' }, String(providers().length))
             ]),
             ui.E('button', { type: 'button', 'class': 'sbd-sub-tab ' + (tab === 'nodes' ? 'active' : ''), click: () => switchTab('nodes') }, [
-                ui.icon('globe'), ui.E('span', {}, '节点'), ui.E('span', { 'class': 'sbd-sub-tab-count' }, String((data && data.counts && data.counts.nodes) || 0))
+                ui.icon('globe'), ui.E('span', {}, 'Node'), ui.E('span', { 'class': 'sbd-sub-tab-count' }, String((data && data.counts && data.counts.nodes) || 0))
             ])
         ]);
         const searchInput = ui.E('input', {
-            type: 'search', 'class': 'sbd-input sbd-sub-search', placeholder: '搜索节点、协议或服务器',
+            type: 'search', 'class': 'sbd-input sbd-sub-search', placeholder: 'Cari node, protokol, atau server',
             value: search, input: event => { search = event.target.value.trim().toLowerCase(); if (tab === 'nodes') renderContent(); }
         });
         const actions = ui.E('div', { 'class': 'sbd-sub-actions' }, [
-            ui.btn('新增订阅', { icon: 'plus', variant: 'primary', onClick: () => openProviderEditor(null, 'remote') }),
-            ui.btn('导入节点', { icon: 'upload', onClick: () => openProviderEditor(null, 'local') })
+            ui.btn('Tambah langganan', { icon: 'plus', variant: 'primary', onClick: () => openProviderEditor(null, 'remote') }),
+            ui.btn('Impor node', { icon: 'upload', onClick: () => openProviderEditor(null, 'local') })
         ]);
         toolbar.appendChild(ui.E('div', { 'class': 'sbd-sub-toolbar-main' }, [tabs, tab === 'nodes' ? searchInput : null].filter(Boolean)));
         toolbar.appendChild(actions);
@@ -173,34 +173,34 @@ async function render(host, ctx) {
 
     function providerCard(provider, index) {
         const remote = provider.kind === 'remote';
-        const update = provider.updated ? api.formatDate(provider.updated) : '尚未更新';
+        const update = provider.updated ? api.formatDate(provider.updated) : 'Belum diperbarui';
         const source = remote ? provider.url : provider.path;
         return ui.E('section', { 'class': 'sbd-subscription-source-card' }, [
             ui.E('div', { 'class': 'sbd-sub-source-head' }, [
                 ui.appIcon(remote ? 'link' : 'database', remote ? 'blue' : 'green'),
                 ui.E('div', { 'class': 'sbd-sub-source-copy' }, [
-                    ui.E('div', { 'class': 'sbd-sub-source-title' }, ui.nameWithFlags(provider.tag || '未命名订阅')),
+                    ui.E('div', { 'class': 'sbd-sub-source-title' }, ui.nameWithFlags(provider.tag || 'Langganan tanpa nama')),
                     ui.E('div', { 'class': 'sbd-sub-source-badges' }, [
-                        ui.badge(remote ? '远程订阅' : '本地节点', remote ? 'blue' : 'green'),
-                        ui.badge((provider.node_count || 0) + ' 节点', ''),
-                        remote && provider.update_interval ? ui.badge('更新 ' + provider.update_interval, 'orange') : null,
-                        !remote ? ui.badge('无订阅流量', '') : null,
-                        provider.error ? ui.badge('读取异常', 'red') : null
+                        ui.badge(remote ? 'Langganan jarak jauh' : 'Node lokal', remote ? 'blue' : 'green'),
+                        ui.badge((provider.node_count || 0) + ' node', ''),
+                        remote && provider.update_interval ? ui.badge('Diperbarui ' + provider.update_interval, 'orange') : null,
+                        !remote ? ui.badge('Tanpa lalu lintas langganan', '') : null,
+                        provider.error ? ui.badge('Kesalahan pembacaan', 'red') : null
                     ].filter(Boolean))
                 ]),
                 ui.E('div', { 'class': 'sbd-sub-source-actions' }, [
-                    ui.btn('编辑', { icon: 'edit', small: true, onClick: () => openProviderEditor(index, remote ? 'remote' : 'local') }),
-                    ui.btn('', { icon: 'trash', iconOnly: true, small: true, variant: 'danger', title: '删除订阅源', onClick: () => deleteProvider(index) })
+                    ui.btn('Edit', { icon: 'edit', small: true, onClick: () => openProviderEditor(index, remote ? 'remote' : 'local') }),
+                    ui.btn('', { icon: 'trash', iconOnly: true, small: true, variant: 'danger', title: 'Hapus sumber langganan', onClick: () => deleteProvider(index) })
                 ])
             ]),
             ui.E('div', { 'class': 'sbd-sub-source-body' }, [
-                ui.E('div', { 'class': 'sbd-sub-source-url', title: source || '' }, remote ? shortUrl(source) : (source || '未设置文件路径')),
+                ui.E('div', { 'class': 'sbd-sub-source-url', title: source || '' }, remote ? shortUrl(source) : (source || 'Path file belum diatur')),
                 trafficBlock(provider),
                 provider.error ? ui.note(provider.error, 'bad') : null,
                 ui.E('div', { 'class': 'sbd-sub-source-meta' }, [
-                    ui.E('span', {}, '更新：' + update),
-                    ui.E('span', {}, provider.health_check && provider.health_check.enabled ? '健康检查已启用' : '健康检查关闭'),
-                    provider.exclude ? ui.E('span', { title: provider.exclude }, '排除：' + provider.exclude.slice(0, 42) + (provider.exclude.length > 42 ? '…' : '')) : null
+                    ui.E('span', {}, 'Diperbarui: ' + update),
+                    ui.E('span', {}, provider.health_check && provider.health_check.enabled ? 'Pemeriksaan kesehatan aktif' : 'Pemeriksaan kesehatan nonaktif'),
+                    provider.exclude ? ui.E('span', { title: provider.exclude }, 'Dikecualikan: ' + provider.exclude.slice(0, 42) + (provider.exclude.length > 42 ? '…' : '')) : null
                 ].filter(Boolean))
             ].filter(Boolean))
         ]);
@@ -213,15 +213,15 @@ async function render(host, ctx) {
             ui.E('div', { 'class': 'sbd-sub-source-head' }, [
                 ui.appIcon('config', 'orange'),
                 ui.E('div', { 'class': 'sbd-sub-source-copy' }, [
-                    ui.E('div', { 'class': 'sbd-sub-source-title' }, '当前配置订阅'),
+                    ui.E('div', { 'class': 'sbd-sub-source-title' }, 'Langganan konfigurasi saat ini'),
                     ui.E('div', { 'class': 'sbd-sub-source-badges' }, [
-                        ui.badge('整份配置订阅', 'orange'),
-                        ui.badge(subscription.interval ? '自动 ' + subscription.interval + ' 分钟' : '手动更新', subscription.interval ? 'green' : '')
+                        ui.badge('Langganan seluruh konfigurasi', 'orange'),
+                        ui.badge(subscription.interval ? 'Otomatis ' + subscription.interval + ' menit' : 'Pembaruan manual', subscription.interval ? 'green' : '')
                     ])
                 ]),
                 ui.E('div', { 'class': 'sbd-sub-source-actions' }, [
-                    ui.btn('编辑地址', { icon: 'edit', small: true, onClick: openLegacyEditor }),
-                    ui.btn('立即同步', { icon: 'refresh', small: true, onClick: updateLegacySubscription })
+                    ui.btn('Edit alamat', { icon: 'edit', small: true, onClick: openLegacyEditor }),
+                    ui.btn('Sinkronkan sekarang', { icon: 'refresh', small: true, onClick: updateLegacySubscription })
                 ])
             ]),
             ui.E('div', { 'class': 'sbd-sub-source-body' }, [
@@ -235,7 +235,7 @@ async function render(host, ctx) {
         const legacy = legacyCard();
         if (legacy) content.appendChild(legacy);
         const list = providers();
-        if (!list.length) content.appendChild(ui.empty('暂无订阅源，可新增远程订阅或导入本地节点'));
+        if (!list.length) content.appendChild(ui.empty('Belum ada sumber langganan; tambahkan langganan jarak jauh atau impor node lokal'));
         list.forEach((provider, index) => content.appendChild(providerCard(provider, index)));
     }
 
@@ -244,7 +244,7 @@ async function render(host, ctx) {
         return ui.E('div', { 'class': 'sbd-managed-node-card' }, [
             ui.appIcon(node.type && /direct|reject/i.test(node.type) ? 'link' : 'globe', node.tls ? 'green' : 'blue'),
             ui.E('div', { 'class': 'sbd-managed-node-copy' }, [
-                ui.E('strong', { 'class': 'sbd-managed-node-name' }, ui.nameWithFlags(node.tag || '未命名节点')),
+                ui.E('strong', { 'class': 'sbd-managed-node-name' }, ui.nameWithFlags(node.tag || 'Node tanpa nama')),
                 ui.E('span', { 'class': 'sbd-managed-node-server' }, endpoint(node))
             ]),
             ui.E('div', { 'class': 'sbd-managed-node-meta' }, [
@@ -264,21 +264,21 @@ async function render(host, ctx) {
             })
         })).filter(source => source.nodes.length || !search);
         if (!sources.length) {
-            content.appendChild(ui.empty(search ? '未找到匹配节点' : '暂无可用节点'));
+            content.appendChild(ui.empty(search ? 'Tidak ditemukan node yang cocok' : 'Belum ada node yang tersedia'));
             return;
         }
         sources.forEach(source => {
             const section = ui.E('section', { 'class': 'sbd-node-source-section' }, [
                 ui.E('div', { 'class': 'sbd-node-source-head' }, [
                     ui.E('div', { 'class': 'sbd-node-source-title' }, ui.nameWithFlags(source.tag)),
-                    ui.badge(source.kind === 'remote' ? '远程' : source.kind === 'local' ? '本地' : '手动', source.kind === 'remote' ? 'blue' : 'green'),
-                    ui.E('span', { 'class': 'sbd-node-source-count' }, source.nodes.length + ' 节点')
+                    ui.badge(source.kind === 'remote' ? 'Jarak jauh' : source.kind === 'local' ? 'Lokal' : 'Manual', source.kind === 'remote' ? 'blue' : 'green'),
+                    ui.E('span', { 'class': 'sbd-node-source-count' }, source.nodes.length + ' node')
                 ])
             ]);
             if (source.error) section.appendChild(ui.note(source.error, 'bad'));
             const grid = ui.E('div', { 'class': 'sbd-managed-node-grid' });
             source.nodes.forEach(node => grid.appendChild(nodeCard(node)));
-            if (!source.nodes.length) grid.appendChild(ui.empty(search ? '该订阅没有匹配节点' : '该订阅暂无节点'));
+            if (!source.nodes.length) grid.appendChild(ui.empty(search ? 'Tidak ada node langganan yang cocok' : 'Langganan ini belum memiliki node'));
             section.appendChild(grid);
             content.appendChild(section);
         });
@@ -306,7 +306,7 @@ async function render(host, ctx) {
             render();
         } catch (error) {
             content.innerHTML = '';
-            content.appendChild(components.errorCard('节点与订阅加载失败', api.errorText(error), load, {
+            content.appendChild(components.errorCard('Gagal memuat node dan langganan', api.errorText(error), load, {
                 icon: 'database'
             }));
         } finally {
@@ -315,23 +315,23 @@ async function render(host, ctx) {
     }
 
     async function applyProviders(nextProviders, message) {
-        if (!current) throw new Error('当前配置尚未加载');
+        if (!current) throw new Error('Konfigurasi saat ini belum dimuat');
         const draft = clone(current.parsed);
         draft.providers = nextProviders;
         await api.validateConfigObject(draft);
         const job = await api.submitConfigObject({
             action: 'apply', target: current.name, expected: current.hash, data: draft
         });
-        if (job) await ctx.watchJob(job, '应用节点与订阅');
+        if (job) await ctx.watchJob(job, 'Menerapkan node dan langganan');
         await ctx.refreshStatus().catch(() => {});
         await load();
-        ui.notify(message || '节点与订阅已应用', 'success');
+        ui.notify(message || 'Node dan langganan diterapkan', 'success');
     }
 
     async function deleteProvider(index) {
         const provider = providers()[index];
         if (!provider) return;
-        const ok = await ui.confirm('删除订阅源', '删除“' + provider.tag + '”会同时移除配置引用，并重启 sing-box。', '删除', true);
+        const ok = await ui.confirm('Hapus sumber langganan', 'Menghapus “' + provider.tag + '” juga akan menghapus referensinya dalam konfigurasi dan memulai ulang sing-box.', 'Hapus', true);
         if (!ok) return;
         try {
             setBusy(true);
@@ -347,7 +347,7 @@ async function render(host, ctx) {
                 health_check: item.health_check && Object.keys(item.health_check).length ? item.health_check : undefined
             }));
             next.splice(index, 1);
-            await applyProviders(next, '订阅源已删除');
+            await applyProviders(next, 'Sumber langganan dihapus');
         } catch (error) {
             ui.notify(api.errorText(error), 'error', 7000);
         } finally {
@@ -357,14 +357,14 @@ async function render(host, ctx) {
 
     function openLegacyEditor() {
         const input = ui.E('input', { 'class': 'sbd-input', type: 'url', value: data.subscription.url || '', placeholder: 'https://example.com/config' });
-        ui.modal('编辑配置订阅', [
-            ui.field('订阅 URL', input, '用于整份配置更新，不会新增 provider。')
+        ui.modal('Edit langganan konfigurasi', [
+            ui.field('URL langganan', input, 'Digunakan untuk memperbarui seluruh konfigurasi; tidak menambahkan Provider.')
         ], {
-            cancelText: '取消', confirmText: '保存地址', width: '680px',
+            cancelText: 'Batal', confirmText: 'Simpan alamat', width: '680px',
             onConfirm: async () => {
                 await api.setSubscription(input.value.trim());
                 await load();
-                ui.notify('配置订阅地址已保存', 'success');
+                ui.notify('Alamat langganan konfigurasi disimpan', 'success');
             }
         });
     }
@@ -373,8 +373,8 @@ async function render(host, ctx) {
         try {
             setBusy(true);
             const result = await api.command('subscription-update');
-            if (result.job) await ctx.watchJob(result.job, '更新配置订阅');
-            else ui.notify(result.message || '订阅内容没有变化', 'success');
+            if (result.job) await ctx.watchJob(result.job, 'Memperbarui langganan konfigurasi');
+            else ui.notify(result.message || 'Konten langganan tidak berubah', 'success');
             await ctx.refreshStatus().catch(() => {});
             await load();
         } catch (error) {
@@ -408,24 +408,24 @@ async function render(host, ctx) {
         }
         function sourceEditor(hostNode) {
             const select = ui.E('select', { 'class': 'sbd-select' }, [
-                ui.E('option', { value: 'text', selected: working.sourceType === 'text' ? '' : null }, '粘贴分享链接或 Base64'),
-                ui.E('option', { value: 'url', selected: working.sourceType === 'url' ? '' : null }, '从解析链接下载')
+                ui.E('option', { value: 'text', selected: working.sourceType === 'text' ? '' : null }, 'Tempel tautan berbagi atau Base64'),
+                ui.E('option', { value: 'url', selected: working.sourceType === 'url' ? '' : null }, 'Unduh dari tautan penguraian')
             ]);
             select.addEventListener('change', () => { working.sourceType = select.value; working.source = ''; draw(); });
             const sourceNode = working.sourceType === 'url'
                 ? input(working.source, 'https://example.com/subscribe', value => { working.source = value; }, 'url')
-                : ui.E('textarea', { 'class': 'sbd-textarea', placeholder: 'vless://… / vmess://… / 整段 Base64 订阅内容' }, working.source);
+                : ui.E('textarea', { 'class': 'sbd-textarea', placeholder: 'vless://… / vmess://… / seluruh konten langganan Base64' }, working.source);
             if (sourceNode.tagName === 'TEXTAREA') sourceNode.addEventListener('input', () => { working.source = sourceNode.value; });
-            const importButton = ui.btn('解析并写入节点文件', {
+            const importButton = ui.btn('Uraikan dan tulis ke file node', {
                 icon: 'download', onClick: async () => {
                     const tag = tagValue.value.trim();
-                    if (!tag) return ui.notify('请先填写订阅名称', 'warn');
+                    if (!tag) return ui.notify('Masukkan nama langganan terlebih dahulu', 'warn');
                     const path = existing && existing.tag === tag && existing.path ? existing.path : providerPath(tag);
                     importButton.disabled = true;
                     try {
                         imported = await api.importProvider({ tag, path, sourceType: working.sourceType, source: working.source });
                         working.path = imported.path;
-                        ui.notify('已导入 ' + imported.count + ' 个节点', 'success');
+                        ui.notify(imported.count + ' node diimpor', 'success');
                     } catch (error) {
                         ui.notify(api.errorText(error), 'error', 7000);
                     } finally {
@@ -433,12 +433,12 @@ async function render(host, ctx) {
                     }
                 }
             });
-            hostNode.appendChild(ui.field('本地节点来源', select));
-            hostNode.appendChild(ui.field(working.sourceType === 'url' ? '解析链接' : '节点内容', sourceNode,
-                working.sourceType === 'url' ? '只用于本次下载，生成后不再依赖 URL。' : '支持一行一个分享链接或整段 Base64。'));
+            hostNode.appendChild(ui.field('Sumber node lokal', select));
+            hostNode.appendChild(ui.field(working.sourceType === 'url' ? 'Tautan penguraian' : 'Konten node', sourceNode,
+                working.sourceType === 'url' ? 'Hanya digunakan untuk unduhan kali ini; file yang dibuat tidak lagi bergantung pada URL.' : 'Mendukung satu tautan berbagi per baris atau seluruh konten Base64.'));
             hostNode.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, importButton));
         }
-        const tagValue = input(working.tag, '例如 HIMEMY、备用机场', value => {
+        const tagValue = input(working.tag, 'misalnya HIMEMY, penyedia cadangan', value => {
             working.tag = value;
             if (!existing) working.path = providerPath(value);
             pathText.textContent = working.path;
@@ -446,46 +446,46 @@ async function render(host, ctx) {
         const pathText = ui.E('code', { 'class': 'sbd-sub-path' }, working.path);
         function draw() {
             body.innerHTML = '';
-            body.appendChild(ui.field('订阅名称', tagValue, '用于生成 Provider 标签和文件名。'));
+            body.appendChild(ui.field('Nama langganan', tagValue, 'Digunakan untuk membuat label Provider dan nama file.'));
             if (working.kind === 'remote') {
-                body.appendChild(ui.field('订阅 URL', input(working.url, 'https://example.com/subscribe', value => { working.url = value; }, 'url')));
+                body.appendChild(ui.field('URL langganan', input(working.url, 'https://example.com/subscribe', value => { working.url = value; }, 'url')));
                 body.appendChild(ui.E('div', { 'class': 'sbd-sub-form-grid' }, [
-                    ui.field('更新间隔', input(working.update_interval, '6h', value => { working.update_interval = value; })),
-                    ui.field('HTTP 客户端', input(working.http_client, 'provider_direct', value => { working.http_client = value; }), '留空或填写已有 http_clients 标签。'),
-                    ui.field('节点文件', pathText)
+                    ui.field('Interval pembaruan', input(working.update_interval, '6h', value => { working.update_interval = value; })),
+                    ui.field('Klien HTTP', input(working.http_client, 'provider_direct', value => { working.http_client = value; }), 'Kosongkan atau masukkan label http_clients yang sudah ada.'),
+                    ui.field('File node', pathText)
                 ]));
                 body.appendChild(ui.E('div', { 'class': 'sbd-sub-form-grid' }, [
-                    ui.field('包含关键词', input(working.include, '例如 香港|日本', value => { working.include = value; }), '用 | 分隔。'),
-                    ui.field('排除关键词', input(working.exclude, '例如 官网|到期|剩余', value => { working.exclude = value; }), '用 | 分隔。')
+                    ui.field('Kata kunci penyertaan', input(working.include, 'misalnya Hong Kong|Jepang', value => { working.include = value; }), 'Pisahkan dengan |.'),
+                    ui.field('Kata kunci pengecualian', input(working.exclude, 'misalnya situs resmi|kedaluwarsa|tersisa', value => { working.exclude = value; }), 'Pisahkan dengan |.')
                 ]));
             } else {
                 sourceEditor(body);
-                body.appendChild(ui.field('节点文件', pathText, '由分享链接解析后写入本地 provider。'));
+                body.appendChild(ui.field('File node', pathText, 'Ditulis ke Provider lokal setelah tautan berbagi diuraikan.'));
             }
             const healthToggle = ui.E('select', { 'class': 'sbd-select' }, [
-                ui.E('option', { value: '1', selected: working.health ? '' : null }, '启用'),
-                ui.E('option', { value: '0', selected: working.health ? null : '' }, '关闭')
+                ui.E('option', { value: '1', selected: working.health ? '' : null }, 'Aktifkan'),
+                ui.E('option', { value: '0', selected: working.health ? null : '' }, 'Nonaktifkan')
             ]);
             healthToggle.addEventListener('change', () => { working.health = healthToggle.value === '1'; });
-            body.appendChild(ui.field('健康检查', healthToggle, '使用默认 204 检查地址，每 30 分钟检查一次。'));
+            body.appendChild(ui.field('Pemeriksaan kesehatan', healthToggle, 'Gunakan alamat pemeriksaan 204 default dan periksa setiap 30 menit.'));
         }
         tagValue.addEventListener('input', () => { working.tag = tagValue.value; working.path = existing && existing.tag === working.tag && existing.path ? existing.path : providerPath(working.tag); pathText.textContent = working.path; });
         draw();
-        ui.modal(existing ? '编辑订阅源' : working.kind === 'remote' ? '新增远程订阅' : '导入本地节点', body, {
-            subtitle: working.kind === 'remote' ? '保存后更新 providers 并重启 sing-box。' : '解析分享链接后生成本地节点 provider。',
-            cancelText: '取消', confirmText: existing ? '保存并应用' : '添加并应用', width: '760px',
+        ui.modal(existing ? 'Edit sumber langganan' : working.kind === 'remote' ? 'Tambah langganan jarak jauh' : 'Impor node lokal', body, {
+            subtitle: working.kind === 'remote' ? 'Provider akan diperbarui dan sing-box dimulai ulang setelah disimpan.' : 'Uraikan tautan berbagi untuk membuat Provider node lokal.',
+            cancelText: 'Batal', confirmText: existing ? 'Simpan dan terapkan' : 'Tambah dan terapkan', width: '760px',
             onConfirm: async () => {
                 const tag = working.tag.trim();
-                if (!tag) throw new Error('订阅名称不能为空');
-                if (providers().some((item, itemIndex) => item.tag === tag && itemIndex !== index)) throw new Error('订阅名称已存在');
+                if (!tag) throw new Error('Nama langganan tidak boleh kosong');
+                if (providers().some((item, itemIndex) => item.tag === tag && itemIndex !== index)) throw new Error('Nama langganan sudah digunakan');
                 const path = providerPath(tag);
                 if (working.kind === 'remote') {
-                    if (!/^https?:\/\/\S+$/i.test(working.url.trim())) throw new Error('请输入有效的 HTTP/HTTPS 订阅 URL');
+                    if (!/^https?:\/\/\S+$/i.test(working.url.trim())) throw new Error('Masukkan URL langganan HTTP/HTTPS yang valid');
                 } else if ((!existing || existing.kind !== 'local') && !(imported && imported.count)) {
-                    throw new Error('请先解析并写入本地节点文件');
+                    throw new Error('Uraikan node dan tulis ke file lokal terlebih dahulu');
                 }
                 if (existing && existing.kind === 'local' && existing.path && existing.tag !== tag) {
-                    throw new Error('本地订阅改名后需要重新解析节点文件');
+                    throw new Error('Setelah nama langganan lokal diubah, file node harus diuraikan kembali');
                 }
                 const value = {
                     type: working.kind === 'local' ? 'local' : 'remote', tag, path,
@@ -508,7 +508,7 @@ async function render(host, ctx) {
                     health_check: item.health_check && Object.keys(item.health_check).length ? item.health_check : undefined
                 }));
                 if (existing) next[index] = value; else next.push(value);
-                await applyProviders(next, existing ? '订阅源已更新' : '订阅源已添加');
+                await applyProviders(next, existing ? 'Sumber langganan diperbarui' : 'Sumber langganan ditambahkan');
             }
         });
     }
@@ -518,6 +518,4 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
-
 

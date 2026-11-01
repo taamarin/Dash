@@ -54,13 +54,13 @@ assert 'function enhanceDocumentLandmarks' in index_source
 assert 'enhanceDocumentLandmarks(header, main)' in index_source
 assert '#mainmenu.main-left' in index_source
 assert "'role': 'status'" in (base / 'lib/dom.js').read_text(encoding='utf-8')
-assert "'aria-label': '来源筛选'" in (base / 'pages/connections.js').read_text(encoding='utf-8')
-assert "'aria-label': '内核来源'" in (base / 'pages/kernel.js').read_text(encoding='utf-8')
+assert "'aria-label': 'Filter sumber'" in (base / 'pages/connections.js').read_text(encoding='utf-8')
+assert "'aria-label': 'Sumber kernel'" in (base / 'pages/kernel.js').read_text(encoding='utf-8')
 assert "role: 'log', tabindex: '0'" in (base / 'pages/tools.js').read_text(encoding='utf-8')
-assert "'aria-label': '开机自启'" in (base / 'pages/settings.js').read_text(encoding='utf-8')
+assert "'aria-label': 'Mulai otomatis saat boot'" in (base / 'pages/settings.js').read_text(encoding='utf-8')
 config_source = (base / 'pages/config.js').read_text(encoding='utf-8')
 assert "|| 'config.yaml'" in config_source
-assert '导入配置文件' in config_source
+assert 'Impor file konfigurasi' in config_source
 assert 'createConfigFromFile(file, text)' in config_source
 assert 'snapshotPending' in overview_source
 print('frontend architecture tests OK: 4 startup modules, lazy pages/upload, one status poller')

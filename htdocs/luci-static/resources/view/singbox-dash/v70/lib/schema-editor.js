@@ -23,7 +23,7 @@ function renderMixedUnion(schema, value, path, options) {
     const host = ui.E('div', { 'class': 'sbd-union-value' });
     const wrap = ui.E('div', { 'class': 'sbd-mixed-union' }, [
         ui.E('div', { 'class': 'sbd-union-head' }, [
-            ui.E('span', { 'class': 'sbd-field-label' }, '数据类型'), select
+            ui.E('span', { 'class': 'sbd-field-label' }, 'Jenis data'), select
         ]),
         host
     ]);
@@ -74,7 +74,7 @@ function renderJsonEditor(schema, value, path, options) {
         if (!raw) deletePath(options.draft, path);
         else {
             try { setPath(options.draft, path, JSON.parse(raw)); }
-            catch (_) { ui.notify('JSON 格式错误', 'error'); return; }
+            catch (_) { ui.notify('Format JSON tidak valid', 'error'); return; }
         }
         markChange(options);
     };
@@ -97,7 +97,7 @@ function renderMixedArray(schema, value, path, options, itemVariants) {
         try { preview = typeof item === 'string' ? item : JSON.stringify(item); }
         catch (_) { preview = String(item); }
         if (preview && preview.length > 120) preview = preview.slice(0, 120) + '…';
-        return { title: variant ? variantLabelText(options.root, variant) : '值', preview };
+        return { title: variant ? variantLabelText(options.root, variant) : 'Nilai', preview };
     }
     function open(item, index) {
         let selected = itemVariants.findIndex(entry => variantMatches(options.root, entry, item));
@@ -115,7 +115,7 @@ function renderMixedArray(schema, value, path, options, itemVariants) {
             const localOptions = Object.assign({}, options, {
                 draft: local, required: ['value'], onChange: () => {}, rerender: draw
             });
-            editorHost.appendChild(renderField('值', variant, local.value, ['value'], localOptions));
+            editorHost.appendChild(renderField('Nilai', variant, local.value, ['value'], localOptions));
         }
         if (typeSelect) {
             typeSelect.addEventListener('change', () => {
@@ -125,12 +125,12 @@ function renderMixedArray(schema, value, path, options, itemVariants) {
             });
         }
         draw();
-        ui.modal(index === undefined ? '新增列表项' : '编辑列表项', ui.E('div', { 'class': 'sbd-stack' }, [
-            typeSelect ? ui.field('类型', typeSelect) : null,
+        ui.modal(index === undefined ? 'Tambah item daftar' : 'Edit item daftar', ui.E('div', { 'class': 'sbd-stack' }, [
+            typeSelect ? ui.field('Jenis', typeSelect) : null,
             editorHost
         ].filter(Boolean)), {
             subtitle: index === undefined ? '' : itemInfo(item).title,
-            cancelText: '取消', confirmText: index === undefined ? '添加' : '保存', width: '620px',
+            cancelText: 'Batal', confirmText: index === undefined ? 'Tambah' : 'Simpan', width: '620px',
             onConfirm: () => {
                 if (index === undefined) items.push(clone(local.value));
                 else items[index] = clone(local.value);
@@ -141,10 +141,10 @@ function renderMixedArray(schema, value, path, options, itemVariants) {
     }
     function draw() {
         rows.innerHTML = '';
-        if (!items.length) rows.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, '暂无条目'));
+        if (!items.length) rows.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, 'Belum ada item'));
         items.forEach((item, index) => {
             const info = itemInfo(item);
-            const up = ui.btn('', { icon: 'chevron', iconOnly: true, variant: 'ghost', title: '上移', disabled: index === 0, onClick: () => {
+            const up = ui.btn('', { icon: 'chevron', iconOnly: true, variant: 'ghost', title: 'Pindahkan ke atas', disabled: index === 0, onClick: () => {
                 [items[index - 1], items[index]] = [items[index], items[index - 1]];
                 commit(); draw();
             } });
@@ -156,14 +156,14 @@ function renderMixedArray(schema, value, path, options, itemVariants) {
                 ].filter(Boolean)),
                 ui.E('div', { 'class': 'sbd-object-actions' }, [
                     up,
-                    ui.btn('编辑', { icon: 'edit', small: true, onClick: () => open(clone(item), index) }),
-                    ui.btn('', { icon: 'trash', iconOnly: true, variant: 'ghost', title: '删除', onClick: () => {
+                    ui.btn('Edit', { icon: 'edit', small: true, onClick: () => open(clone(item), index) }),
+                    ui.btn('', { icon: 'trash', iconOnly: true, variant: 'ghost', title: 'Hapus', onClick: () => {
                         items.splice(index, 1); commit(); draw();
                     } })
                 ])
             ]));
         });
-        rows.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('新增条目', {
+        rows.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('Tambah item', {
             icon: 'plus', variant: 'primary', small: true, disabled: !itemVariants.length,
             onClick: () => open(undefined, undefined)
         })));
@@ -193,9 +193,9 @@ function renderSwitch(schema, value, path, options) {
     const absent = value === undefined || value === null;
     if (!required) {
         const select = ui.E('select', { 'class': 'sbd-select' }, [
-            ui.E('option', { value: '' }, '默认'),
-            ui.E('option', { value: 'true' }, '开启'),
-            ui.E('option', { value: 'false' }, '关闭')
+            ui.E('option', { value: '' }, 'Default'),
+            ui.E('option', { value: 'true' }, 'Aktif'),
+            ui.E('option', { value: 'false' }, 'Nonaktif')
         ]);
         select.value = absent ? '' : String(!!value);
         select.addEventListener('change', () => {
@@ -214,7 +214,7 @@ function renderSwitch(schema, value, path, options) {
 function renderEnum(schema, value, path, options) {
     const select = ui.E('select', { 'class': 'sbd-select' });
     if (!(options.required || []).includes(path[path.length - 1])) {
-        select.appendChild(ui.E('option', { value: '' }, '默认'));
+        select.appendChild(ui.E('option', { value: '' }, 'Default'));
     }
     (schema.enum || []).forEach(item => select.appendChild(ui.E('option', { value: String(item) }, String(item))));
     select.value = value === undefined || value === null ? '' : String(value);
@@ -282,7 +282,7 @@ function renderPrimitiveArray(schema, value, path, options, numeric) {
     const chips = ui.E('div', { 'class': 'sbd-chips' });
     const input = ui.E('input', {
         'class': 'sbd-input', type: numeric ? 'number' : 'text',
-        placeholder: numeric ? '输入数字后回车或点击添加' : '输入内容后回车或点击添加'
+        placeholder: numeric ? 'Masukkan angka lalu tekan Enter atau klik tambah' : 'Masukkan nilai lalu tekan Enter atau klik tambah'
     });
     const itemSchema = resolveSchema(options.root, schema.items || {});
     const reference = itemSchema['x-tag-reference'] || '';
@@ -300,11 +300,11 @@ function renderPrimitiveArray(schema, value, path, options, numeric) {
     function redraw() {
         chips.innerHTML = '';
         items.forEach((item, index) => {
-            const remove = ui.E('button', { type: 'button', 'class': 'sbd-chip-x', title: '移除' }, '×');
+            const remove = ui.E('button', { type: 'button', 'class': 'sbd-chip-x', title: 'Hapus' }, '×');
             remove.addEventListener('click', () => { items.splice(index, 1); commit(); redraw(); });
             chips.appendChild(ui.E('span', { 'class': 'sbd-chip' }, [ui.E('span', {}, String(item)), remove]));
         });
-        if (!items.length) chips.appendChild(ui.E('span', { 'class': 'sbd-chip-empty' }, '未设置'));
+        if (!items.length) chips.appendChild(ui.E('span', { 'class': 'sbd-chip-empty' }, 'Belum diatur'));
     }
     function add() {
         const raw = String(input.value || '').trim();
@@ -318,7 +318,7 @@ function renderPrimitiveArray(schema, value, path, options, numeric) {
     input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); add(); } });
     wrap.appendChild(chips);
     wrap.appendChild(ui.E('div', { 'class': 'sbd-chip-add' }, [
-        input, list, ui.btn('添加', { icon: 'plus', small: true, onClick: add })
+        input, list, ui.btn('Tambah', { icon: 'plus', small: true, onClick: add })
     ].filter(Boolean)));
     redraw();
     return wrap;
@@ -351,7 +351,7 @@ function renderMapEditor(schema, value, path, options) {
         markChange(options);
     }
     function edit(key) {
-        const keyInput = ui.E('input', { 'class': 'sbd-input', type: 'text', placeholder: '键名', value: key || '' });
+        const keyInput = ui.E('input', { 'class': 'sbd-input', type: 'text', placeholder: 'Nama kunci', value: key || '' });
         let keyList = null;
         if (keyEnum.length) {
             keyList = ui.E('datalist', { id: 'sbd-map-key-' + (++controlId) });
@@ -360,7 +360,7 @@ function renderMapEditor(schema, value, path, options) {
         }
         const local = { value: key ? clone(object[key]) : undefined };
         const valueHost = ui.E('div', { 'class': 'sbd-stack' });
-        const freeValue = ui.E('textarea', { 'class': 'sbd-textarea sbd-schema-code', placeholder: 'JSON 或文本值' });
+        const freeValue = ui.E('textarea', { 'class': 'sbd-textarea sbd-schema-code', placeholder: 'Nilai JSON atau teks' });
         if (!valueSchema) {
             const current = local.value;
             freeValue.value = current === undefined ? '' : (typeof current === 'string' ? current : JSON.stringify(current, null, 2));
@@ -368,33 +368,33 @@ function renderMapEditor(schema, value, path, options) {
         function drawValue() {
             valueHost.innerHTML = '';
             if (valueSchema) {
-                valueHost.appendChild(renderField('值', valueSchema, local.value, ['value'],
+                valueHost.appendChild(renderField('Nilai', valueSchema, local.value, ['value'],
                     Object.assign({}, options, { draft: local, onChange: () => {}, rerender: drawValue })));
             } else {
-                valueHost.appendChild(ui.field('值', freeValue));
+                valueHost.appendChild(ui.field('Nilai', freeValue));
             }
         }
         drawValue();
-        const hint = keyEnum.length ? '可选键：' + keyEnum.join(' / ')
-            : keyPattern ? '键格式：' + keyPattern : '';
-        ui.modal(key ? '编辑键值' : '添加键值', ui.E('div', { 'class': 'sbd-stack' }, [
-            ui.field('键', keyInput, hint),
+        const hint = keyEnum.length ? 'Kunci yang dapat dipilih: ' + keyEnum.join(' / ')
+            : keyPattern ? 'Format kunci: ' + keyPattern : '';
+        ui.modal(key ? 'Edit pasangan kunci-nilai' : 'Tambah pasangan kunci-nilai', ui.E('div', { 'class': 'sbd-stack' }, [
+            ui.field('Kunci', keyInput, hint),
             keyList,
             valueHost
         ].filter(Boolean)), {
-            cancelText: '取消', confirmText: '保存', width: '560px',
+            cancelText: 'Batal', confirmText: 'Simpan', width: '560px',
             onConfirm: () => {
                 const nextKey = keyInput.value.trim();
-                if (!nextKey) throw new Error('键名不能为空');
+                if (!nextKey) throw new Error('Nama kunci tidak boleh kosong');
                 if (keyEnum.length && !keyEnum.includes(nextKey))
-                    throw new Error('键必须是：' + keyEnum.join(' / '));
+                    throw new Error('Kunci harus berupa salah satu dari: ' + keyEnum.join(' / '));
                 if (keyPattern) {
                     try {
                         if (!new RegExp(keyPattern).test(nextKey)) throw new Error();
-                    } catch (_) { throw new Error('键格式不符合要求'); }
+                    } catch (_) { throw new Error('Format kunci tidak sesuai'); }
                 }
                 if (nextKey !== key && Object.prototype.hasOwnProperty.call(object, nextKey))
-                    throw new Error('键名已存在');
+                    throw new Error('Nama kunci sudah ada');
                 if (nextKey !== key) delete object[key];
                 if (!valueSchema) {
                     const raw = freeValue.value.trim();
@@ -416,20 +416,20 @@ function renderMapEditor(schema, value, path, options) {
     function draw() {
         rows.innerHTML = '';
         const entries = Object.entries(object);
-        if (!entries.length) rows.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, '暂无条目'));
+        if (!entries.length) rows.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, 'Belum ada item'));
         entries.forEach(([key, item]) => {
             rows.appendChild(ui.E('div', { 'class': 'sbd-map-row' }, [
                 ui.E('div', { 'class': 'sbd-map-key' }, key),
                 ui.E('div', { 'class': 'sbd-map-value' }, typeof item === 'string' ? item : JSON.stringify(item)),
                 ui.E('div', { 'class': 'sbd-map-actions' }, [
-                    ui.btn('编辑', { icon: 'edit', small: true, onClick: () => edit(key) }),
-                    ui.btn('', { icon: 'trash', iconOnly: true, variant: 'ghost', title: '删除', onClick: () => {
+                    ui.btn('Edit', { icon: 'edit', small: true, onClick: () => edit(key) }),
+                    ui.btn('', { icon: 'trash', iconOnly: true, variant: 'ghost', title: 'Hapus', onClick: () => {
                         delete object[key]; commit(); draw();
                     } })
                 ])
             ]));
         });
-        rows.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('添加条目', { icon: 'plus', small: true, onClick: () => edit('') })));
+        rows.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('Tambah item', { icon: 'plus', small: true, onClick: () => edit('') })));
     }
     draw();
     wrap.appendChild(rows);
@@ -442,12 +442,12 @@ function renderObjectField(label, schema, value, path, options) {
         'class': 'sbd-schema-object-head'
     }, [
         ui.E('span', { 'class': 'sbd-schema-object-title' }, label),
-        ui.E('span', { 'class': 'sbd-schema-object-hint' }, hasValue ? Object.keys(value).length + ' 项' : '未配置')
+        ui.E('span', { 'class': 'sbd-schema-object-hint' }, hasValue ? Object.keys(value).length + ' item' : 'Belum dikonfigurasi')
     ]));
     const body = ui.E('div', { 'class': 'sbd-schema-object-body' });
     details.appendChild(body);
     if (!hasValue) {
-        details.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('启用配置', {
+        details.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('Aktifkan konfigurasi', {
             icon: 'plus', small: true, onClick: () => { setPath(options.draft, path, {}); markChange(options); options.rerender(); }
         })));
     } else {
@@ -475,11 +475,11 @@ function renderObjectFields(host, schema, value, path, options) {
         const node = renderField(key, property, getPath(options.draft, path.concat(key)), path.concat(key), childOptions);
         if (complex || priority) main.push(node); else advanced.push(node);
     });
-    if (!main.length && !advanced.length) host.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, '无可编辑字段'));
+    if (!main.length && !advanced.length) host.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, 'Tidak ada kolom yang dapat diedit'));
     main.forEach(node => host.appendChild(node));
     if (advanced.length) {
         const details = ui.E('details', { 'class': 'sbd-schema-advanced' }, [
-            ui.E('summary', {}, '更多可选项（' + advanced.length + '）')
+            ui.E('summary', {}, 'Opsi lainnya (' + advanced.length + ')')
         ]);
         advanced.forEach(node => details.appendChild(node));
         host.appendChild(details);
@@ -502,7 +502,7 @@ function renderVariantObject(schema, value, path, options) {
             markChange(options);
             options.rerender();
         });
-        wrap.appendChild(ui.field('类型', select));
+        wrap.appendChild(ui.field('Jenis', select));
     }
     const body = ui.E('div', {});
     renderObjectFields(body, variant || schema, draft, path, Object.assign({}, options, {
@@ -527,10 +527,10 @@ function renderObjectArray(schema, value, path, options) {
         if (isRuleList) {
             const target = item && (item.action || item.outbound || item.rule_set || item.domain
                 || item.domain_suffix || item.ip_cidr || item.protocol || item.type);
-            return '规则 #' + (index + 1) + (target ? ' · ' + String(target) : '');
+            return 'Aturan #' + (index + 1) + (target ? ' · ' + String(target) : '');
         }
         const variant = chooseVariant(options.root, variants, item || {});
-        const type = item && item.type || variantType(options.root, variant) || '条目';
+        const type = item && item.type || variantType(options.root, variant) || 'Item';
         return type + (item && item.tag ? ' · ' + item.tag : '');
     }
     function itemSubtitle(item) {
@@ -543,7 +543,7 @@ function renderObjectArray(schema, value, path, options) {
             });
             return parts.join(' · ');
         }
-        return [item.listen_port ? '端口 ' + item.listen_port : '', item.server || '', item.path || ''].filter(Boolean).join(' · ');
+        return [item.listen_port ? 'Port ' + item.listen_port : '', item.server || '', item.path || ''].filter(Boolean).join(' · ');
     }
     function open(item, index) {
         const working = clone(item || defaultObject(options.root, variants[0], options));
@@ -568,14 +568,14 @@ function renderObjectArray(schema, value, path, options) {
                 Object.assign(working, next);
                 draw();
             });
-            host.appendChild(ui.field('类型', typeSelect));
+            host.appendChild(ui.field('Jenis', typeSelect));
         }
         host.appendChild(editorHost);
         draw();
-        ui.modal(index === undefined ? '新增条目' : '编辑条目', host, {
+        ui.modal(index === undefined ? 'Tambah item' : 'Edit item', host, {
             subtitle: index === undefined ? '' : itemTitle(working, index),
-            cancelText: '取消',
-            confirmText: index === undefined ? '添加' : '保存',
+            cancelText: 'Batal',
+            confirmText: index === undefined ? 'Tambah' : 'Simpan',
             width: '660px',
             onConfirm: () => {
                 if (index === undefined) items.push(working); else items[index] = working;
@@ -586,9 +586,9 @@ function renderObjectArray(schema, value, path, options) {
     }
     function draw() {
         rows.innerHTML = '';
-        if (!items.length) rows.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, '暂无条目'));
+        if (!items.length) rows.appendChild(ui.E('div', { 'class': 'sbd-schema-empty' }, 'Belum ada item'));
         items.forEach((item, index) => {
-            const up = ui.btn('', { icon: 'chevron', iconOnly: true, variant: 'ghost', title: '上移', disabled: index === 0, onClick: () => {
+            const up = ui.btn('', { icon: 'chevron', iconOnly: true, variant: 'ghost', title: 'Pindahkan ke atas', disabled: index === 0, onClick: () => {
                 [items[index - 1], items[index]] = [items[index], items[index - 1]]; commit(); draw();
             } });
             up.classList.add('sbd-rotate-up');
@@ -599,14 +599,14 @@ function renderObjectArray(schema, value, path, options) {
                 ].filter(Boolean)),
                 ui.E('div', { 'class': 'sbd-object-actions' }, [
                     up,
-                    ui.btn('编辑', { icon: 'edit', small: true, onClick: () => open(clone(item), index) }),
-                    ui.btn('', { icon: 'trash', iconOnly: true, variant: 'ghost', title: '删除', onClick: () => {
+                    ui.btn('Edit', { icon: 'edit', small: true, onClick: () => open(clone(item), index) }),
+                    ui.btn('', { icon: 'trash', iconOnly: true, variant: 'ghost', title: 'Hapus', onClick: () => {
                         items.splice(index, 1); commit(); draw();
                     } })
                 ])
             ]));
         });
-        rows.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('新增条目', {
+        rows.appendChild(ui.E('div', { 'class': 'sbd-schema-add' }, ui.btn('Tambah item', {
             icon: 'plus', variant: 'primary', small: true, disabled: !variants.length, onClick: () => open(undefined, undefined)
         })));
     }
@@ -666,8 +666,8 @@ function renderTopLevel(host, key, options) {
         const has = isPlainObject(getPath(options.draft, path));
         if (!has) {
             body.appendChild(ui.E('div', { 'class': 'sbd-schema-unset' }, [
-                ui.E('span', {}, '当前未启用此配置项'),
-                ui.btn('启用配置', { icon: 'plus', small: true, onClick: () => {
+                ui.E('span', {}, 'Opsi konfigurasi ini belum aktif'),
+                ui.btn('Aktifkan konfigurasi', { icon: 'plus', small: true, onClick: () => {
                     setPath(options.draft, path, {});
                     markChange(options);
                     options.rerender();

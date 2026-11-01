@@ -5,8 +5,8 @@
 'require view.singbox-dash.v70.lib.components as components';
 
 const PAGES = [
-    ['overview', '仪表盘'], ['proxies', '策略分流'], ['subscriptions', '节点与订阅'], ['connections', '活动连接'], ['trace', '链路查询'], ['rules', '规则中心'],
-    ['config', '配置中心'], ['kernel', '内核管理'], ['tools', '诊断工具']
+    ['overview', 'Dasbor'], ['proxies', 'Perutean proxy'], ['subscriptions', 'Node dan langganan'], ['connections', 'Koneksi aktif'], ['trace', 'Penelusuran rute'], ['rules', 'Pusat aturan'],
+    ['config', 'Pusat konfigurasi'], ['kernel', 'Pengelolaan kernel'], ['tools', 'Diagnostik']
 ];
 
 async function render(host, ctx) {
@@ -14,48 +14,48 @@ async function render(host, ctx) {
     const root = ui.E('div', { 'class': 'sbd-grid' });
     host.appendChild(root);
 
-    const enabledInput = ui.E('input', { type: 'checkbox', 'aria-label': '开机自启' });
+    const enabledInput = ui.E('input', { type: 'checkbox', 'aria-label': 'Mulai otomatis saat boot' });
     enabledInput.checked = String(settings.enabled) === '1';
-    const defaultSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': '默认主页' }, PAGES.map(item =>
+    const defaultSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': 'Halaman beranda default' }, PAGES.map(item =>
         ui.E('option', { value: item[0], selected: settings.default_page === item[0] ? '' : null }, item[1])
     ));
     const intervalInput = ui.E('input', {
-        'class': 'sbd-input', type: 'number', 'aria-label': '订阅更新周期（分钟）', min: '0', max: '10080', step: '1',
+        'class': 'sbd-input', type: 'number', 'aria-label': 'Interval pembaruan langganan (menit)', min: '0', max: '10080', step: '1',
         value: String(settings.update_interval || 0)
     });
-    const ebpfSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': '内核构建偏好' }, [
-        ui.E('option', { value: 'auto', selected: settings.prefer_ebpf === 'auto' ? '' : null }, '自动识别'),
-        ui.E('option', { value: 'on', selected: settings.prefer_ebpf === 'on' ? '' : null }, '优先 eBPF'),
-        ui.E('option', { value: 'off', selected: settings.prefer_ebpf === 'off' ? '' : null }, '禁用 eBPF')
+    const ebpfSelect = ui.E('select', { 'class': 'sbd-select', 'aria-label': 'Preferensi build kernel' }, [
+        ui.E('option', { value: 'auto', selected: settings.prefer_ebpf === 'auto' ? '' : null }, 'Deteksi otomatis'),
+        ui.E('option', { value: 'on', selected: settings.prefer_ebpf === 'on' ? '' : null }, 'Utamakan eBPF'),
+        ui.E('option', { value: 'off', selected: settings.prefer_ebpf === 'off' ? '' : null }, 'Nonaktifkan eBPF')
     ]);
     const proxyInput = ui.E('input', {
         'class': 'sbd-input', type: 'url', value: settings.github_proxy || '',
         placeholder: 'https://gh-proxy.example/'
     });
-    const kernelNoticeInput = ui.E('input', { type: 'checkbox', 'aria-label': '上游内核更新提醒' });
+    const kernelNoticeInput = ui.E('input', { type: 'checkbox', 'aria-label': 'Pemberitahuan pembaruan kernel upstream' });
     kernelNoticeInput.checked = String(settings.kernel_update_notice || '1') === '1';
-    const dnsFailoverInput = ui.E('input', { type: 'checkbox', 'aria-label': '自动切换 DNS' });
+    const dnsFailoverInput = ui.E('input', { type: 'checkbox', 'aria-label': 'Alih DNS otomatis' });
     dnsFailoverInput.checked = String(settings.dns_failover || '1') === '1';
     const detectedDnsPort = String(settings.dns_singbox_port_detected || '').trim();
     const dnsSingboxPortInput = ui.E('input', {
-        'class': 'sbd-input', type: 'number', 'aria-label': 'SingBox DNS 端口', min: '1', max: '65535', step: '1',
+        'class': 'sbd-input', type: 'number', 'aria-label': 'Port DNS SingBox', min: '1', max: '65535', step: '1',
         value: detectedDnsPort || String(settings.dns_singbox_port || ''),
-        placeholder: detectedDnsPort ? '自动读取，例如 5335' : '未自动读取，请手动填写'
+        placeholder: detectedDnsPort ? 'Dibaca otomatis, misalnya 5335' : 'Tidak dibaca otomatis; masukkan secara manual'
     });
     const dnsBackupPortInput = ui.E('input', {
-        'class': 'sbd-input', type: 'number', 'aria-label': '备份 DNS 服务端口', min: '1', max: '65535', step: '1',
+        'class': 'sbd-input', type: 'number', 'aria-label': 'Port layanan DNS cadangan', min: '1', max: '65535', step: '1',
         value: String(settings.dns_backup_port || settings.dns_smartdns_port || 1153),
-        placeholder: '例如 1153'
+        placeholder: 'Misalnya 1153'
     });
     const dnsFallbackServerInput = ui.E('input', {
-        'class': 'sbd-input', type: 'text', 'aria-label': '兜底 DNS 服务配置',
+        'class': 'sbd-input', type: 'text', 'aria-label': 'Konfigurasi layanan DNS fallback',
         value: settings.dns_fallback_server || '223.5.5.5',
-        placeholder: '例如 223.5.5.5'
+        placeholder: 'Misalnya 223.5.5.5'
     });
     const dnsIntervalInput = ui.E('input', {
-        'class': 'sbd-input', type: 'number', 'aria-label': 'DNS 故障检测间隔（秒）', min: '2', max: '60', step: '1',
+        'class': 'sbd-input', type: 'number', 'aria-label': 'Interval pemeriksaan kegagalan DNS (detik)', min: '2', max: '60', step: '1',
         value: String(settings.dns_guard_interval || 5),
-        placeholder: '2-60 秒'
+        placeholder: '2–60 detik'
     });
 
     function setBusy(value) {
@@ -65,15 +65,15 @@ async function render(host, ctx) {
     async function save() {
         const interval = Number(intervalInput.value);
         if (!Number.isInteger(interval) || interval < 0 || interval > 10080) {
-            return ui.notify('更新间隔需在 0 到 10080 分钟之间', 'error');
+            return ui.notify('Interval pembaruan harus antara 0 dan 10080 menit', 'error');
         }
         const proxy = proxyInput.value.trim();
         if (proxy && !/^https:\/\/[^\s]+$/.test(proxy)) {
-            return ui.notify('GitHub 加速地址需为 HTTPS 链接', 'error');
+            return ui.notify('Alamat akselerasi GitHub harus berupa tautan HTTPS', 'error');
         }
         const fallbackServer = dnsFallbackServerInput.value.trim();
         if (fallbackServer && !/^[A-Za-z0-9_.:-]+(?:#[0-9]{1,5})?$/.test(fallbackServer)) {
-            return ui.notify('兜底 DNS 格式不正确，例如 223.5.5.5 或 1.1.1.1#53', 'error');
+            return ui.notify('Format DNS fallback tidak valid, misalnya 223.5.5.5 atau 1.1.1.1#53', 'error');
         }
         setBusy(true);
         try {
@@ -93,7 +93,7 @@ async function render(host, ctx) {
             settings = result.settings;
             ctx.settings = settings;
             await ctx.refreshStatus();
-            ui.notify('设置已保存', 'success');
+            ui.notify('Pengaturan disimpan', 'success');
         } catch (error) {
             ui.notify(api.errorText(error), 'error', 7000);
         } finally {
@@ -101,44 +101,44 @@ async function render(host, ctx) {
         }
     }
 
-    const saveButton = ui.btn('保存设置', {
+    const saveButton = ui.btn('Simpan pengaturan', {
         icon: 'save', variant: 'primary', onClick: save
     });
-    root.appendChild(ui.card('服务与面板选项', [
-        ui.row('开机自启', '系统启动时自动拉起 sing-box', ui.E('label', { 'class': 'sbd-switch' }, [
+    root.appendChild(ui.card('Opsi layanan dan panel', [
+        ui.row('Mulai otomatis saat boot', 'Mulai sing-box secara otomatis saat sistem dinyalakan', ui.E('label', { 'class': 'sbd-switch' }, [
             enabledInput,
             ui.E('span')
         ]), { icon: 'play', color: 'green' }),
-        ui.row('默认主页', '进入面板时打开的标签页', defaultSelect, { icon: 'overview', color: 'blue' }),
-        ui.row('订阅更新周期', '单位：分钟（0 为关闭）', intervalInput, { icon: 'clock', color: 'orange' })
+        ui.row('Halaman beranda default', 'Tab yang dibuka saat memasuki panel', defaultSelect, { icon: 'overview', color: 'blue' }),
+        ui.row('Interval pembaruan langganan', 'Satuan: menit (0 untuk menonaktifkan)', intervalInput, { icon: 'clock', color: 'orange' })
     ], { className: 'sbd-span-6', icon: 'sliders', iconTone: 'blue' }));
 
-    root.appendChild(ui.card('内核与下载代理', [
-        ui.row('内核构建偏好', '自动模式下按系统内核能力匹配', ebpfSelect, { icon: 'zap', color: 'purple' }),
-        ui.row('上游内核更新提醒', '仅在打开面板时检查，不后台轮询', ui.E('label', { 'class': 'sbd-switch' }, [
+    root.appendChild(ui.card('Kernel dan proxy unduhan', [
+        ui.row('Preferensi build kernel', 'Dalam mode otomatis, pencocokan didasarkan pada kemampuan kernel sistem', ebpfSelect, { icon: 'zap', color: 'purple' }),
+        ui.row('Pemberitahuan pembaruan kernel upstream', 'Pemeriksaan hanya dilakukan saat panel dibuka, bukan melalui polling latar belakang', ui.E('label', { 'class': 'sbd-switch' }, [
             kernelNoticeInput,
             ui.E('span')
         ]), { icon: 'bell', color: 'orange' }),
-        ui.field('GitHub 下载加速', proxyInput, '填写 HTTPS 代理前缀或 {url} 模板')
+        ui.field('Akselerasi unduhan GitHub', proxyInput, 'Masukkan awalan proxy HTTPS atau templat {url}')
     ], { className: 'sbd-span-6', icon: 'kernel', iconTone: 'purple' }));
 
     const dnsRows = [
-        ui.row('自动切换DNS', '', ui.E('label', { 'class': 'sbd-switch' }, [
+        ui.row('Alih DNS otomatis', '', ui.E('label', { 'class': 'sbd-switch' }, [
             dnsFailoverInput,
             ui.E('span')
         ]), { icon: 'shield', color: 'green' }),
-        ui.row('SingBox DNS 端口', '', dnsSingboxPortInput, { icon: 'config', color: 'blue' }),
-        ui.row('备份DNS服务端口', '', dnsBackupPortInput, { icon: 'network', color: 'orange' }),
-        ui.row('兜底DNS服务配置', '', dnsFallbackServerInput, { icon: 'globe', color: 'green' }),
-        ui.row('检测间隔', '', dnsIntervalInput, { icon: 'clock', color: 'purple' })
+        ui.row('Port DNS SingBox', '', dnsSingboxPortInput, { icon: 'config', color: 'blue' }),
+        ui.row('Port layanan DNS cadangan', '', dnsBackupPortInput, { icon: 'network', color: 'orange' }),
+        ui.row('Konfigurasi layanan DNS fallback', '', dnsFallbackServerInput, { icon: 'globe', color: 'green' }),
+        ui.row('Interval pemeriksaan', '', dnsIntervalInput, { icon: 'clock', color: 'purple' })
     ];
-    root.appendChild(ui.card('DNS 故障转移', dnsRows,
+    root.appendChild(ui.card('Failover DNS', dnsRows,
         { className: 'sbd-span-6 sbd-dns-failover-card', icon: 'link', iconTone: 'green' }));
 
     root.appendChild(ui.card('', [
         ui.E('div', { 'class': 'sbd-btn-row' }, [
             saveButton,
-            ui.btn('重置表单', {
+            ui.btn('Atur ulang formulir', {
                 icon: 'refresh',
                 onClick: async () => {
                     try {
@@ -155,6 +155,5 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
 
 

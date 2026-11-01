@@ -27,11 +27,11 @@ function hopIcon(hop) {
 }
 
 function hopKindName(hop) {
-    if (hop.kind === 'group') return '策略组';
-    if (hop.kind === 'node') return '节点';
-    if (hop.kind === 'direct') return '直连';
-    if (hop.kind === 'reject') return '阻断';
-    return '最终出站';
+    if (hop.kind === 'group') return 'Grup kebijakan';
+    if (hop.kind === 'node') return 'Node';
+    if (hop.kind === 'direct') return 'Langsung';
+    if (hop.kind === 'reject') return 'Blokir';
+    return 'Outbound akhir';
 }
 
 function finalTone(name) {
@@ -47,22 +47,22 @@ async function render(host, ctx) {
 
     const input = ui.E('input', {
         type: 'text', 'class': 'sbd-input sbd-trace-input',
-        placeholder: '输入 IP、域名或 URL', autocomplete: 'off', spellcheck: 'false'
+        placeholder: 'Masukkan IP, domain, atau URL', autocomplete: 'off', spellcheck: 'false'
     });
-    const submit = ui.btn('查询链路', { icon: 'search', variant: 'primary', type: 'submit' });
+    const submit = ui.btn('Telusuri rute', { icon: 'search', variant: 'primary', type: 'submit' });
     const form = ui.E('form', { 'class': 'sbd-trace-form' }, [input, submit]);
     const results = ui.E('div', { 'class': 'sbd-trace-results' });
     let busy = false;
 
-    root.appendChild(ui.card('规则链路查询', [
+    root.appendChild(ui.card('Penelusuran rute aturan', [
         form,
-        ui.note('按 TCP/443 模拟规则匹配；不模拟客户端来源、进程条件和 DNS 解析结果。', 'info')
+        ui.note('Simulasikan pencocokan aturan dengan TCP/443; sumber klien, kondisi proses, dan hasil resolusi DNS tidak disimulasikan.', 'info')
     ], { icon: 'link', iconTone: 'blue' }));
     root.appendChild(results);
 
     function renderEmpty(message) {
         results.innerHTML = '';
-        results.appendChild(ui.empty(message || '输入 IP 或域名后查询最终出站'));
+        results.appendChild(ui.empty(message || 'Masukkan IP atau domain untuk menelusuri outbound akhir'));
     }
 
     function chainCard(result) {
@@ -76,13 +76,13 @@ async function render(host, ctx) {
                     ui.E('strong', { 'class': 'sbd-trace-hop-name' }, nameWithFlags(hop.name)),
                     ui.E('span', { 'class': 'sbd-trace-hop-kind' }, hopKindName(hop) + ' · ' + hop.type)
                 ]),
-                index === chain.length - 1 ? ui.badge('出站', finalTone(hop.name)) : null
+                index === chain.length - 1 ? ui.badge('Outbound', finalTone(hop.name)) : null
             ].filter(Boolean));
         });
-        return ui.card('最终出站链路', [
+        return ui.card('Rute outbound akhir', [
             ui.E('div', { 'class': 'sbd-trace-chain' }, hops),
             ui.E('div', { 'class': 'sbd-trace-final' }, [
-                ui.E('span', {}, '最终出站'),
+                ui.E('span', {}, 'Outbound akhir'),
                 ui.E('strong', {}, nameWithFlags(result.final || '—'))
             ])
         ], { icon: 'outbound', iconTone: 'green', className: 'sbd-trace-result-card' });
@@ -92,13 +92,13 @@ async function render(host, ctx) {
         const matched = result.matched || {};
         const detail = String(matched.detail || '').replace(/^match rules\.\[\d+\]:\s*/, '');
         const meta = [];
-        if (matched.index != null) meta.push('第 ' + (Number(matched.index) + 1) + ' 条规则');
-        if (matched.proxy) meta.push('目标 ' + matched.proxy);
-        meta.push('模式 ' + ({ rule: '规则', global: '全局', direct: '直连' }[result.mode] || result.mode || '规则'));
+        if (matched.index != null) meta.push('Aturan ke-' + (Number(matched.index) + 1));
+        if (matched.proxy) meta.push('Target ' + matched.proxy);
+        meta.push('Mode ' + ({ rule: 'Aturan', global: 'Global', direct: 'Langsung' }[result.mode] || result.mode || 'Aturan'));
         const notes = result.skipped
-            ? '另有 ' + result.skipped + ' 条依赖来源或进程条件的规则未参与匹配'
+            ? result.skipped + ' aturan lain yang bergantung pada sumber atau kondisi proses tidak disertakan dalam pencocokan'
             : '';
-        return ui.card('命中规则', [
+        return ui.card('Aturan yang cocok', [
             ui.E('div', { 'class': 'sbd-trace-rule' }, [
                 ui.E('div', { 'class': 'sbd-trace-rule-head' }, [
                     ui.badge(ruleTypeName(matched.type), 'blue'),
@@ -116,15 +116,15 @@ async function render(host, ctx) {
         const query = input.value.trim();
         if (!query) {
             input.focus();
-            ui.notify('请输入 IP 或域名', 'warning');
+            ui.notify('Masukkan IP atau domain', 'warning');
             return;
         }
         busy = true;
         submit.disabled = true;
         const label = submit.querySelector('span:not(.sbd-icon)');
-        if (label) label.textContent = '查询中…';
+        if (label) label.textContent = 'Menelusuri…';
         results.innerHTML = '';
-        results.appendChild(ui.card('正在匹配链路', [ui.empty('正在读取规则并解析代理组…')], {
+        results.appendChild(ui.card('Mencocokkan rute', [ui.empty('Membaca aturan dan menguraikan grup proxy…')], {
             icon: 'link', iconTone: 'blue', className: 'sbd-trace-loading'
         }));
         try {
@@ -134,14 +134,14 @@ async function render(host, ctx) {
             results.appendChild(chainCard(result));
         } catch (error) {
             results.innerHTML = '';
-            results.appendChild(ui.card('链路查询失败', [
+            results.appendChild(ui.card('Penelusuran rute gagal', [
                 ui.note(api.errorText(error), 'bad'),
-                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重试', { icon: 'refresh', onClick: run }))
+                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Coba lagi', { icon: 'refresh', onClick: run }))
             ], { icon: 'info', iconTone: 'red' }));
         } finally {
             busy = false;
             submit.disabled = false;
-            if (label) label.textContent = '查询链路';
+            if (label) label.textContent = 'Telusuri rute';
         }
     }
 
@@ -159,7 +159,6 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
 
 
 

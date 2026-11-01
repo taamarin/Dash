@@ -4,20 +4,20 @@
 'require view.singbox-dash.v70.lib.api as api';
 
 const TYPE_NAMES = {
-    Selector: '手动选择', URLTest: '自动测速', Fallback: '故障转移',
-    LoadBalance: '负载均衡', Smart: '智能选择', Relay: '链式代理',
-    Direct: '直连', Reject: '阻断'
+    Selector: 'Pilih manual', URLTest: 'Uji otomatis', Fallback: 'Failover',
+    LoadBalance: 'Penyeimbang beban', Smart: 'Pilihan cerdas', Relay: 'Proxy berantai',
+    Direct: 'Langsung', Reject: 'Blokir'
 };
 const GROUP_TYPES = new Set(['Selector', 'URLTest', 'Fallback', 'LoadBalance', 'Smart', 'Relay']);
 const GROUP_COLORS = ['orange', 'blue', 'green', 'purple', 'red'];
 const TEST_URL = 'http://www.gstatic.com/generate_204';
 const TEST_TIMEOUT = 4000;
-const MODE_OPTIONS = [['rule', '规则'], ['global', '全局'], ['direct', '直连']];
+const MODE_OPTIONS = [['rule', 'Aturan'], ['global', 'Global'], ['direct', 'Langsung']];
 const FOLDER_LABELS = {
-    folder_all: '全部',
-    folder_uncategorized: '未分类',
-    folder_builtin_strategy: '策略组',
-    folder_builtin_nodes: '节点组'
+    folder_all: 'Semua',
+    folder_uncategorized: 'Tanpa kategori',
+    folder_builtin_strategy: 'Grup kebijakan',
+    folder_builtin_nodes: 'Grup node'
 };
 const VIRTUAL_UNCAT = '__uncat__';
 let sharedData = null;
@@ -28,7 +28,7 @@ const sharedDelays = Object.create(null);
 
 function delayText(value) {
     const number = Number(value);
-    if (!Number.isFinite(number) || number <= 0) return '超时';
+    if (!Number.isFinite(number) || number <= 0) return 'Waktu habis';
     return number + ' ms';
 }
 
@@ -58,9 +58,9 @@ function historyDelay(node) {
 
 function modeName(value) {
     const mode = String(value || 'rule').toLowerCase();
-    if (mode === 'global') return '全局';
-    if (mode === 'direct') return '直连';
-    return '规则';
+    if (mode === 'global') return 'Global';
+    if (mode === 'direct') return 'Langsung';
+    return 'Aturan';
 }
 
 function groupIcon(name, type) {
@@ -108,23 +108,23 @@ async function render(host, ctx) {
 
     const pillsHost = ui.E('div', { 'class': 'sbd-filter-pills' });
     const modeSwitch = ui.E('div', {
-        'class': 'sbd-mode-switch', role: 'group', 'aria-label': '运行模式'
+        'class': 'sbd-mode-switch', role: 'group', 'aria-label': 'Mode operasi'
     });
     const modeButtons = Object.create(null);
     MODE_OPTIONS.forEach(item => {
         const button = ui.E('button', {
-            type: 'button', 'data-mode': item[0], title: '切换到' + item[1] + '模式',
+            type: 'button', 'data-mode': item[0], title: 'Beralih ke mode ' + item[1],
             click: () => setMode(item[0])
         }, item[1]);
         modeButtons[item[0]] = button;
         modeSwitch.appendChild(button);
     });
-    const testAllButton = ui.btn('全部测速', {
-        icon: 'zap', small: true, title: '自动测试全部策略组', onClick: () => testAllGroups()
+    const testAllButton = ui.btn('Uji semua', {
+        icon: 'zap', small: true, title: 'Uji semua grup kebijakan secara otomatis', onClick: () => testAllGroups()
     });
     const testAllLabel = testAllButton.querySelector('span:not(.sbd-icon)');
     const refreshButton = ui.btn('', {
-        icon: 'refresh', iconOnly: true, title: '刷新策略组', onClick: () => load()
+        icon: 'refresh', iconOnly: true, title: 'Segarkan grup kebijakan', onClick: () => load()
     });
     const filterBar = ui.E('div', { 'class': 'sbd-filter-bar' }, [
         pillsHost,
@@ -139,7 +139,7 @@ async function render(host, ctx) {
     const searchInput = ui.E('input', {
         type: 'search',
         'class': 'sbd-input',
-        placeholder: '搜索策略组或节点名称...',
+        placeholder: 'Cari nama grup kebijakan atau node...',
         input: event => { filter = event.target.value.trim().toLowerCase(); paint(); }
     });
     root.appendChild(ui.E('div', { 'class': 'sbd-glass-search-bar' }, [
@@ -167,10 +167,10 @@ async function render(host, ctx) {
             updateModeSwitch();
             if (data) paint();
             await load({ silent: true });
-            ui.notify('已切换到' + modeName(mode) + '模式，zashboard 已同步', 'success');
+            ui.notify('Beralih ke mode ' + modeName(mode) + '; zashboard telah disinkronkan', 'success');
         } catch (error) {
             updateModeSwitch();
-            ui.notify('模式切换失败：' + api.errorText(error), 'error', 7000);
+            ui.notify('Gagal mengalihkan mode: ' + api.errorText(error), 'error', 7000);
         } finally {
             modeChanging = false;
             Object.values(modeButtons).forEach(button => { button.disabled = false; });
@@ -275,7 +275,7 @@ async function render(host, ctx) {
     }
 
     function folderLabel(name) {
-        return FOLDER_LABELS[name] || name || '分类';
+        return FOLDER_LABELS[name] || name || 'Kategori';
     }
 
     function isNodeOnly(name, proxies, groupNames) {
@@ -327,7 +327,7 @@ async function render(host, ctx) {
             });
             if (!matched) uncategorized.add(group.name);
         });
-        const items = [{ id: 'ALL', label: '全部', count: groups.length, icon: 'rules' }]
+        const items = [{ id: 'ALL', label: 'Semua', count: groups.length, icon: 'rules' }]
             .concat(folders.map(folder => ({
                 id: folder.id, label: folderLabel(folder.name),
                 count: sets.get(folder.id).size, icon: 'folder'
@@ -341,7 +341,7 @@ async function render(host, ctx) {
 
     function renderFilterPills(folderView) {
         pillsHost.innerHTML = '';
-        const sourceTip = folderSource === 'zashboard' ? '分类来自 zashboard 配置' : '分类按代理关系自动生成';
+        const sourceTip = folderSource === 'zashboard' ? 'Kategori berasal dari konfigurasi zashboard' : 'Kategori dibuat otomatis berdasarkan hubungan proxy';
         folderView.items.forEach(item => {
             const button = ui.E('button', {
                 type: 'button',
@@ -381,9 +381,9 @@ async function render(host, ctx) {
         function updateNow(selected) {
             group.now = selected;
             nowText.innerHTML = '';
-            nowText.appendChild(nameBadge(selected || '未选择', /direct|直连/i.test(selected || '') ? 'green' : 'orange'));
+            nowText.appendChild(nameBadge(selected || 'Belum dipilih', /direct|直连/i.test(selected || '') ? 'green' : 'orange'));
             nowText.appendChild(ui.badge(typeText, 'blue'));
-            nowText.appendChild(ui.E('span', {}, visible.length + ' 节点'));
+            nowText.appendChild(ui.E('span', {}, visible.length + ' node'));
         }
         updateNow(group.now);
 
@@ -408,8 +408,8 @@ async function render(host, ctx) {
                 type: 'button',
                 'class': delayClass(delay),
                 'data-delay-node': node.name,
-                title: '点击测试节点延迟',
-                'aria-label': '测试 ' + node.name + ' 的延迟',
+                title: 'Klik untuk menguji latensi node',
+                'aria-label': 'Uji latensi ' + node.name,
                 click: async event => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -439,7 +439,7 @@ async function render(host, ctx) {
                     if (group.now === node.name) return;
                     try {
                         await api.clash('PUT', '/proxies/' + encodeURIComponent(group.name), { name: node.name });
-                        ui.notify('已切换至 ' + node.name, 'success');
+                        ui.notify('Beralih ke ' + node.name, 'success');
                         updateNow(node.name);
                         nodeList.querySelectorAll('.sbd-node').forEach(row => {
                             const selected = row.getAttribute('data-node') === node.name;
@@ -513,7 +513,7 @@ async function render(host, ctx) {
                 applyDelay(name, Number.isFinite(value) ? value : 0);
             });
         } catch (error) {
-            if (manual) ui.notify('策略组测速失败：' + api.errorText(error), 'error', 6000);
+            if (manual) ui.notify('Gagal menguji grup kebijakan: ' + api.errorText(error), 'error', 6000);
             (group.all || []).forEach(name => {
                 if (delays[name] === undefined) {
                     list.querySelectorAll('[data-delay-node]').forEach(node => {
@@ -545,17 +545,17 @@ async function render(host, ctx) {
         const groups = groupsFrom(data).filter(group => group.name !== 'GLOBAL');
         if (!groups.length) return;
         testAllButton.disabled = true;
-        if (testAllLabel) testAllLabel.textContent = '测速中…';
+        if (testAllLabel) testAllLabel.textContent = 'Menguji…';
         let finished = 0;
         try {
             await runPool(groups, 4, async group => {
                 await testGroup(group, true);
                 finished++;
             });
-            ui.notify('已完成 ' + finished + ' 个策略组测速', 'success');
+            ui.notify('Pengujian ' + finished + ' grup kebijakan selesai', 'success');
         } finally {
             testAllButton.disabled = false;
-            if (testAllLabel) testAllLabel.textContent = '全部测速';
+            if (testAllLabel) testAllLabel.textContent = 'Uji semua';
         }
     }
 
@@ -568,9 +568,9 @@ async function render(host, ctx) {
         });
         list.innerHTML = '';
         if (error) {
-            list.appendChild(ui.card('无法读取策略分流', [
+            list.appendChild(ui.card('Tidak dapat membaca perutean proxy', [
                 ui.note(error, 'bad'),
-                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重试', { icon: 'refresh', onClick: load }))
+                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Coba lagi', { icon: 'refresh', onClick: load }))
             ], { className: 'sbd-proxy-grid-full' }));
             return;
         }
@@ -582,7 +582,7 @@ async function render(host, ctx) {
         if (!folderView.items.some(item => item.id === activeCategory)) activeCategory = 'ALL';
         renderFilterPills(folderView);
         if (!groups.length) {
-            list.appendChild(ui.empty('当前配置无可管理的策略组'));
+            list.appendChild(ui.empty('Tidak ada grup kebijakan yang dapat dikelola dalam konfigurasi saat ini'));
             return;
         }
         const selectedNames = activeCategory === 'ALL' ? null : (folderView.sets.get(activeCategory) || new Set());
@@ -591,7 +591,7 @@ async function render(host, ctx) {
             const node = groupNode(proxies, group, groups.indexOf(group), false);
             if (node) list.appendChild(node);
         });
-        if (!list.childNodes.length) list.appendChild(ui.empty('未找到匹配的节点'));
+        if (!list.childNodes.length) list.appendChild(ui.empty('Tidak ada node yang cocok'));
         window.requestAnimationFrame(() => scrollState.forEach(item => { item[0].scrollTop = item[1]; }));
     }
 
@@ -605,9 +605,9 @@ async function render(host, ctx) {
                 ]),
                 ui.E('span', { 'class': 'sbd-proxy-skeleton-action' })
             ])));
-        list.appendChild(ui.card('正在读取策略组', [
+        list.appendChild(ui.card('Memuat grup kebijakan', [
             skeleton,
-            ui.note('正在连接 Clash API，通常需要几秒钟。', 'info')
+            ui.note('Menghubungkan ke Clash API; biasanya hanya perlu beberapa detik.', 'info')
         ], { icon: 'proxies', iconTone: 'blue', className: 'sbd-proxy-grid-full' }));
     }
 
@@ -616,13 +616,13 @@ async function render(host, ctx) {
         const status = ctx.status || {};
         const apiInfo = status.api || {};
         if (!status.running) {
-            error = 'sing-box 未运行，无法读取策略组';
+            error = 'sing-box tidak berjalan, grup kebijakan tidak dapat dibaca';
             data = null;
             paint();
             return;
         }
         if (apiInfo.valid === false || !apiInfo.port) {
-            error = apiInfo.error || '当前配置中未启用 Clash API';
+            error = apiInfo.error || 'Clash API tidak diaktifkan dalam konfigurasi saat ini';
             data = null;
             paint();
             return;
@@ -648,7 +648,7 @@ async function render(host, ctx) {
                 proxyResult = await Promise.race([
                     api.clash('GET', '/proxies'),
                     new Promise((_, reject) => window.setTimeout(
-                        () => reject(new Error('读取策略组超时，请重试')), 8000))
+                        () => reject(new Error('Waktu membaca grup kebijakan habis; coba lagi')), 8000))
                 ]);
             } catch (reason) {
                 proxyResult = null;
@@ -702,6 +702,5 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
 
 

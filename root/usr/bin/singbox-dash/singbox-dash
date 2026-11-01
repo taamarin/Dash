@@ -3,7 +3,7 @@ SOCKET=/var/run/singbox-dash-manager.sock
 SERVICE=/etc/init.d/singbox-dash-manager
 
 if [ "$#" -eq 0 ] || [ -z "$1" ]; then
-    printf '%s\n' '{"ok":false,"error":"缺少操作命令"}'
+    printf '%s\n' '{"ok":false,"error":"Perintah tindakan tidak ada"}'
     exit 2
 fi
 

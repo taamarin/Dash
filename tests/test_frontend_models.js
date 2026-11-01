@@ -36,7 +36,7 @@ assert.equal(JSON.stringify(rules.simpleRule(direct)), JSON.stringify({
     field: 'domain_suffix', values: ['openai.com'], action: 'direct', outbound: ''
 }));
 assert.strictEqual(rules.categoryOf(direct, {}), 'direct');
-assert.strictEqual(rules.targetLabel(direct, {}), '直连');
+assert.strictEqual(rules.targetLabel(direct, {}), 'Langsung');
 assert.strictEqual(rules.isCatchAll({ action: 'reject' }), true);
 let invalidPortRejected = false;
 try { rules.validateValues('port', '0'); } catch (_) { invalidPortRejected = true; }

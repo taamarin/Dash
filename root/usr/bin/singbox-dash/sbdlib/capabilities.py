@@ -29,8 +29,8 @@ class CapabilityMixin:
                     'shared_data_plane': shared_data_plane,
                     'summary': '', 'counts': {}, 'issues': [{
                         'severity': 'fail', 'status': 'FAIL', 'scope': 'runner',
-                        'requirement': 'required', 'name': 'eBPF 预检命令执行失败',
-                        'title': '内核文件不存在', 'advice': '请先安装内核再检测 eBPF。',
+                        'requirement': 'required', 'name': 'Eksekusi perintah prapemeriksaan eBPF gagal',
+                        'title': 'File kernel tidak ditemukan', 'advice': 'Pasang kernel sebelum memeriksa eBPF.',
                         'detail': ''
                     }], 'raw': ''
                 }
@@ -52,9 +52,9 @@ class CapabilityMixin:
                     'summary': '', 'counts': {}, 'issues': [{
                         'severity': 'fail', 'status': 'FAIL', 'scope': 'runner',
                         'requirement': 'required',
-                        'name': 'eBPF 预检命令执行失败',
-                        'title': 'eBPF 预检命令执行失败',
-                        'advice': '请检查核心文件、Root 权限和内核日志。',
+                        'name': 'Eksekusi perintah prapemeriksaan eBPF gagal',
+                        'title': 'Eksekusi perintah prapemeriksaan eBPF gagal',
+                        'advice': 'Periksa file inti, hak akses root, dan log kernel.',
                         'detail': clean_error(exc)
                     }], 'raw': clean_error(exc)
                 }
@@ -78,17 +78,17 @@ class CapabilityMixin:
             except ValueError:
                 base['issues'] = [{
                     'severity': 'fail', 'status': 'FAIL', 'scope': 'report',
-                    'requirement': 'required', 'name': 'eBPF JSON 诊断报告无效',
-                    'title': '无法读取 eBPF 诊断报告',
-                    'advice': '请升级到支持 tools ebpf status --json 的 sing-box 内核。',
+                    'requirement': 'required', 'name': 'Laporan diagnostik JSON eBPF tidak valid',
+                    'title': 'Tidak dapat membaca laporan diagnostik eBPF',
+                    'advice': 'Tingkatkan kernel sing-box ke versi yang mendukung tools ebpf status --json.',
                     'detail': raw[-800:]
                 }]
                 return base
             if not isinstance(report, dict):
                 base['issues'] = [{
                     'severity': 'fail', 'status': 'FAIL', 'scope': 'report',
-                    'requirement': 'required', 'name': 'eBPF JSON 诊断报告无效',
-                    'title': 'eBPF 诊断报告格式错误', 'advice': '请更换或升级 sing-box 内核。',
+                    'requirement': 'required', 'name': 'Laporan diagnostik JSON eBPF tidak valid',
+                    'title': 'Format laporan diagnostik eBPF tidak valid', 'advice': 'Ganti atau tingkatkan kernel sing-box.',
                     'detail': raw[-800:]
                 }]
                 return base
@@ -115,7 +115,7 @@ class CapabilityMixin:
                     status = 'UNKNOWN'
                 if status == 'PASS':
                     continue
-                feature = str(item.get('feature') or item.get('name') or 'eBPF 检查项')
+                feature = str(item.get('feature') or item.get('name') or 'Pemeriksaan eBPF')
                 issues.append({
                     'severity': status.lower(),
                     'status': status,
@@ -125,9 +125,9 @@ class CapabilityMixin:
                     'reason': str(item.get('reason') or ''),
                     'detail': str(item.get('detail') or '')[:1000],
                     'title': feature,
-                    'advice': ('该必需能力未通过，当前模式不能使用。'
+                    'advice': ('Kemampuan wajib ini tidak lulus; mode saat ini tidak dapat digunakan.'
                                if status in ('FAIL', 'UNKNOWN')
-                               else '该问题需启动时继续验证，不能视为已确认可用。')
+                               else 'Masalah ini harus diverifikasi saat mulai dan belum dapat dianggap tersedia.')
                 })
 
             valid = (
@@ -145,9 +145,9 @@ class CapabilityMixin:
             if not valid:
                 issues.append({
                     'severity': 'fail', 'status': 'FAIL', 'scope': 'report',
-                    'requirement': 'required', 'name': 'eBPF 诊断报告未完成',
-                    'title': 'eBPF 能力检测未完成',
-                    'advice': '当前模式不能标记为可用，请根据技术详情修复后重新检测。',
+                    'requirement': 'required', 'name': 'Laporan diagnostik eBPF belum lengkap',
+                    'title': 'Pemeriksaan kemampuan eBPF belum selesai',
+                    'advice': 'Mode saat ini tidak dapat ditandai tersedia. Perbaiki masalah berdasarkan detail teknis, lalu periksa kembali.',
                     'detail': ('exit=%d result=%s preflight=%s mode=%s local=%s shared=%s'
                                % (returncode, result or '-', bool(report.get('preflight')),
                                   mode or '-', local_plane or '-', shared_plane or '-'))
@@ -171,26 +171,26 @@ class CapabilityMixin:
             if result == 'preflight_passed' and not report.get('exact_object_load'):
                 issues.append({
                     'severity': 'unknown', 'status': 'UNKNOWN', 'scope': 'ebpf',
-                    'requirement': 'required', 'name': '实际 eBPF 程序对象未加载',
-                    'title': '未能加载实际 eBPF 程序对象',
-                    'advice': '当前模式不能标记为可用，请升级内核后重新检测。',
+                    'requirement': 'required', 'name': 'Objek program eBPF yang sebenarnya tidak dimuat',
+                    'title': 'Gagal memuat objek program eBPF yang sebenarnya',
+                    'advice': 'Mode saat ini tidak dapat ditandai tersedia. Tingkatkan kernel, lalu periksa kembali.',
                     'detail': 'exact_object_load=false。'
                 })
             if result == 'unsupported' and not issues:
                 issues.append({
                     'severity': 'fail', 'status': 'FAIL', 'scope': 'ebpf',
-                    'requirement': 'required', 'name': 'eBPF 能力不支持',
-                    'title': '当前内核缺少必需 eBPF 能力',
-                    'advice': '请升级内核，或改用 TUN / TProxy / Redirect 模式。',
-                    'detail': 'sing-box 返回 unsupported。'
+                    'requirement': 'required', 'name': 'Kemampuan eBPF tidak didukung',
+                    'title': 'Kernel saat ini tidak memiliki kemampuan eBPF yang diperlukan',
+                    'advice': 'Tingkatkan kernel atau gunakan mode TUN / TProxy / Redirect.',
+                    'detail': 'sing-box mengembalikan unsupported.'
                 })
             if not supported and not issues:
                 issues.append({
                     'severity': 'unknown', 'status': 'UNKNOWN', 'scope': 'ebpf',
-                    'requirement': 'required', 'name': 'eBPF 能力未确认',
-                    'title': 'eBPF 能力未确认',
-                    'advice': '当前模式不能标记为可用，请修复后重新检测。',
-                    'detail': '预检结果未满足“可用”的完整条件。'
+                    'requirement': 'required', 'name': 'Kemampuan eBPF belum dikonfirmasi',
+                    'title': 'Kemampuan eBPF belum dikonfirmasi',
+                    'advice': 'Mode saat ini tidak dapat ditandai tersedia. Perbaiki masalah, lalu periksa kembali.',
+                    'detail': 'Hasil prapemeriksaan belum memenuhi seluruh persyaratan untuk dinyatakan tersedia.'
                 })
             base.update({
                 'supported': supported, 'result': result,
@@ -218,7 +218,7 @@ class CapabilityMixin:
             try:
                 binary = self.binary_key()
             except OSError:
-                return {'plane': '', 'dialect': '', 'reason': '内核未安装'}
+                return {'plane': '', 'dialect': '', 'reason': 'Kernel belum dipasang'}
             cached = self.cache_get('ebpf-local-plane.json', key=binary)
             if isinstance(cached, dict) and cached.get('plane') in ('tc', 'socket_assign'):
                 return cached
@@ -226,7 +226,7 @@ class CapabilityMixin:
                 result = self.run([self.bin, 'tools', 'ebpf', 'status', '--help'],
                                   timeout=8, check=False)
             except Failure as exc:
-                return {'plane': '', 'dialect': '', 'reason': '无法读取内核 eBPF 能力：' + clean_error(exc)}
+                return {'plane': '', 'dialect': '', 'reason': 'Tidak dapat membaca kemampuan eBPF kernel: ' + clean_error(exc)}
             output = (result.stdout + b'\n' + result.stderr).decode('utf-8', 'replace')
             help_line = next((line for line in output.splitlines()
                               if '--local-data-plane' in line), '')
@@ -237,7 +237,7 @@ class CapabilityMixin:
                 plane = 'tc'
             if not plane:
                 return {'plane': '', 'dialect': '', 'reason':
-                        '无法识别当前内核版本的 eBPF 本地数据面参数'}
+                        'Tidak dapat mengenali parameter data plane lokal eBPF pada versi kernel saat ini'}
             value = {
                 'plane': plane,
                 'dialect': 'socket_assign' if plane == 'socket_assign' else 'legacy_tc',
@@ -266,7 +266,7 @@ class CapabilityMixin:
                     device = Path('/dev/net/tun')
                 try:
                     if device.exists() and not device.is_char_device():
-                        return {'ok': False, 'created': False, 'reason': '/dev/net/tun 存在但不是字符设备'}
+                        return {'ok': False, 'created': False, 'reason': '/dev/net/tun ada tetapi bukan perangkat karakter'}
                 except OSError:
                     pass
                 return {'ok': True, 'created': False, 'reason': '', 'device': str(device),
@@ -278,21 +278,21 @@ class CapabilityMixin:
                 info = self.tun_probe()
             if not info['kernel_support']:
                 return {'ok': False, 'created': False,
-                        'reason': '内核没有检测到 TUN 支持，请安装 kmod-tun 或使用支持 TUN 的内核'}
+                        'reason': 'Dukungan TUN tidak terdeteksi di kernel; pasang kmod-tun atau gunakan kernel yang mendukung TUN'}
             device = self.root / 'dev/net/tun'
             try:
                 device.parent.mkdir(parents=True, exist_ok=True)
                 result = self.run(['mknod', str(device), 'c', '10', '200'], timeout=10, check=False)
                 if result is None or result.returncode:
-                    detail = clean_error((result.stderr or result.stdout).decode('utf-8', 'replace')) if result else 'mknod 不可用'
-                    return {'ok': False, 'created': False, 'reason': '无法创建 /dev/net/tun：' + detail}
+                    detail = clean_error((result.stderr or result.stdout).decode('utf-8', 'replace')) if result else 'mknod tidak tersedia'
+                    return {'ok': False, 'created': False, 'reason': 'Tidak dapat membuat /dev/net/tun: ' + detail}
                 self.run(['chmod', '666', str(device)], timeout=5, check=False)
                 os.chmod(device, 0o666)
             except OSError as exc:
-                return {'ok': False, 'created': False, 'reason': '无法创建 /dev/net/tun：' + clean_error(exc)}
+                return {'ok': False, 'created': False, 'reason': 'Tidak dapat membuat /dev/net/tun: ' + clean_error(exc)}
             verified = self.tun_probe()
             if not verified['device_node']:
-                return {'ok': False, 'created': False, 'reason': '/dev/net/tun 创建后仍未检测到'}
+                return {'ok': False, 'created': False, 'reason': '/dev/net/tun tetap tidak terdeteksi setelah dibuat'}
             return {'ok': True, 'created': True, 'reason': '', 'device': str(device),
                     'kernel_support': True}
 
@@ -366,7 +366,7 @@ class CapabilityMixin:
             return key, tun_info
 
     def mode_capabilities_unchecked(self, reason=''):
-            reason = reason or '尚未检测设备能力，请点击“重新检测”'
+            reason = reason or 'Kemampuan perangkat belum diperiksa. Klik “Periksa kembali”.'
             def item():
                 return {'available': False, 'reason': reason}
             return {
@@ -417,7 +417,7 @@ class CapabilityMixin:
                            and saved_binary.get('size') == binary.get('size'))
             if not same_binary:
                 result = self.mode_capabilities_unchecked(
-                    '内核已更新，请点击“重新检测”更新设备能力')
+                    'Kernel diperbarui. Klik “Periksa kembali” untuk memperbarui kemampuan perangkat.')
                 result = self.annotate_runtime_evidence(result)
                 self._mode_capabilities_snapshot_cache = copy.deepcopy(result)
                 return result
@@ -428,9 +428,9 @@ class CapabilityMixin:
             result['checked_at'] = int(raw.get('time') or 0)
             result['stale'] = current_key != saved_key
             result['needs_check'] = bool(result['stale'])
-            result['snapshot_reason'] = ('运行环境发生变化，当前显示上次检测结果；'
-                                         '可点击“重新检测”更新'
-                                         if result['stale'] else '使用上次检测结果')
+            result['snapshot_reason'] = ('Lingkungan runtime berubah; hasil pemeriksaan sebelumnya ditampilkan. '
+                                         'Klik “Periksa kembali” untuk memperbarui.'
+                                         if result['stale'] else 'Menggunakan hasil pemeriksaan sebelumnya')
             result = self.annotate_runtime_evidence(result)
             self._mode_capabilities_snapshot_cache = copy.deepcopy(result)
             return result
@@ -466,22 +466,22 @@ class CapabilityMixin:
             def ebpf_capability(probe, plane, dialect=''):
                 reason = ''
                 if not bin_ready:
-                    reason = '内核未安装'
+                    reason = 'Kernel belum dipasang'
                 elif 'with_ebpf' not in version:
-                    reason = '当前内核不是 eBPF 构建'
+                    reason = 'Kernel saat ini bukan build eBPF'
                 elif plane != 'cgroup' and not local_plane:
-                    reason = layout.get('reason') or '无法识别当前内核版本的 eBPF 本地数据面参数'
+                    reason = layout.get('reason') or 'Tidak dapat mengenali parameter data plane lokal eBPF pada versi kernel saat ini'
                 elif not bpffs:
-                    reason = 'bpffs 未挂载'
+                    reason = 'bpffs belum dipasang'
                 elif plane == 'cgroup' and not cgroup2:
-                    reason = '系统未启用 cgroup v2'
+                    reason = 'cgroup v2 tidak diaktifkan pada sistem'
                 elif not probe.get('supported'):
                     blockers = [item.get('title') or item.get('name')
                                 for item in (probe.get('issues') or [])
                                 if item.get('severity') in ('fail', 'unknown')]
-                    reason = ('；'.join(blockers[:4])) if blockers else (probe.get('summary') or 'eBPF 预检未通过')
+                    reason = ('; '.join(blockers[:4])) if blockers else (probe.get('summary') or 'Prapemeriksaan eBPF tidak lulus')
                 elif not members:
-                    reason = '无法识别 LAN 成员接口'
+                    reason = 'Tidak dapat mengenali antarmuka anggota LAN'
                 return {'available': not reason, 'reason': reason,
                         'interfaces': members, 'local_data_plane': plane,
                         'local_data_plane_dialect': dialect,
@@ -495,25 +495,25 @@ class CapabilityMixin:
 
             net_reason = ''
             if not bin_ready:
-                net_reason = '内核未安装'
+                net_reason = 'Kernel belum dipasang'
             elif not nft:
-                net_reason = '缺少 nftables'
+                net_reason = 'nftables tidak tersedia'
             elif not ip:
-                net_reason = '缺少 iproute2'
+                net_reason = 'iproute2 tidak tersedia'
             if not bin_ready:
-                tun_reason = '内核未安装'
+                tun_reason = 'Kernel belum dipasang'
             elif not ip:
-                tun_reason = '缺少 iproute2'
+                tun_reason = 'iproute2 tidak tersedia'
             elif not tun_ready:
-                tun_reason = ('TUN 内核支持已启用，但 /dev/net/tun 设备节点不存在'
-                              if tun_info['kernel_support'] else '系统未启用 TUN 内核支持')
+                tun_reason = ('Dukungan TUN kernel aktif, tetapi node perangkat /dev/net/tun tidak ada'
+                              if tun_info['kernel_support'] else 'Dukungan TUN kernel tidak diaktifkan pada sistem')
             else:
                 tun_reason = ''
             now = int(time.time())
             value = {
                 'schema': 8,
                 'checked': True, 'needs_check': False, 'stale': False,
-                'checked_at': now, 'snapshot_reason': '刚完成设备能力检测',
+                'checked_at': now, 'snapshot_reason': 'Pemeriksaan kemampuan perangkat baru saja selesai',
                 'ebpf_local_plane': local_plane,
                 'ebpf_local_plane_dialect': layout.get('dialect') or '',
                 'ebpf': ebpf_capability(probe_tc, local_plane, layout.get('dialect') or ''),
@@ -591,29 +591,29 @@ class CapabilityMixin:
                                    'detail': text.strip()[-800:]})
                 else:
                     issues.append({'severity': 'fail', 'scope': 'runner', 'requirement': 'required',
-                                   'name': 'eBPF 预检命令执行失败', 'detail': text.strip()[-800:]})
+                                   'name': 'Eksekusi perintah prapemeriksaan eBPF gagal', 'detail': text.strip()[-800:]})
             friendly = {
-                'tc namespace isolation': ('TC 网络隔离将在启动时确认',
-                    '预检无法完全模拟隔离网络和虚拟网卡；sing-box 启动成功后会自动完成验证。'),
-                'local tc interface': ('本机 TC 接口将在启动时自动确认',
-                    '未提前指定接口时，sing-box 会自动选择默认接口并创建内部虚拟网卡。'),
-                'downstream interface': ('LAN 接口转发将在启动时确认',
-                    '预检不会绑定实际 LAN 接口；服务启动后会检查 TC 转发规则。'),
-                'bpf_sk_assign': ('内核缺少 socket 分配能力',
-                    '当前内核不支持 bpf_sk_assign，建议升级内核或改用 TUN / TProxy 模式。'),
-                'ipv6 transparent udp sockets': ('IPv6 UDP 透明代理不可用',
-                    '可以在配置中关闭 IPv6，或改用其他接管模式。'),
-                'ipv6 transparent tcp sockets': ('IPv6 TCP 透明代理不可用',
-                    '可以在配置中关闭 IPv6，或改用其他接管模式。'),
-                'ipv4 transparent udp sockets': ('IPv4 UDP 透明代理不可用',
-                    '请检查内核透明代理和网络命名空间能力，必要时改用 TUN 模式。'),
-                'ipv4 transparent tcp sockets': ('IPv4 TCP 透明代理不可用',
-                    '请检查内核透明代理能力，必要时改用 TUN 模式。'),
-                'locked-memory limit': ('BPF 内存锁定受限',
-                    '请提高内核 memlock 限制，或检查容器/系统资源限制。'),
-                'route netlink access': ('路由配置权限不足',
-                    '请确认 sing-box 以 root 运行并具备 NET_ADMIN 权限。'),
-                'bpf jit': ('BPF JIT 未启用', '启用 BPF JIT 可以改善 eBPF 转发性能。')
+                'tc namespace isolation': ('Isolasi jaringan TC dikonfirmasi saat mulai',
+                    'Prapemeriksaan tidak dapat sepenuhnya menyimulasikan jaringan terisolasi dan antarmuka virtual; verifikasi otomatis dilakukan setelah sing-box berhasil dimulai.'),
+                'local tc interface': ('Antarmuka TC lokal dikonfirmasi otomatis saat mulai',
+                    'Jika antarmuka tidak ditentukan sebelumnya, sing-box akan memilih antarmuka default dan membuat antarmuka virtual internal secara otomatis.'),
+                'downstream interface': ('Penerusan antarmuka LAN dikonfirmasi saat mulai',
+                    'Prapemeriksaan tidak mengikat antarmuka LAN sebenarnya; aturan penerusan TC akan diperiksa setelah layanan dimulai.'),
+                'bpf_sk_assign': ('Kernel tidak memiliki kemampuan alokasi socket',
+                    'Kernel saat ini tidak mendukung bpf_sk_assign. Sebaiknya tingkatkan kernel atau gunakan mode TUN / TProxy.'),
+                'ipv6 transparent udp sockets': ('Proxy transparan IPv6 UDP tidak tersedia',
+                    'Nonaktifkan IPv6 dalam konfigurasi atau gunakan mode pengambilalihan lain.'),
+                'ipv6 transparent tcp sockets': ('Proxy transparan IPv6 TCP tidak tersedia',
+                    'Nonaktifkan IPv6 dalam konfigurasi atau gunakan mode pengambilalihan lain.'),
+                'ipv4 transparent udp sockets': ('Proxy transparan IPv4 UDP tidak tersedia',
+                    'Periksa kemampuan proxy transparan kernel dan namespace jaringan; jika perlu, gunakan mode TUN.'),
+                'ipv4 transparent tcp sockets': ('Proxy transparan IPv4 TCP tidak tersedia',
+                    'Periksa kemampuan proxy transparan kernel; jika perlu, gunakan mode TUN.'),
+                'locked-memory limit': ('Batas penguncian memori BPF tercapai',
+                    'Tingkatkan batas memlock kernel atau periksa batas sumber daya kontainer/sistem.'),
+                'route netlink access': ('Izin konfigurasi rute tidak mencukupi',
+                    'Pastikan sing-box berjalan sebagai root dan memiliki izin NET_ADMIN.'),
+                'bpf jit': ('BPF JIT tidak diaktifkan', 'Mengaktifkan BPF JIT dapat meningkatkan performa penerusan eBPF.')
             }
             for item in issues:
                 key = str(item.get('name') or '').strip().lower()
@@ -622,14 +622,14 @@ class CapabilityMixin:
                     plane_name = ('TC / socket_assign' if plane == 'socket_assign'
                                   else 'TC' if plane == 'tc'
                                   else 'Cgroup' if plane == 'cgroup' else plane)
-                    item['title'] = '当前内核不支持 ' + plane_name + ' 本地数据面'
-                    item['advice'] = '请改用另一种 eBPF 数据面，或升级到包含该数据面的内核构建。'
+                    item['title'] = 'Kernel saat ini tidak mendukung data plane lokal ' + plane_name
+                    item['advice'] = 'Gunakan data plane eBPF lain atau tingkatkan ke build kernel yang menyertakan data plane ini.'
                     continue
-                title, advice = friendly.get(key, (item.get('name') or '预检发现问题', ''))
+                title, advice = friendly.get(key, (item.get('name') or 'Masalah ditemukan saat prapemeriksaan', ''))
                 if not advice:
-                    advice = ('该项必需能力未通过，请查看技术详情或切换接管模式。'
+                    advice = ('Kemampuan wajib ini tidak lulus. Periksa detail teknis atau alihkan mode pengambilalihan.'
                               if item.get('severity') in ('fail', 'unknown')
-                              else '该项仅影响性能或需要启动时进一步确认。')
+                              else 'Item ini hanya memengaruhi performa atau perlu dikonfirmasi lebih lanjut saat mulai.')
                 item['title'] = title
                 item['advice'] = advice
             supported = (returncode == 0 and counts.get('FAIL', 0) == 0
@@ -641,7 +641,7 @@ class CapabilityMixin:
     def ebpf_probe(self, local_data_plane='socket_assign', shared_data_plane='packet_rewrite',
                         interfaces=None):
             if not self.bin.is_file():
-                return {'supported': False, 'summary': '内核文件不存在', 'issues': [], 'counts': {},
+                return {'supported': False, 'summary': 'File kernel tidak ditemukan', 'issues': [], 'counts': {},
                         'result': 'error', 'preflight': False, 'exact_object_load': False,
                         'mode': 'all', 'local_data_plane': local_data_plane,
                         'shared_data_plane': shared_data_plane}
@@ -661,4 +661,3 @@ class CapabilityMixin:
             caches[cache_key] = copy.deepcopy(value)
             self._ebpf_caches = caches
             return value
-

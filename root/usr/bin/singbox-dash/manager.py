@@ -149,12 +149,12 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 [str(x) for x in args], input=input_data, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, timeout=timeout, env=env or self.env)
         except subprocess.TimeoutExpired as exc:
-            raise Failure('操作超时：' + Path(str(args[0])).name) from exc
+            raise Failure('Operasi kehabisan waktu: ' + Path(str(args[0])).name) from exc
         except OSError as exc:
-            raise Failure('无法运行：' + Path(str(args[0])).name + '：' + clean_error(exc)) from exc
+            raise Failure('Tidak dapat menjalankan: ' + Path(str(args[0])).name + ': ' + clean_error(exc)) from exc
         if check and result.returncode:
             message = (result.stderr or result.stdout).decode('utf-8', 'replace')
-            raise Failure(clean_error(message) or ('命令失败：' + Path(str(args[0])).name))
+            raise Failure(clean_error(message) or ('Perintah gagal: ' + Path(str(args[0])).name))
         return result
 
     def cache_get(self, name, key=None, max_age=None):
@@ -227,7 +227,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             except ImportError:
                 pass
             except BlockingIOError as exc:
-                raise Failure('另一个操作正在进行，请等待完成') from exc
+                raise Failure('Operasi lain sedang berlangsung. Tunggu hingga selesai.') from exc
             yield
 
     def parse(self, data, require_object=True):
@@ -235,29 +235,29 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             try:
                 text = data.decode('utf-8')
             except UnicodeDecodeError as exc:
-                raise Failure('配置不是 UTF-8 文本') from exc
+                raise Failure('Konfigurasi bukan teks UTF-8') from exc
         else:
             text = str(data)
         if not text.strip():
-            raise Failure('配置为空')
+            raise Failure('Konfigurasi kosong')
         try:
             value = json.loads(text)
         except ValueError:
             if yaml is None:
-                raise Failure('缺少 PyYAML，无法解析 YAML 配置')
+                raise Failure('PyYAML tidak tersedia; konfigurasi YAML tidak dapat diuraikan')
             try:
                 value = yaml.load(text, Loader=CoreLoader)
             except Exception as exc:
-                raise Failure('配置语法错误：' + clean_error(exc)) from exc
+                raise Failure('Kesalahan sintaks konfigurasi: ' + clean_error(exc)) from exc
         if require_object and (not isinstance(value, dict) or not value):
-            raise Failure('配置根节点必须是非空对象')
+            raise Failure('Elemen akar konfigurasi harus berupa objek yang tidak kosong')
         return value
 
     def serialize(self, obj, original=b''):
         if original.lstrip().startswith(b'{'):
             return (json.dumps(obj, ensure_ascii=False, indent=2) + '\n').encode()
         if yaml is None:
-            raise Failure('缺少 PyYAML，无法写入 YAML 配置')
+            raise Failure('PyYAML tidak tersedia; konfigurasi YAML tidak dapat ditulis')
         return yaml.safe_dump(obj, allow_unicode=True, sort_keys=False,
                               default_flow_style=False, width=4096).encode()
 
@@ -265,7 +265,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         config = self.parse(data)
         executable = Path(executable or self.bin)
         if not executable.exists():
-            raise Failure('内核文件不存在')
+            raise Failure('File kernel tidak ditemukan')
         with tempfile.NamedTemporaryFile(prefix='.dash-check-', dir=self.state,
                                          delete=False) as stream:
             stream.write(data if isinstance(data, bytes) else data.encode())
@@ -275,8 +275,8 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             try:
                 self.run([executable, 'check', '-c', temp, '-D', self.conf], timeout=16)
             except Failure as exc:
-                if str(exc).startswith('操作超时：'):
-                    raise Failure('sing-box 配置检查超过 16 秒，请到“诊断工具 → 运行日志”查看具体错误') from exc
+                if str(exc).startswith('Operasi kehabisan waktu:'):
+                    raise Failure('Pemeriksaan konfigurasi sing-box melebihi 16 detik. Periksa kesalahan di “Diagnostik → Log runtime”.') from exc
                 raise Failure(self.explain_config_error(str(exc))) from exc
         finally:
             temp.unlink(missing_ok=True)
@@ -301,10 +301,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def target(self, name):
         if not isinstance(name, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,80}\.(?:ya?ml|json)', name):
-            raise Failure('配置文件名不合法')
+            raise Failure('Nama file konfigurasi tidak valid')
         path = self.conf / name
         if path.parent != self.conf or path.is_symlink():
-            raise Failure('配置路径不合法')
+            raise Failure('Path konfigurasi tidak valid')
         return path
 
     def active(self, pid=None):
@@ -471,7 +471,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         if not requested:
             requested = family if family in CORE_SOURCES else 'michongs'
         if requested == 'unknown' or requested not in CORE_SOURCES:
-            return {'id': 'unknown', 'label': '未知', 'repo': '',
+            return {'id': 'unknown', 'label': 'Tidak diketahui', 'repo': '',
                     'installed': False, 'current_family': family}
         info = CORE_SOURCES[requested]
         return {'id': requested, 'label': info['label'], 'repo': info['repo'],
@@ -595,22 +595,22 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                     item_type = str(item.get('type') or '').strip().lower()
                     if item_type and item_type not in allowed:
                         location = '%s[%d]' % (label, index)
-                        detail = '当前内核不支持 %s 的类型 “%s”' % (location, item_type)
+                        detail = 'Kernel saat ini tidak mendukung jenis “%s” pada %s' % (item_type, location)
                         if item_type == 'ebpf' and 'with_ebpf' not in self.core_version():
-                            detail += '；该内核没有 with_ebpf 构建能力'
+                            detail += '; kernel ini tidak memiliki kemampuan build with_ebpf'
                         report['unsupported'].append({
                             'path': location, 'type': item_type,
-                            'message': detail + '。请升级内核或修改配置。'
+                            'message': detail + '. Tingkatkan kernel atau ubah konfigurasi.'
                         })
-                        report['messages'].append(detail + '。请升级内核或修改配置。')
+                        report['messages'].append(detail + '. Tingkatkan kernel atau ubah konfigurasi.')
         version_line = self.core_version()
         inbounds = clean.get('inbounds')
         if isinstance(inbounds, list) and 'with_ebpf' not in version_line:
             for index, item in enumerate(inbounds):
                 if isinstance(item, dict) and str(item.get('type') or '').lower() == 'ebpf':
                     location = 'inbounds[%d]' % index
-                    message = ('当前内核没有 with_ebpf 构建能力，无法运行 %s。'
-                               '请安装 eBPF 构建或切换运行模式。' % location)
+                    message = ('Kernel saat ini tidak memiliki kemampuan build with_ebpf sehingga %s tidak dapat dijalankan. '
+                               'Pasang build eBPF atau alihkan mode operasi.' % location)
                     if not any(entry.get('path') == location
                                for entry in report['unsupported']):
                         report['unsupported'].append({
@@ -650,21 +650,21 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             message, re.I)
         if match:
             path, kind, name = match.groups()
-            hint = '。请升级内核或修改配置。'
+            hint = '. Tingkatkan kernel atau ubah konfigurasi.'
             if name.lower() == 'ebpf' and 'with_ebpf' not in self.core_version():
-                hint = '。当前内核没有 with_ebpf 构建能力，请安装 eBPF 构建或切换运行模式。'
+                hint = '. Kernel saat ini tidak memiliki kemampuan build with_ebpf; pasang build eBPF atau alihkan mode operasi.'
             family = self.core_source_info()['label']
-            return '%s 内核不支持 %s 的 %s 类型 “%s”%s' % (family, path, kind, name, hint)
+            return 'Kernel %s tidak mendukung jenis %s “%s” pada %s%s' % (family, kind, name, path, hint)
         match = re.search(r'([A-Za-z0-9_.\[\]-]+): json: unknown field "([^"]+)"', message, re.I)
         if not match:
             match = re.search(r'json: unknown field "([^"]+)"', message, re.I)
             if match:
-                return '配置字段 “%s” 与当前内核不兼容，请升级内核或删除该字段。' % match.group(1)
+                return 'Kolom konfigurasi “%s” tidak kompatibel dengan kernel saat ini. Tingkatkan kernel atau hapus kolom tersebut.' % match.group(1)
         else:
-            return '配置字段 “%s” 与当前内核不兼容（%s），请升级内核或删除该字段。' % (
+            return 'Kolom konfigurasi “%s” tidak kompatibel dengan kernel saat ini (%s). Tingkatkan kernel atau hapus kolom tersebut.' % (
                 match.group(2), match.group(1))
         if 'invalid character' in message.lower() and 'yaml' not in message.lower():
-            return '当前内核无法解析该配置格式，请重新导入 YAML / JSON 配置后再试。'
+            return 'Kernel saat ini tidak dapat menguraikan format konfigurasi ini. Impor ulang konfigurasi YAML / JSON, lalu coba lagi.'
         return message
 
     def mode_details(self, data):
@@ -767,13 +767,13 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 port = parsed.port
                 path = parsed.path or ''
             if scheme not in ('http', 'https'):
-                raise ValueError('只支持 http 或 https')
+                raise ValueError('Hanya http atau https yang didukung')
             if path not in ('', '/'):
-                raise ValueError('external_controller 不能包含路径')
+                raise ValueError('external_controller tidak boleh berisi path')
             if port is None:
-                raise ValueError('缺少端口号')
+                raise ValueError('Nomor port tidak ada')
             if not 1 <= int(port) <= 65535:
-                raise ValueError('端口号必须在 1-65535 之间')
+                raise ValueError('Nomor port harus antara 1–65535')
             result.update({
                 'host': host, 'port': int(port), 'scheme': scheme,
                 'valid': True,
@@ -781,13 +781,13 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             })
         except (Failure, TypeError, ValueError) as exc:
             result['valid'] = False
-            result['error'] = clean_error(exc) or 'Clash API 地址无效'
+            result['error'] = clean_error(exc) or 'Alamat Clash API tidak valid'
         return result
 
     def validated_api_details(self, data):
         details = self.api_details(data)
         if details.get('endpoint') and not details.get('valid'):
-            raise Failure('Clash API 配置错误：' + (details.get('error') or '地址无效'))
+            raise Failure('Kesalahan konfigurasi Clash API: ' + (details.get('error') or 'alamat tidak valid'))
         return details
 
     def clash_connect_host(self, details):
@@ -822,16 +822,16 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         if address and str(address) in local:
             return str(address)
         if address:
-            raise Failure('Clash API 仅允许连接本机或路由器本地地址')
+            raise Failure('Clash API hanya boleh tersambung ke alamat lokal perangkat atau router')
         try:
             resolved = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
         except OSError as exc:
-            raise Failure('无法解析 Clash API 地址：' + host) from exc
+            raise Failure('Tidak dapat menguraikan alamat Clash API: ' + host) from exc
         for entry in resolved:
             candidate = entry[4][0].split('%', 1)[0]
             if candidate in local or ipaddress.ip_address(candidate).is_loopback:
                 return candidate
-        raise Failure('Clash API 仅允许连接本机或路由器本地地址')
+        raise Failure('Clash API hanya boleh tersambung ke alamat lokal perangkat atau router')
 
     def core_schema(self):
         schema_path = self.state / 'schema.json'
@@ -841,7 +841,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             key = {'mtime_ns': stat_result.st_mtime_ns, 'size': stat_result.st_size,
                    'version': self.core_version()}
         except OSError as exc:
-            raise Failure('内核文件不存在') from exc
+            raise Failure('File kernel tidak ditemukan') from exc
         family = self.core_family(key.get('version') or '')
         family_info = self.core_source_info(family)
         if schema_path.is_file() and read_json(meta_path, {}) == key:
@@ -855,14 +855,14 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         try:
             self.run([self.bin, 'schema', '-o', temp], timeout=45)
             if not temp.is_file() or temp.stat().st_size > 8 * 1024 * 1024:
-                raise Failure('内核没有生成有效的 JSON Schema')
+                raise Failure('Kernel tidak menghasilkan JSON Schema yang valid')
             raw = temp.read_bytes()
             try:
                 value = json.loads(raw.decode('utf-8'))
             except (UnicodeDecodeError, ValueError) as exc:
-                raise Failure('内核生成的 JSON Schema 无效') from exc
+                raise Failure('JSON Schema yang dihasilkan kernel tidak valid') from exc
             if not isinstance(value, dict) or not isinstance(value.get('properties'), dict):
-                raise Failure('内核 JSON Schema 缺少根节点属性')
+                raise Failure('JSON Schema kernel tidak memiliki properti elemen akar')
             value['x-sbd-core-family'] = family
             value['x-sbd-core-family-label'] = family_info['label']
             value['x-sbd-core-repository'] = family_info['repo']
@@ -1005,7 +1005,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         version = self.core_version() if self.bin.is_file() else ''
         current_mode = details.get('mode') if isinstance(details.get('mode'), dict) else {}
         if pid and current_mode.get('mode') not in ('', 'custom', 'unknown', None):
-            self.record_mode_runtime(current_mode, True, '当前运行配置已成功启动')
+            self.record_mode_runtime(current_mode, True, 'Konfigurasi runtime saat ini berhasil dimulai')
         release = {}
         try:
             for line in (self.root / 'etc/openwrt_release').read_text().splitlines():
@@ -1041,11 +1041,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def mode_plan(self, data, mode, validate_result=True):
         if mode not in SELECTABLE_MODES:
-            raise Failure('未知接管模式')
+            raise Failure('Mode pengambilalihan tidak diketahui')
         physical_mode = 'ebpf' if mode in MODE_VARIANTS else mode
         capability = self.mode_capabilities_snapshot().get(mode, {})
         if capability and capability.get('available') is False:
-            raise Failure(capability.get('reason') or '当前系统不支持此接管模式')
+            raise Failure(capability.get('reason') or 'Sistem saat ini tidak mendukung mode pengambilalihan ini')
         config = copy.deepcopy(self.parse(data))
         inbounds = config.get('inbounds')
         if not isinstance(inbounds, list):
@@ -1069,10 +1069,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         version_line = self.core_version()
         match = re.search(r'version\s+(\d+)\.(\d+)', version_line)
         if not match:
-            raise Failure('无法确认内核版本，已拒绝生成模式参数')
+            raise Failure('Tidak dapat memastikan versi kernel; pembuatan parameter mode ditolak')
         version = tuple(map(int, match.groups()))
         if version < (1, 14):
-            raise Failure('接管模式需要 sing-box 1.14 或更新版本')
+            raise Failure('Mode pengambilalihan memerlukan sing-box 1.14 atau lebih baru')
 
         saved = read_json(self.state / 'mode-profiles.json', {})
         if isinstance(saved, dict) and int(saved.get('version') or 0) >= 2:
@@ -1085,10 +1085,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
         if physical_mode == 'ebpf':
             if 'with_ebpf' not in version_line:
-                raise Failure('当前内核没有 with_ebpf 构建能力')
+                raise Failure('Kernel saat ini tidak memiliki kemampuan build with_ebpf')
             members = self.lan_members()
             if not members:
-                raise Failure('无法识别 LAN 成员接口，无法启用 eBPF 共享接管')
+                raise Failure('Tidak dapat mengenali antarmuka anggota LAN; pengambilalihan bersama eBPF tidak dapat diaktifkan')
             inbound = existing or {}
             inbound.update({
                 'type': 'ebpf', 'tag': inbound.get('tag') or 'ebpf-in',
@@ -1099,7 +1099,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             if not local_plane:
                 local_plane = str(self.ebpf_local_plane().get('plane') or '')
             if local_plane not in ('tc', 'socket_assign', 'cgroup'):
-                raise Failure('无法识别当前内核版本的 eBPF 本地数据面参数')
+                raise Failure('Tidak dapat mengenali parameter data plane lokal eBPF pada versi kernel saat ini')
             local.update({'enabled': True, 'data_plane': local_plane, 'dns_mode': 'hijack',
                           'ipv6': ipv6, 'bypass_private_address': True})
             shared = inbound.setdefault('shared', {})
@@ -1255,7 +1255,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 cap['runtime_verified'] = False
                 cap['runtime_state'] = 'failed'
                 cap['available'] = False
-                cap['reason'] = '不可用：实际启动失败：' + (cap['runtime_reason'] or 'sing-box 未能启动')
+                cap['reason'] = 'Tidak tersedia: gagal memulai secara aktual: ' + (cap['runtime_reason'] or 'sing-box gagal dimulai')
             elif cap.get('available'):
                 cap['runtime_verified'] = True
                 cap['runtime_state'] = 'success'
@@ -1272,7 +1272,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         base.mkdir(parents=True, exist_ok=True, mode=0o700)
         tag = str(tag or '').strip()
         if not re.fullmatch(r'[^\x00-\x1f/]{1,80}', tag):
-            raise Failure('Provider 标签不合法')
+            raise Failure('Label Provider tidak valid')
         raw = str(value or '').strip()
         if raw:
             candidate = Path(raw)
@@ -1282,11 +1282,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             slug = re.sub(r'[^A-Za-z0-9._-]+', '-', tag).strip('.-_')[:48] or 'provider'
             candidate = base / (slug + '.yaml')
         if candidate.parent.resolve() != base:
-            raise Failure('本地 Provider 文件必须位于 /etc/sing-box/providers/')
+            raise Failure('File Provider lokal harus berada di /etc/sing-box/providers/')
         if candidate.suffix.lower() not in ('.yaml', '.yml', '.json'):
             candidate = candidate.with_suffix('.yaml')
         if candidate.exists() and candidate.is_symlink():
-            raise Failure('Provider 文件不能是符号链接')
+            raise Failure('File Provider tidak boleh berupa tautan simbolis')
         return candidate
 
     def provider_transport(self, query):
@@ -1335,7 +1335,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             public_key = (query.get('pbk') or query.get('publicKey') or [''])[0]
             short_id = (query.get('sid') or query.get('shortId') or [''])[0]
             if not public_key:
-                raise Failure('Reality 节点缺少 public key')
+                raise Failure('Node Reality tidak memiliki public key')
             tls['reality'] = {'enabled': True, 'public_key': public_key}
             if short_id:
                 tls['reality']['short_id'] = short_id
@@ -1354,21 +1354,21 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def upload_path(self, value):
         if not value:
-            raise Failure('缺少上传文件')
+            raise Failure('File unggahan tidak ada')
         path = Path(value)
         base = self.upload_dir()
         try:
             resolved = path.resolve(strict=True)
         except OSError as exc:
-            raise Failure('上传文件必须位于 %s/singbox-dash-*' % base) from exc
+            raise Failure('File unggahan harus berada di %s/singbox-dash-*' % base) from exc
         allowed = any(str(resolved).startswith(prefix)
                       for prefix in (str(base) + '/singbox-dash-',))
         safe_name = re.fullmatch(r'singbox-dash-[A-Za-z0-9_.-]+', path.name)
         if (not allowed or path.is_symlink() or not path.is_file()
                 or not safe_name or path.parent != base):
-            raise Failure('上传文件必须位于 %s/singbox-dash-*' % base)
+            raise Failure('File unggahan harus berada di %s/singbox-dash-*' % base)
         if path.stat().st_size > MAX_KERNEL:
-            raise Failure('上传文件超过 160 MB')
+            raise Failure('File unggahan melebihi 160 MB')
         try:
             os.chmod(path, 0o600)
         except OSError:
@@ -1377,7 +1377,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def upload_token(self, kind='config'):
         if kind not in ('config', 'kernel'):
-            raise Failure('上传类型不合法')
+            raise Failure('Jenis unggahan tidak valid')
         token = uuid.uuid4().hex
         now = int(time.time())
         write_json(self.upload_sessions / (token + '.json'), {
@@ -1396,21 +1396,21 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         path = self.upload_sessions / (token + '.json')
         meta = read_json(path, {})
         if not meta or meta.get('kind') != kind:
-            raise Failure('上传会话不存在或类型不匹配')
+            raise Failure('Sesi unggah tidak ditemukan atau jenisnya tidak cocok')
         if int(meta.get('expires') or 0) < int(time.time()):
             path.unlink(missing_ok=True)
-            raise Failure('上传会话已过期，请重新上传')
+            raise Failure('Sesi unggah kedaluwarsa. Unggah kembali.')
         return path
 
     def assemble_upload(self, request):
         if not isinstance(request, dict):
-            raise Failure('上传请求格式错误')
+            raise Failure('Format permintaan unggah tidak valid')
         token = str(request.get('token') or '')
         kind = str(request.get('kind') or '')
         if not re.fullmatch(r'[a-f0-9]{32}', token):
-            raise Failure('上传会话不合法')
+            raise Failure('Sesi unggah tidak valid')
         if kind not in ('config', 'kernel'):
-            raise Failure('上传类型不合法')
+            raise Failure('Jenis unggahan tidak valid')
         session = self.verify_upload_session(token, kind)
         pattern = re.compile(r'^singbox-dash-upload-%s-(\d{5})\.b64$' % token)
         chunks = []
@@ -1420,25 +1420,25 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 chunks.append((int(match.group(1)), path))
         chunks.sort()
         if not chunks:
-            raise Failure('没有收到上传分片')
+            raise Failure('Tidak ada bagian unggahan yang diterima')
         if [index for index, _ in chunks] != list(range(len(chunks))):
             self.cleanup_upload_chunks(token)
-            raise Failure('上传分片不连续，请重新上传')
+            raise Failure('Urutan bagian unggahan terputus. Unggah kembali.')
         limit = MAX_CONFIG if kind == 'config' else MAX_KERNEL
         data = bytearray()
         try:
             for _, path in chunks:
                 if path.stat().st_size > MAX_UPLOAD_CHUNK * 2:
-                    raise Failure('上传分片过大')
+                    raise Failure('Bagian unggahan terlalu besar')
                 try:
                     block = base64.b64decode(path.read_bytes(), validate=True)
                 except (ValueError, OSError) as exc:
-                    raise Failure('上传分片编码错误') from exc
+                    raise Failure('Pengodean bagian unggahan tidak valid') from exc
                 data.extend(block)
                 if len(data) > limit:
-                    raise Failure('上传文件超过大小限制')
+                    raise Failure('File unggahan melebihi batas ukuran')
             if not data:
-                raise Failure('上传文件为空')
+                raise Failure('File unggahan kosong')
             target = self.upload_dir() / ('singbox-dash-%s-%s' % (kind, token))
             atomic(target, bytes(data), 0o600)
             return {'ok': True, 'path': str(target), 'size': len(data),
@@ -1463,7 +1463,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         if not jid:
             return None
         if not re.fullmatch(r'[a-f0-9]{32}', jid):
-            raise Failure('任务 ID 不合法')
+            raise Failure('ID tugas tidak valid')
         return read_json(self.jobs / jid / 'status.json')
 
     def phase(self, job, phase, **extra):
@@ -1487,7 +1487,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
     def backup_config(self, name):
         path = self.target(name)
         if not path.is_file():
-            raise Failure('目标配置不存在')
+            raise Failure('Konfigurasi target tidak ditemukan')
         data = path.read_bytes()
         stamp = time.strftime('%Y%m%d-%H%M%S')
         suffix = '.json' if data.lstrip().startswith(b'{') else '.yaml'
@@ -1525,10 +1525,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
     def delete_config_backup(self, name):
         name = str(name or '')
         if not self.valid_backup(name):
-            raise Failure('备份名称不合法')
+            raise Failure('Nama cadangan tidak valid')
         path = self.backups / name
         if not path.is_file() or path.is_symlink():
-            raise Failure('配置备份不存在')
+            raise Failure('Cadangan konfigurasi tidak ditemukan')
         path.unlink()
         Path(str(path) + '.meta').unlink(missing_ok=True)
         return {'ok': True, 'deleted': name, 'kind': 'config'}
@@ -1537,10 +1537,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         name = str(name or '')
         pattern = r'sing-box-[A-Za-z0-9._-]+-[a-f0-9]{8}'
         if not re.fullmatch(pattern, name):
-            raise Failure('内核备份名称不合法')
+            raise Failure('Nama cadangan kernel tidak valid')
         path = self.kernel_backups / name
         if not path.is_file() or path.is_symlink():
-            raise Failure('内核备份不存在')
+            raise Failure('Cadangan kernel tidak ditemukan')
         path.unlink()
         Path(str(path) + '.meta').unlink(missing_ok=True)
         return {'ok': True, 'deleted': name, 'kind': 'kernel'}
@@ -1566,7 +1566,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         folder = Path(folder)
         manifest = read_json(folder / 'manifest.json', {})
         if not isinstance(manifest, dict):
-            raise Failure('网络状态快照损坏')
+            raise Failure('Snapshot status jaringan rusak')
         for relative, entry in manifest.items():
             target = self.root / relative
             if not isinstance(entry, dict):
@@ -1574,7 +1574,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             if entry.get('exists'):
                 source = folder / str(entry.get('file') or '')
                 if not source.is_file() or source.is_symlink():
-                    raise Failure('网络状态快照缺少文件')
+                    raise Failure('File tidak ada dalam snapshot status jaringan')
                 atomic(target, source.read_bytes(), int(entry.get('mode') or 0o644))
             else:
                 target.unlink(missing_ok=True)
@@ -1611,19 +1611,19 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             all_pids = self.all_pids()
             pid = self.primary_pid()
             if not all_pids:
-                last_error = 'sing-box 进程未启动'
+                last_error = 'Proses sing-box belum dimulai'
                 time.sleep(1)
                 continue
             if not pid:
-                last_error = '检测到 sing-box 进程，但未使用当前配置'
+                last_error = 'Proses sing-box terdeteksi, tetapi tidak menggunakan konfigurasi saat ini'
                 time.sleep(1)
                 continue
             if not self.process_running():
-                last_error = 'sing-box 进程已退出'
+                last_error = 'Proses sing-box telah berhenti'
                 time.sleep(1)
                 continue
             if api_port and not self.port_open(api_port):
-                last_error = 'Clash API 端口未就绪'
+                last_error = 'Port Clash API belum siap'
                 time.sleep(1)
                 continue
             mode = details.get('mode') or 'custom'
@@ -1638,7 +1638,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                     time.sleep(1)
                     continue
             return True
-        raise Failure('sing-box 运行检查失败：' + (last_error or '超时'))
+        raise Failure('Pemeriksaan runtime sing-box gagal: ' + (last_error or 'waktu habis'))
 
     def core_service_init(self):
         return self.core_init if self.core_init.is_file() else self.fallback_core_init
@@ -1654,7 +1654,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         if mode == 'tun':
             repaired = self.ensure_tun_device()
             if not repaired.get('ok'):
-                raise Failure(repaired.get('reason') or 'TUN 设备准备失败')
+                raise Failure(repaired.get('reason') or 'Gagal menyiapkan perangkat TUN')
         if mode not in ('custom', 'unknown') and self.mode_helper.exists():
             self.run([self.mode_helper, 'apply', mode,
                       str(details.get('port') or 0), self.lan_interface(),
@@ -1664,7 +1664,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
     def prepare_boot(self):
         active = self.active()
         if not active.is_file():
-            raise Failure('当前配置不存在')
+            raise Failure('Konfigurasi saat ini tidak ditemukan')
         raw = active.read_bytes()
         prepared, config, compatibility = self.prepare_config_for_core(raw)
         if prepared != raw:
@@ -1685,9 +1685,9 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             result = self.run([self.core_service_init(), 'restart'], timeout=65, check=False)
             if result.returncode != 0:
                 raise Failure(clean_error((result.stderr or result.stdout).decode('utf-8', 'replace'))
-                              or 'sing-box 重启失败')
+                              or 'Gagal memulai ulang sing-box')
             self.wait_for_core(api_port, timeout=35, details=details)
-            self.record_mode_runtime(details, True, '实际重启并运行成功')
+            self.record_mode_runtime(details, True, 'Berhasil dimulai ulang dan berjalan secara aktual')
         except Exception as exc:
             self.record_mode_runtime(details, False, exc)
             raise
@@ -1699,7 +1699,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             return
         manager = self.root / 'usr/bin/singbox-dash/manager.py'
         if not manager.is_file():
-            raise Failure('任务服务启动失败，且找不到后台管理脚本')
+            raise Failure('Gagal memulai layanan tugas dan skrip pengelolaan latar belakang tidak ditemukan')
         try:
             subprocess.Popen(
                 [sys.executable, str(manager), 'worker'],
@@ -1707,13 +1707,13 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 close_fds=True, start_new_session=True)
         except OSError as exc:
-            raise Failure('任务服务启动失败：' + clean_error(exc)) from exc
+            raise Failure('Gagal memulai layanan tugas: ' + clean_error(exc)) from exc
 
     def create_job(self, action, target, candidate, **extra):
         with self.lock('submit'):
             current = self.job()
             if current and current.get('phase') not in TERMINAL:
-                raise Failure('已有任务正在执行，请稍后再试')
+                raise Failure('Tugas lain sedang berjalan. Coba lagi nanti.')
             jid = uuid.uuid4().hex
             folder = self.jobs / jid
             folder.mkdir(parents=True, mode=0o700)
@@ -1746,28 +1746,28 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
     def submit_save(self, request):
         action = request.get('action')
         if action not in ('save', 'apply', 'restore', 'mode'):
-            raise Failure('不允许的配置操作')
+            raise Failure('Operasi konfigurasi tidak diizinkan')
         target = self.target(request.get('target'))
         expected = request.get('expected')
         if not isinstance(expected, str) or not re.fullmatch(r'[a-f0-9]{64}', expected):
-            raise Failure('缺少配置基线，请重新载入')
+            raise Failure('Basis konfigurasi tidak ada. Muat ulang.')
         old = target.read_bytes() if target.exists() else b''
         if digest(old) != expected:
-            raise Failure('配置已被其他页面或后台更新，请重新载入')
+            raise Failure('Konfigurasi telah diperbarui oleh halaman lain atau proses latar belakang. Muat ulang.')
         if action == 'restore':
             name = request.get('backup', '')
             if not self.valid_backup(name):
-                raise Failure('备份名称不合法')
+                raise Failure('Nama cadangan tidak valid')
             candidate = (self.backups / name).read_bytes()
         else:
             candidate = self.upload_path(request.get('source')).read_bytes()
         if not candidate or len(candidate) > MAX_CONFIG:
-            raise Failure('配置为空或超过 10 MB')
+            raise Failure('Konfigurasi kosong atau melebihi 10 MB')
         config = self.parse(candidate)
         mode = request.get('mode')
         if action == 'mode':
             if mode not in SELECTABLE_MODES:
-                raise Failure('未知接管模式')
+                raise Failure('Mode pengambilalihan tidak diketahui')
             candidate = self.mode_plan(candidate, mode, validate_result=False)
         candidate, config, compatibility = self.prepare_config_for_core(candidate)
         api = self.validated_api_details(config)
@@ -1782,12 +1782,12 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def prepare_config_object(self, value):
         if not isinstance(value, dict) or not value:
-            raise Failure('可视化配置根节点必须是非空对象')
+            raise Failure('Elemen akar konfigurasi visual harus berupa objek yang tidak kosong')
         active = self.active()
         original = active.read_bytes() if active.is_file() else b''
         candidate = self.serialize(value, original)
         if len(candidate) > MAX_CONFIG:
-            raise Failure('配置超过 10 MB')
+            raise Failure('Konfigurasi melebihi 10 MB')
         candidate, preview, compatibility = self.prepare_config_for_core(candidate)
         self.validated_api_details(preview)
         return candidate, preview, compatibility
@@ -1799,17 +1799,17 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def submit_config_object(self, request):
         if not isinstance(request, dict):
-            raise Failure('配置请求格式错误')
+            raise Failure('Format permintaan konfigurasi tidak valid')
         action = request.get('action')
         if action not in ('save', 'apply'):
-            raise Failure('不允许的可视化配置操作')
+            raise Failure('Operasi konfigurasi visual tidak diizinkan')
         target = self.target(request.get('target'))
         expected = request.get('expected')
         if not isinstance(expected, str) or not re.fullmatch(r'[a-f0-9]{64}', expected):
-            raise Failure('缺少配置基线，请重新载入')
+            raise Failure('Basis konfigurasi tidak ada. Muat ulang.')
         old = target.read_bytes() if target.exists() else b''
         if digest(old) != expected:
-            raise Failure('配置已被其他页面或后台更新，请重新载入')
+            raise Failure('Konfigurasi telah diperbarui oleh halaman lain atau proses latar belakang. Muat ulang.')
         candidate, preview, compatibility = self.prepare_config_object(request.get('data'))
         api = self.validated_api_details(preview)
         return self.create_job(action, target.name, candidate,
@@ -1834,7 +1834,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         expected = job['expected']
         current = target.read_bytes() if target.exists() else b''
         if digest(current) != expected:
-            raise Failure('配置在任务排队期间发生变化，已取消写入')
+            raise Failure('Konfigurasi berubah saat tugas berada dalam antrean; penulisan dibatalkan')
         active = self.active()
         is_active = target == active
         was_running = bool(self.pids())
@@ -1860,7 +1860,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 mode = new_details.get('mode') or 'custom'
                 if mode not in ('custom', 'unknown'):
                     if not self.mode_helper.exists():
-                        raise Failure('模式管理脚本缺失')
+                        raise Failure('Skrip pengelolaan mode tidak ditemukan')
                     self.run([self.mode_helper, 'apply', mode,
                               str(new_details.get('port') or 0), self.lan_interface(),
                               str(new_details.get('interface') or 'singtun0'),
@@ -1890,11 +1890,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 write_json(self.state / 'mode-profiles.json',
                            {'version': 2, 'profiles': profiles})
             if job['action'] == 'mode' and not was_running:
-                message = '模式已保存，下次启动生效'
+                message = 'Mode disimpan dan akan berlaku saat mulai berikutnya'
             elif was_running and is_active and job['action'] in ('apply', 'mode', 'restore'):
-                message = '配置已应用'
+                message = 'Konfigurasi diterapkan'
             else:
-                message = '配置已保存'
+                message = 'Konfigurasi disimpan'
             return self.phase(job, 'done', message=message, backup=backup_name)
         except Exception as exc:
             try:
@@ -1909,7 +1909,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 if was_running:
                     self.restart_core(True, old_api.get('port'), details=old_details)
                 status = self.phase(job, 'rolled_back',
-                                    error=clean_error(exc), message='已恢复原配置')
+                                    error=clean_error(exc), message='Konfigurasi asli dipulihkan')
             except Exception as rollback_exc:
                 append_error_log('config-rollback', rollback_exc)
                 status = self.phase(job, 'rollback_failed',
@@ -1920,11 +1920,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         marker = read_json(self.state / ACTIVE_FILE, {})
         jid = marker.get('id')
         if not jid or not re.fullmatch(r'[a-f0-9]{32}', str(jid)):
-            raise Failure('没有待执行任务')
+            raise Failure('Tidak ada tugas yang menunggu untuk dijalankan')
         folder = self.jobs / jid
         job = read_json(folder / 'request.json')
         if not job:
-            raise Failure('任务请求不存在')
+            raise Failure('Permintaan tugas tidak ditemukan')
         current = self.job(jid)
         if current and current.get('phase') in TERMINAL:
             return current
@@ -1933,7 +1933,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 return self.apply_config_job(job)
             if job['action'] == 'kernel':
                 return self.apply_kernel_job(job)
-            raise Failure('未知任务类型')
+            raise Failure('Jenis tugas tidak diketahui')
 
 
     # ---- kernel, service and control-plane helpers ---------------------
@@ -2025,11 +2025,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             with open(executable, 'rb') as stream:
                 header = stream.read(64)
                 if len(header) < 52 or header[:4] != b'\x7fELF':
-                    raise Failure('文件不是有效的 ELF 内核')
+                    raise Failure('File bukan kernel ELF yang valid')
                 elf_class = {1: 32, 2: 64}.get(header[4], 0)
                 byte_order = {1: 'little', 2: 'big'}.get(header[5], '')
                 if elf_class not in (32, 64) or not byte_order:
-                    raise Failure('ELF 文件头无效')
+                    raise Failure('Header file ELF tidak valid')
                 endian = '<' if byte_order == 'little' else '>'
                 machine = struct.unpack(endian + 'H', header[18:20])[0]
                 if elf_class == 64:
@@ -2066,7 +2066,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         except Failure:
             raise
         except (OSError, struct.error) as exc:
-            raise Failure('无法读取内核文件：' + clean_error(exc)) from exc
+            raise Failure('Tidak dapat membaca file kernel: ' + clean_error(exc)) from exc
         machine_names = {
             3: 'x86', 8: 'mips', 10: 'mips64', 40: 'arm', 62: 'x86_64',
             183: 'aarch64', 243: 'riscv64', 258: 'loongarch64'
@@ -2088,15 +2088,15 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             'loong64': (258, 64, 'little')
         }.get(platform['core_arch'])
         if not expected:
-            raise Failure('当前架构没有匹配的安全内核规则：' + platform['core_arch'])
+            raise Failure('Tidak ada aturan kernel aman yang cocok untuk arsitektur saat ini: ' + platform['core_arch'])
         if (info['machine'], info['class'], info['endian']) != expected:
-            raise Failure('内核架构不匹配：文件为 %s/%s-bit/%s-endian，设备需要 %s/%s-bit/%s-endian' % (
+            raise Failure('Arsitektur kernel tidak cocok: file adalah %s/%s-bit/%s-endian, perangkat memerlukan %s/%s-bit/%s-endian' % (
                 info['machine_name'], info['class'], info['endian'],
                 platform['core_arch'], expected[1], expected[2]))
         libc = self.platform()['libc']
         required = info.get('linkage', 'unknown')
         if libc in ('musl', 'glibc') and required in ('musl', 'glibc') and required != libc:
-            raise Failure('内核依赖 %s，当前系统使用 %s' % (required, libc))
+            raise Failure('Kernel memerlukan %s, tetapi sistem saat ini menggunakan %s' % (required, libc))
         return info
 
     def kernel_info(self):
@@ -2139,10 +2139,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             'ebpf': {'supported': ebpf_build, 'deferred': True,
                      'local_plane': layout.get('plane') or '',
                      'dialect': layout.get('dialect') or '',
-                     'summary': ('构建标签包含 eBPF；本机数据面参数为 ' + layout['plane']
+                     'summary': ('Tag build menyertakan eBPF; parameter data plane lokal adalah ' + layout['plane']
                                  if ebpf_build and layout.get('plane')
-                                 else '构建标签包含 eBPF；运行能力请在诊断工具中验证' if ebpf_build
-                                 else '当前内核不包含 eBPF 构建标签')}
+                                 else 'Tag build menyertakan eBPF; verifikasi kemampuan runtime di alat diagnostik' if ebpf_build
+                                 else 'Kernel saat ini tidak menyertakan tag build eBPF')}
         }
         self.cache_set('kernel-info.json', cache_key, result)
         return result
@@ -2176,7 +2176,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                     time.sleep(0.8 * (attempt + 1))
                     continue
                 break
-        raise Failure('GitHub 请求失败：' + clean_error(last_error)) from last_error
+        raise Failure('Permintaan GitHub gagal: ' + clean_error(last_error)) from last_error
 
 
 
@@ -2197,7 +2197,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                         break
                     total += len(block)
                     if total > limit:
-                        raise Failure('下载文件超过大小限制')
+                        raise Failure('File unduhan melebihi batas ukuran')
                     stream.write(block)
                 stream.flush()
                 os.fsync(stream.fileno())
@@ -2206,7 +2206,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             raise
         except (urllib.error.URLError, OSError, ValueError) as exc:
             target.unlink(missing_ok=True)
-            raise Failure('下载失败：' + clean_error(exc)) from exc
+            raise Failure('Unduhan gagal: ' + clean_error(exc)) from exc
         return target
 
 
@@ -2230,7 +2230,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                         break
                     total += len(block)
                     if total > MAX_KERNEL:
-                        raise Failure('解包内容超过 160 MB')
+                        raise Failure('Konten hasil ekstraksi melebihi 160 MB')
                     output.write(block)
             os.chmod(child, mode)
             if child.read_bytes()[:4] == b'\x7fELF':
@@ -2248,7 +2248,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                     if info.is_dir():
                         continue
                     if name.startswith('/') or '..' in Path(name).parts:
-                        raise Failure('压缩包包含不安全路径')
+                        raise Failure('Arsip berisi path yang tidak aman')
                     if info.file_size > MAX_KERNEL or (info.external_attr >> 16) & 0o170000 == stat.S_IFLNK:
                         continue
                     with archive.open(info) as stream:
@@ -2259,7 +2259,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                     if not member.isfile() or member.issym() or member.islnk():
                         continue
                     if member.name.startswith('/') or '..' in Path(member.name).parts:
-                        raise Failure('压缩包包含不安全路径')
+                        raise Failure('Arsip berisi path yang tidak aman')
                     stream = archive.extractfile(member)
                     if stream:
                         add_stream(member.name, stream)
@@ -2267,9 +2267,9 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             with gzip.open(source, 'rb') as stream:
                 add_stream('sing-box', stream)
         else:
-            raise Failure('仅支持 ELF、tar.gz、tgz 或 zip 内核文件')
+            raise Failure('Hanya file kernel ELF, tar.gz, tgz, atau zip yang didukung')
         if not found:
-            raise Failure('压缩包中未找到 ELF 内核')
+            raise Failure('Kernel ELF tidak ditemukan dalam arsip')
         if len(found) > 1:
             preferred = [item for item in found if 'sing-box' in item.name.lower()]
             found = preferred or found
@@ -2280,7 +2280,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         folder = Path(folder)
         folder.mkdir(parents=True, exist_ok=True, mode=0o700)
         if source.stat().st_size > MAX_KERNEL:
-            raise Failure('内核文件超过 160 MB')
+            raise Failure('File kernel melebihi 160 MB')
         if source.read_bytes()[:4] == b'\x7fELF':
             kernel = folder / 'sing-box'
             shutil.copyfile(source, kernel)
@@ -2291,7 +2291,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         result = self.run([kernel, 'version'], timeout=25, check=False)
         version = (result.stdout + b'\n' + result.stderr).decode('utf-8', 'replace').strip()
         if result.returncode or not re.search(r'(?i)sing-box\s+version\s+\d+\.\d+', version):
-            raise Failure('内核无法运行：' + clean_error(version))
+            raise Failure('Kernel tidak dapat dijalankan: ' + clean_error(version))
         active = self.active()
         if active.is_file():
             self.validate(active.read_bytes(), executable=kernel)
@@ -2332,11 +2332,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             write_json(folder / 'journal.json', journal)
             installed = self.run([self.bin, 'version'], timeout=25, check=False)
             if installed.returncode:
-                raise Failure('安装后的内核无法运行')
+                raise Failure('Kernel yang dipasang tidak dapat dijalankan')
             installed_version = (installed.stdout + b'\n' + installed.stderr).decode(
                 'utf-8', 'replace').strip()
             if not re.search(r'(?i)sing-box\s+version\s+\d+\.\d+', installed_version):
-                raise Failure('安装后的内核版本输出无效')
+                raise Failure('Output versi kernel yang dipasang tidak valid')
             self.check_elf(self.bin)
             if active.is_file():
                 self.validate(active.read_bytes())
@@ -2354,7 +2354,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                         self.bin.unlink(missing_ok=True)
                     if had_binary and (not self.bin.is_file()
                                        or file_digest(self.bin) != original_hash):
-                        raise Failure('恢复后的内核哈希与原文件不一致')
+                        raise Failure('Hash kernel yang dipulihkan tidak cocok dengan file asli')
                 self.restart_core(was_running, api.get('port'), details=old_details)
             except Exception as rollback_exc:
                 rollback_ok = False
@@ -2362,8 +2362,8 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             journal['rollback_ok'] = bool(rollback_ok)
             write_json(folder / 'journal.json', journal)
             if not rollback_ok:
-                raise Failure(clean_error(exc) + '；自动恢复失败：' +
-                              journal.get('rollback_error', '未知原因')) from exc
+                raise Failure(clean_error(exc) + '; Pemulihan otomatis gagal: ' +
+                              journal.get('rollback_error', 'alasan tidak diketahui')) from exc
             raise exc
 
     def apply_kernel_job(self, job):
@@ -2378,16 +2378,16 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 releases = self.releases('all', source=release_source)
                 release = next((item for item in releases if item['tag'] == descriptor.get('tag')), None)
                 if not release:
-                    raise Failure('目标 Release 不存在')
+                    raise Failure('Release target tidak ditemukan')
                 asset, reason = self.choose_asset(release, descriptor.get('asset', ''))
                 self.phase(job, 'downloading', message=asset['name'], reason=reason)
                 source = self.download_url(asset['download'], folder / 'download.tar.gz')
                 expected = self.release_checksum(release, asset['name'], folder)
                 if not expected:
-                    raise Failure('Release 缺少目标内核的 SHA256 校验值')
+                    raise Failure('Release tidak memiliki checksum SHA256 untuk kernel target')
                 if file_digest(source) != expected:
-                    raise Failure('内核 SHA256 校验失败')
-                self.phase(job, 'installing', message='SHA256 校验通过')
+                    raise Failure('Verifikasi checksum SHA256 kernel gagal')
+                self.phase(job, 'installing', message='Verifikasi checksum SHA256 berhasil')
             else:
                 source = folder / 'candidate'
             version = self.install_kernel(source, folder, release)
@@ -2395,28 +2395,28 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 self.probe_mode_capabilities(version)
             except Exception as exc:
                 append_error_log('kernel-capabilities', exc)
-            return self.phase(job, 'done', message='内核已更新', version=version,
+            return self.phase(job, 'done', message='Kernel diperbarui', version=version,
                               backup=read_json(folder / 'journal.json', {}).get('backup', ''))
         except Exception as exc:
             journal = read_json(folder / 'journal.json', {})
             if not journal.get('changed'):
                 return self.phase(job, 'failed', error=clean_error(exc),
-                                  message='内核安装失败，现有内核未被修改')
+                                  message='Pemasangan kernel gagal; kernel yang ada tidak diubah')
             if journal.get('rollback_ok'):
                 if journal.get('had_binary'):
                     return self.phase(job, 'rolled_back', error=clean_error(exc),
-                                      message='内核更新失败，已恢复原版本')
+                                      message='Pembaruan kernel gagal; versi asli telah dipulihkan')
                 return self.phase(job, 'failed', error=clean_error(exc),
-                                  message='内核安装失败，未留下半安装文件')
+                                  message='Pemasangan kernel gagal; tidak ada file setengah terpasang yang tersisa')
             return self.phase(job, 'rollback_failed', error=clean_error(exc),
-                              message='内核更新失败，且自动恢复失败')
+                              message='Pembaruan kernel gagal dan pemulihan otomatis juga gagal')
 
     def rollback_kernel(self, name):
         if not re.fullmatch(r'sing-box-[A-Za-z0-9._-]+-[a-f0-9]{8}', str(name or '')):
-            raise Failure('内核备份名称不合法')
+            raise Failure('Nama cadangan kernel tidak valid')
         source = self.kernel_backups / name
         if not source.is_file():
-            raise Failure('内核备份不存在')
+            raise Failure('Cadangan kernel tidak ditemukan')
         backup = source.read_bytes()
         folder = self.state / 'kernel-rollback-' + uuid.uuid4().hex
         folder.mkdir(parents=True, mode=0o700)
@@ -2425,12 +2425,12 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             version = self.install_kernel(folder / 'candidate', folder)
         finally:
             shutil.rmtree(folder, ignore_errors=True)
-        return {'ok': True, 'version': version, 'message': '已恢复 ' + name}
+        return {'ok': True, 'version': version, 'message': 'Dipulihkan ' + name}
 
     def activate_config(self, name):
         target = self.target(name)
         if not target.is_file():
-            raise Failure('目标配置不存在')
+            raise Failure('Konfigurasi target tidak ditemukan')
         raw = target.read_bytes()
         prepared, config, compatibility = self.prepare_config_for_core(raw)
         self.validate(prepared)
@@ -2471,7 +2471,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                     self.restart_core(True, old_api.get('port'), details=old_details)
             except Exception as rollback_exc:
                 append_error_log('activate-config-rollback', rollback_exc)
-                raise Failure(clean_error(exc) + '；自动恢复失败：' + clean_error(rollback_exc)) from exc
+                raise Failure(clean_error(exc) + '; Pemulihan otomatis gagal: ' + clean_error(rollback_exc)) from exc
             finally:
                 if snapshot:
                     shutil.rmtree(snapshot, ignore_errors=True)
@@ -2492,14 +2492,14 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def service_action(self, action):
         if action not in ('start', 'stop', 'restart', 'enable', 'disable'):
-            raise Failure('不支持的服务操作')
+            raise Failure('Operasi layanan tidak didukung')
         active = self.active()
         details = {'mode': 'custom', 'port': None, 'udp_port': None, 'interface': ''}
         api = {}
         compatibility = {}
         if action in ('start', 'restart'):
             if not active.is_file():
-                raise Failure('当前配置不存在')
+                raise Failure('Konfigurasi saat ini tidak ditemukan')
             raw = active.read_bytes()
             prepared, config, compatibility = self.prepare_config_for_core(raw)
             self.validate(prepared)
@@ -2522,10 +2522,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                               env=service_env)
             if result.returncode:
                 raise Failure(clean_error((result.stderr or result.stdout).decode('utf-8', 'replace'))
-                              or ('服务操作失败：' + action))
+                              or ('Operasi layanan gagal: ' + action))
             if action in ('start', 'restart'):
                 self.wait_for_core(api.get('port'), timeout=35, details=details)
-                self.record_mode_runtime(details, True, '实际启动并运行成功')
+                self.record_mode_runtime(details, True, 'Berhasil dimulai dan berjalan secara aktual')
             elif action == 'stop':
                 if self.mode_helper.exists():
                     self.run([self.mode_helper, 'clear-live'], timeout=35, check=False)
@@ -2533,7 +2533,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 while self.pids() and time.time() < deadline:
                     time.sleep(1)
                 if self.pids():
-                    raise Failure('停止操作后 sing-box 进程仍然存在')
+                    raise Failure('Proses sing-box masih berjalan setelah operasi berhenti')
         except Exception as exc:
             if action in ('start', 'restart'):
                 self.record_mode_runtime(details, False, exc)
@@ -2567,26 +2567,26 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         system = '\n'.join(lr.stdout.decode('utf-8', 'replace').splitlines()[-120:])
         errors = tail(self.state / 'errors.log', 160)
         errors = '\n'.join(line for line in errors.splitlines()
-                           if not re.search(r'(?:未知命令：\s*$|empty-command:\s*缺少操作命令\s*$)', line))
+                           if not re.search(r'(?:Perintah tidak diketahui:\s*$|empty-command:\s*Perintah tindakan tidak ada\s*$)', line))
         sections = []
         if runtime:
-            sections.append('[sing-box 运行日志]\n' + runtime)
+            sections.append('[Log runtime sing-box]\n' + runtime)
         if system:
-            sections.append('[sing-box 系统日志]\n' + system)
+            sections.append('[Log sistem sing-box]\n' + system)
         if errors:
-            sections.append('[LuCI / sing-box 配置错误]\n' + errors)
-        return {'ok': True, 'data': '\n\n'.join(sections) or '暂无 sing-box 日志'}
+            sections.append('[Kesalahan konfigurasi LuCI / sing-box]\n' + errors)
+        return {'ok': True, 'data': '\n\n'.join(sections) or 'Tidak ada log sing-box'}
 
 
     def clash_request(self, request, config=None):
         import http.client
         if not isinstance(request, dict):
-            raise Failure('API 请求格式错误')
+            raise Failure('Format permintaan API tidak valid')
         method = str(request.get('method') or 'GET').upper()
         path = str(request.get('path') or '')
         body = request.get('body')
         if method not in ('GET', 'PUT', 'PATCH', 'DELETE'):
-            raise Failure('不允许的 API 方法')
+            raise Failure('Metode API tidak diizinkan')
         allowed = (path in ('/version', '/proxies', '/providers/proxies', '/configs',
                             '/rules', '/connections', '/providers/rules')
                    or re.fullmatch(r'/proxies/[^/?#]+/delay\?[^#]*', path)
@@ -2594,19 +2594,19 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                    or re.fullmatch(r'/proxies/[^/?#]+', path)
                    or re.fullmatch(r'/connections/[^/?#]+', path))
         if not allowed:
-            raise Failure('不允许的 API 路径')
+            raise Failure('Path API tidak diizinkan')
         active = self.active()
         if not active.is_file():
-            raise Failure('当前配置不存在')
+            raise Failure('Konfigurasi saat ini tidak ditemukan')
         # Parse the running configuration once instead of reading and parsing
         # the same file twice for every Clash API request.
         if not isinstance(config, dict):
             config = self.parse(active.read_bytes())
         details = self.validated_api_details(config)
         if not details.get('enabled'):
-            raise Failure('配置中未启用 Clash API')
+            raise Failure('Clash API tidak diaktifkan dalam konfigurasi')
         if not details.get('port'):
-            raise Failure('Clash API 地址缺少端口')
+            raise Failure('Alamat Clash API tidak memiliki port')
         host = self.clash_connect_host(details)
         api = (((config.get('experimental') or {}).get('clash_api'))
                or config.get('clash_api') or {})
@@ -2627,9 +2627,9 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             response = connection.getresponse()
             raw = response.read(2 * 1024 * 1024)
             if response.status in (401, 403):
-                raise Failure('Clash API 认证失败，请检查配置中的 secret')
+                raise Failure('Autentikasi Clash API gagal. Periksa secret dalam konfigurasi.')
             if response.status >= 400:
-                raise Failure('Clash API 返回 HTTP %s' % response.status)
+                raise Failure('Clash API mengembalikan HTTP %s' % response.status)
             if not raw:
                 return {'ok': True, 'status': response.status}
             value = json.loads(raw.decode('utf-8'))
@@ -2655,16 +2655,16 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         except Failure:
             raise
         except (OSError, ValueError, http.client.HTTPException) as exc:
-            raise Failure('Clash API 请求失败：' + clean_error(exc)) from exc
+            raise Failure('Permintaan Clash API gagal: ' + clean_error(exc)) from exc
         finally:
             connection.close()
 
     def trace_target_parts(self, value):
         raw = str(value or '').strip()
         if not raw:
-            raise Failure('请输入 IP 或域名')
+            raise Failure('Masukkan IP atau domain')
         if len(raw) > 2048:
-            raise Failure('输入内容过长')
+            raise Failure('Input terlalu panjang')
         port = 443
         host = raw
         try:
@@ -2676,10 +2676,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             try:
                 port = parsed.port or (80 if parsed.scheme.lower() == 'http' else 443)
             except ValueError as exc:
-                raise Failure('端口格式不正确') from exc
+                raise Failure('Format port tidak valid') from exc
         host = str(host or '').strip().rstrip('.').strip('[]')
         if not host:
-            raise Failure('无法识别输入的 IP 或域名')
+            raise Failure('Tidak dapat mengenali IP atau domain yang dimasukkan')
         try:
             address = ipaddress.ip_address(host)
             return {'kind': 'ip', 'display': host, 'match': str(address), 'port': port, 'network': 'tcp'}
@@ -2688,10 +2688,10 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         try:
             ascii_host = host.encode('idna').decode('ascii').lower()
         except UnicodeError as exc:
-            raise Failure('域名格式不正确') from exc
+            raise Failure('Format domain tidak valid') from exc
         pattern = r'^(?=.{1,253}$)(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\.)*[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?$'
         if not re.fullmatch(pattern, ascii_host, re.I):
-            raise Failure('请输入有效的 IP、域名或 URL')
+            raise Failure('Masukkan IP, domain, atau URL yang valid')
         return {'kind': 'domain', 'display': host, 'match': ascii_host, 'port': port, 'network': 'tcp'}
 
     def trace_rulesets(self, config):
@@ -2892,7 +2892,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         target = self.trace_target_parts(value)
         active = self.active()
         if not active.is_file():
-            raise Failure('当前配置不存在')
+            raise Failure('Konfigurasi saat ini tidak ditemukan')
         config = self.parse(active.read_bytes())
         rulesets = self.trace_rulesets(config)
         rules_response = self.clash_request({'method': 'GET', 'path': '/rules'}, config)
@@ -2930,7 +2930,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         if matched is None:
             route = config.get('route') if isinstance(config.get('route'), dict) else {}
             matched = {'index': None, 'type': 'Final', 'payload': '', 'proxy': str(route.get('final') or 'DIRECT'),
-                       'detail': '未命中显式规则，使用最终出站'}
+                       'detail': 'Tidak ada aturan eksplisit yang cocok; menggunakan outbound akhir'}
         proxies_response = self.clash_request({'method': 'GET', 'path': '/proxies'}, config)
         proxies = proxies_response.get('proxies') if isinstance(proxies_response, dict) else {}
         resolved = self.trace_proxy_chain(proxies, matched.get('proxy'))
@@ -2946,8 +2946,8 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             'final': resolved['final'],
             'skipped': skipped,
             'assumptions': [
-                '按 TCP/%d 模拟匹配' % target['port'],
-                '未模拟客户端来源、进程条件和 DNS 解析结果',
+                'Simulasi pencocokan menggunakan TCP/%d' % target['port'],
+                'Sumber klien, kondisi proses, dan hasil resolusi DNS tidak disimulasikan',
             ],
         }
 
@@ -2963,7 +2963,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         """Return dashboard data and a short live traffic sample."""
         active = self.active()
         if not active.is_file():
-            raise Failure('当前配置不存在')
+            raise Failure('Konfigurasi saat ini tidak ditemukan')
         config = self.parse(active.read_bytes())
         pids = self.pids()
         providers = None
@@ -2997,7 +2997,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 traffic_rate = None
                 traffic_error = clean_error(exc)
         else:
-            traffic_error = '受管内核未运行'
+            traffic_error = 'Kernel terkelola tidak berjalan'
         return {
             'ok': True,
             'running': bool(pids),
@@ -3011,7 +3011,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
     def config_get(self, name=''):
         target = self.target(name)
         if not target.is_file():
-            raise Failure('配置不存在')
+            raise Failure('Konfigurasi tidak ditemukan')
         cache_key = {'version': 2, 'name': target.name,
                      'file': self.file_signature(target),
                      'kernel': self.binary_revision()}
@@ -3022,7 +3022,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             return result
         data = target.read_bytes()
         if len(data) > MAX_CONFIG:
-            raise Failure('配置超过 10 MB')
+            raise Failure('Konfigurasi melebihi 10 MB')
         parsed = self.parse(data)
         result = {'ok': True, 'name': target.name, 'hash': digest(data),
                   'active': target == self.active(),
@@ -3038,7 +3038,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         active = self.active()
         target = self.target(name) if name else active
         if not target.is_file():
-            raise Failure('配置不存在')
+            raise Failure('Konfigurasi tidak ditemukan')
         pid = self.primary_pid()
         runtime = self.active(pid) if pid else None
         backups = self.backup_list()
@@ -3064,7 +3064,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
             return result
         data = target.read_bytes()
         if len(data) > MAX_CONFIG:
-            raise Failure('配置超过 10 MB')
+            raise Failure('Konfigurasi melebihi 10 MB')
         parsed = self.parse(data)
         slots = [{'name': slot, 'active': slot == active.name,
                   'size': (self.conf / slot).stat().st_size}
@@ -3146,14 +3146,14 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 
     def settings_set(self, request):
         if not isinstance(request, dict):
-            raise Failure('设置格式错误')
+            raise Failure('Format pengaturan tidak valid')
         allowed = {'enabled', 'default_page', 'update_interval', 'prefer_ebpf',
                    'github_proxy', 'dns_failover', 'dns_singbox_port',
                    'dns_backup_port', 'dns_fallback_server', 'dns_smartdns_port',
                    'dns_guard_interval', 'kernel_update_notice'}
         unknown = set(request) - allowed
         if unknown:
-            raise Failure('包含不支持的设置项：' + ', '.join(sorted(unknown)))
+            raise Failure('Berisi opsi pengaturan yang tidak didukung: ' + ', '.join(sorted(unknown)))
         values = self.settings_get()['settings']
         for key, value in request.items():
             if key == 'dns_smartdns_port':
@@ -3162,31 +3162,31 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 values[key] = str(value).strip()
         values.setdefault('kernel_update_notice', '1')
         if values['enabled'] not in ('0', '1'):
-            raise Failure('开机启动必须为 0 或 1')
+            raise Failure('Mulai saat boot harus bernilai 0 atau 1')
         if values['default_page'] not in ('overview', 'proxies', 'subscriptions', 'connections', 'trace', 'rules', 'config', 'kernel', 'tools'):
-            raise Failure('默认页面不合法')
+            raise Failure('Halaman default tidak valid')
         if not values['update_interval'].isdigit() or int(values['update_interval']) > 10080:
-            raise Failure('更新间隔必须为 0 到 10080 分钟')
+            raise Failure('Interval pembaruan harus antara 0 dan 10080 menit')
         if values['prefer_ebpf'] not in ('auto', 'on', 'off'):
-            raise Failure('内核偏好不合法')
+            raise Failure('Preferensi kernel tidak valid')
         if values['github_proxy'] and not re.fullmatch(r'https://[^\s]+', values['github_proxy']):
-            raise Failure('代理地址必须是 HTTPS URL')
+            raise Failure('Alamat proxy harus berupa URL HTTPS')
         if values['dns_failover'] not in ('0', '1'):
-            raise Failure('DNS 故障转移必须为 0 或 1')
+            raise Failure('Failover DNS harus bernilai 0 atau 1')
         if values['dns_singbox_port'] and (not values['dns_singbox_port'].isdigit()
                                            or not 1 <= int(values['dns_singbox_port']) <= 65535):
-            raise Failure('SingBox DNS 端口必须留空或为 1 到 65535')
+            raise Failure('Port DNS SingBox harus kosong atau antara 1 dan 65535')
         if not values['dns_backup_port'].isdigit() or not 1 <= int(values['dns_backup_port']) <= 65535:
-            raise Failure('备份 DNS 服务端口必须为 1 到 65535')
+            raise Failure('Port layanan DNS cadangan harus antara 1 dan 65535')
         fallback = values['dns_fallback_server']
         if fallback:
             match = re.fullmatch(r'([A-Za-z0-9_.:-]+)(?:#(\d{1,5}))?', fallback)
             if not match or (match.group(2) and not 1 <= int(match.group(2)) <= 65535):
-                raise Failure('兜底 DNS 格式不正确，例如 223.5.5.5 或 1.1.1.1#53')
+                raise Failure('Format DNS fallback tidak valid, misalnya 223.5.5.5 atau 1.1.1.1#53')
         if not values['dns_guard_interval'].isdigit() or not 2 <= int(values['dns_guard_interval']) <= 60:
-            raise Failure('DNS 检测间隔必须为 2 到 60 秒')
+            raise Failure('Interval pemeriksaan DNS harus antara 2 dan 60 detik')
         if values['kernel_update_notice'] not in ('0', '1'):
-            raise Failure('内核更新提醒必须为 0 或 1')
+            raise Failure('Pemberitahuan pembaruan kernel harus bernilai 0 atau 1')
 
         old_file = self.uci_file.read_bytes() if self.uci_file.is_file() else None
         old_enabled = self.uci_get('enabled', '1') == '1'
@@ -3233,23 +3233,23 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
                 rollback_error = clean_error(rollback_exc)
                 append_error_log('settings-rollback', rollback_exc)
             if rollback_error:
-                raise Failure(clean_error(exc) + '；设置回滚失败：' + rollback_error) from exc
+                raise Failure(clean_error(exc) + '; Rollback pengaturan gagal: ' + rollback_error) from exc
             raise
         return {'ok': True, 'settings': self.settings_get()['settings']}
 
     def read_command_json(self, path):
         source = self.upload_path(path)
         if source.stat().st_size > 2 * 1024 * 1024:
-            raise Failure('请求文件过大')
+            raise Failure('File permintaan terlalu besar')
         try:
             return json.loads(source.read_text(encoding='utf-8'))
         except (OSError, ValueError) as exc:
-            raise Failure('请求文件格式错误') from exc
+            raise Failure('Format file permintaan tidak valid') from exc
 
     def submit_mode(self, target_name, mode):
         target = self.target(target_name)
         if not target.is_file():
-            raise Failure('目标配置不存在')
+            raise Failure('Konfigurasi target tidak ditemukan')
         old = target.read_bytes()
         source = self.upload_dir() / ('singbox-dash-mode-' + uuid.uuid4().hex)
         atomic(source, old, 0o600)
@@ -3263,11 +3263,11 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
     def submit_kernel_release(self, source, tag, asset=''):
         source_info = self.core_source_info(source)
         if source_info['id'] == 'unknown':
-            raise Failure('未知的内核来源')
+            raise Failure('Sumber kernel tidak diketahui')
         release = next((item for item in self.releases('all', source=source_info['id'])
                         if item['tag'] == tag), None)
         if not release:
-            raise Failure('Release 不存在')
+            raise Failure('Release tidak ditemukan')
         chosen, reason = self.choose_asset(release, asset)
         request = {'kind': 'release', 'source': source_info['id'],
                    'tag': tag, 'asset': chosen['name']}
@@ -3279,7 +3279,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         source = self.upload_path(path)
         data = source.read_bytes()
         job = self.create_job('kernel', 'sing-box', data,
-                              source_name=source.name, reason='本地上传')
+                              source_name=source.name, reason='Unggahan lokal')
         source.unlink(missing_ok=True)
         return job
 
@@ -3295,7 +3295,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         url = str(url or '').strip()
         parts = urllib.parse.urlsplit(url)
         if parts.scheme not in ('http', 'https') or not parts.netloc:
-            raise Failure('订阅地址必须是有效的 HTTP/HTTPS URL')
+            raise Failure('Alamat langganan harus berupa URL HTTP/HTTPS yang valid')
         active = self.active()
         atomic(self.conf / ('url_' + active.name), (url + '\n').encode(), 0o600)
         return self.subscription_info()
@@ -3305,15 +3305,15 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         import urllib.request
         info = self.subscription_info()
         if not info['url']:
-            raise Failure('当前配置没有订阅地址')
+            raise Failure('Konfigurasi saat ini tidak memiliki alamat langganan')
         request = urllib.request.Request(info['url'], headers={'User-Agent': 'singbox-dash/1.0'})
         try:
             with urllib.request.urlopen(request, timeout=45) as response:
                 data = response.read(MAX_CONFIG + 1)
         except (urllib.error.URLError, OSError, ValueError) as exc:
-            raise Failure('订阅下载失败：' + clean_error(exc)) from exc
+            raise Failure('Gagal mengunduh langganan: ' + clean_error(exc)) from exc
         if len(data) > MAX_CONFIG:
-            raise Failure('订阅内容超过 10 MB')
+            raise Failure('Konten langganan melebihi 10 MB')
         data, preview, _ = self.prepare_config_for_core(data)
         self.validated_api_details(preview)
         self.validate(data)
@@ -3325,9 +3325,9 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
         data, info = self.fetch_subscription()
         if digest(data) == digest(old) or self.parse(data) == self.parse(old):
             write_json(self.state / 'update.json', {
-                'phase': 'unchanged', 'time': int(time.time()), 'message': '订阅内容没有变化'
+                'phase': 'unchanged', 'time': int(time.time()), 'message': 'Konten langganan tidak berubah'
             })
-            return {'ok': True, 'phase': 'unchanged', 'message': '订阅内容没有变化'}
+            return {'ok': True, 'phase': 'unchanged', 'message': 'Konten langganan tidak berubah'}
         source = self.upload_dir() / ('singbox-dash-subscription-' + uuid.uuid4().hex)
         atomic(source, data, 0o600)
         try:
@@ -3361,7 +3361,7 @@ class Manager(CapabilityMixin, DiagnosticsMixin, ProviderMixin, ReleaseMixin):
 def command_result(argv):
     manager = Manager(os.environ.get('SINGBOX_DASH_ROOT', '/'))
     if not argv or not str(argv[0]).strip():
-        raise Failure('缺少操作命令')
+        raise Failure('Perintah tindakan tidak ada')
     command = str(argv[0]).strip()
     if command == 'version':
         return {'ok': True, 'app': APP, 'version': VERSION}
@@ -3373,7 +3373,7 @@ def command_result(argv):
                 'expires': int(time.time()) + UPLOAD_SESSION_TTL}
     if command == 'assemble-upload':
         if len(argv) < 2:
-            raise Failure('缺少上传请求文件')
+            raise Failure('File permintaan unggah tidak ada')
         return manager.assemble_upload(manager.read_command_json(argv[1]))
     if command == 'status':
         return manager.status()
@@ -3389,10 +3389,10 @@ def command_result(argv):
         return manager.kernel_info()
     if command == 'validate':
         if len(argv) < 2:
-            raise Failure('缺少配置文件')
+            raise Failure('File konfigurasi tidak ada')
         path = manager.upload_path(argv[1])
         if path.stat().st_size > MAX_CONFIG:
-            raise Failure('配置超过 10 MB')
+            raise Failure('Konfigurasi melebihi 10 MB')
         data = path.read_bytes()
         data, preview, compatibility = manager.prepare_config_for_core(data)
         api = manager.validated_api_details(preview)
@@ -3405,10 +3405,10 @@ def command_result(argv):
         return manager.config_get(argv[1] if len(argv) > 1 else '')
     if command == 'preview':
         if len(argv) < 3:
-            raise Failure('缺少配置或模式')
+            raise Failure('Konfigurasi atau mode tidak ada')
         target = manager.target(argv[1])
         if not target.is_file():
-            raise Failure('配置不存在')
+            raise Failure('Konfigurasi tidak ditemukan')
         data = target.read_bytes()
         planned = manager.mode_plan(data, argv[2])
         return {'ok': True, 'target': target.name, 'mode': argv[2],
@@ -3422,7 +3422,7 @@ def command_result(argv):
         return manager.capabilities_init()
     if command == 'validate-object':
         if len(argv) < 2:
-            raise Failure('缺少可视化配置请求文件')
+            raise Failure('File permintaan konfigurasi visual tidak ada')
         request = manager.read_command_json(argv[1])
         config = request.get('data') if isinstance(request, dict) else None
         candidate, parsed, compatibility = manager.validate_config_object(config)
@@ -3433,15 +3433,15 @@ def command_result(argv):
                 'rules': len((parsed.get('route') or {}).get('rules') or [])}
     if command == 'submit':
         if len(argv) < 2:
-            raise Failure('缺少请求文件')
+            raise Failure('File permintaan tidak ada')
         return manager.submit_save(manager.read_command_json(argv[1]))
     if command == 'submit-object':
         if len(argv) < 2:
-            raise Failure('缺少可视化配置请求文件')
+            raise Failure('File permintaan konfigurasi visual tidak ada')
         return manager.submit_config_object(manager.read_command_json(argv[1]))
     if command == 'mode-apply':
         if len(argv) < 3:
-            raise Failure('缺少配置或模式')
+            raise Failure('Konfigurasi atau mode tidak ada')
         return manager.submit_mode(argv[1], argv[2])
     if command == 'job':
         result = manager.job(argv[1] if len(argv) > 1 else None)
@@ -3454,19 +3454,19 @@ def command_result(argv):
         return {'ok': True, 'backups': manager.backup_list()}
     if command == 'backup-delete':
         if len(argv) < 2:
-            raise Failure('缺少配置备份名称')
+            raise Failure('Nama cadangan konfigurasi tidak ada')
         return manager.delete_config_backup(argv[1])
     if command == 'kernel-backup-delete':
         if len(argv) < 2:
-            raise Failure('缺少内核备份名称')
+            raise Failure('Nama cadangan kernel tidak ada')
         return manager.delete_kernel_backup(argv[1])
     if command == 'activate':
         if len(argv) < 2:
-            raise Failure('缺少配置')
+            raise Failure('Konfigurasi tidak ada')
         return manager.activate_config(argv[1])
     if command == 'service':
         if len(argv) < 2:
-            raise Failure('缺少服务操作')
+            raise Failure('Operasi layanan tidak ada')
         return manager.service_action(argv[1])
     if command == 'tun-repair':
         return manager.ensure_tun_device()
@@ -3476,7 +3476,7 @@ def command_result(argv):
         return manager.provider_status()
     if command == 'provider-import':
         if len(argv) < 2:
-            raise Failure('缺少 Provider 导入请求文件')
+            raise Failure('File permintaan impor Provider tidak ada')
         return manager.import_provider(manager.read_command_json(argv[1]))
     if command == 'diag':
         return manager.diagnostics(refresh=len(argv) > 1 and argv[1] == 'refresh')
@@ -3488,17 +3488,17 @@ def command_result(argv):
                                   argv[3] if len(argv) > 3 else '')
     if command == 'trace':
         if len(argv) < 2:
-            raise Failure('缺少 IP 或域名')
+            raise Failure('IP atau domain tidak ada')
         return manager.trace_target(argv[1])
     if command == 'api':
         if len(argv) < 2:
-            raise Failure('缺少 API 请求文件')
+            raise Failure('File permintaan API tidak ada')
         return manager.clash_request(manager.read_command_json(argv[1]))
     if command == 'subscription-info':
         return {'ok': True, 'subscription': manager.subscription_info()}
     if command == 'subscription-set':
         if len(argv) < 2:
-            raise Failure('缺少订阅请求文件')
+            raise Failure('File permintaan langganan tidak ada')
         request = manager.read_command_json(argv[1])
         return {'ok': True, 'subscription': manager.set_subscription(request.get('url'))}
     if command == 'subscription-update':
@@ -3509,7 +3509,7 @@ def command_result(argv):
         return manager.settings_get()
     if command == 'settings-set':
         if len(argv) < 2:
-            raise Failure('缺少设置请求文件')
+            raise Failure('File permintaan pengaturan tidak ada')
         return manager.settings_set(manager.read_command_json(argv[1]))
     if command == 'kernel-info':
         return manager.kernel_info()
@@ -3527,27 +3527,27 @@ def command_result(argv):
         return manager.kernel_update_notice()
     if command == 'kernel-update-notice-set':
         if len(argv) < 2:
-            raise Failure('缺少提醒设置请求文件')
+            raise Failure('File permintaan pengaturan pemberitahuan tidak ada')
         return manager.set_kernel_update_notice(manager.read_command_json(argv[1]))
     if command == 'kernel-install-release':
         if len(argv) < 2:
-            raise Failure('缺少 Release 标签')
+            raise Failure('Tag Release tidak ada')
         if argv[1] in CORE_SOURCES:
             if len(argv) < 3:
-                raise Failure('缺少 Release 标签')
+                raise Failure('Tag Release tidak ada')
             source, tag, asset = argv[1], argv[2], (argv[3] if len(argv) > 3 else '')
         else:
             source, tag, asset = manager.core_family(), argv[1], (argv[2] if len(argv) > 2 else '')
         return manager.submit_kernel_release(source, tag, asset)
     if command == 'kernel-install':
         if len(argv) < 2:
-            raise Failure('缺少内核文件')
+            raise Failure('File kernel tidak ada')
         return manager.submit_kernel_upload(argv[1])
     if command == 'kernel-rollback':
         if len(argv) < 2:
-            raise Failure('缺少内核备份名称')
+            raise Failure('Nama cadangan kernel tidak ada')
         return manager.rollback_kernel(argv[1])
-    raise Failure('未知命令：' + command)
+    raise Failure('Perintah tidak diketahui: ' + command)
 
 
 def main(argv=None):
@@ -3565,7 +3565,7 @@ def main(argv=None):
     except KeyboardInterrupt:
         return 130
     except Exception as exc:
-        message = '内部错误：' + clean_error(exc)
+        message = 'Kesalahan internal: ' + clean_error(exc)
         append_error_log(argv[0] if argv else 'unknown', message)
         sys.stdout.write(json.dumps({'ok': False, 'error': message},
                                     ensure_ascii=False, separators=(',', ':')) + '\n')

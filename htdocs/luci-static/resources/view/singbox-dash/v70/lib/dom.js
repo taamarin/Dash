@@ -172,12 +172,12 @@ function row(title, sub, action, options) {
 function loading(text) {
     return E('div', { 'class': 'sbd-loading', 'role': 'status', 'aria-live': 'polite' }, [
         E('div', { 'class': 'sbd-spinner' }),
-        E('span', {}, text || '加载中')
+        E('span', {}, text || 'Memuat...')
     ]);
 }
 
 function empty(text) {
-    return E('div', { 'class': 'sbd-empty' }, String(text || '暂无数据'));
+    return E('div', { 'class': 'sbd-empty' }, String(text || 'Tidak ada data'));
 }
 
 function note(text, tone) {
@@ -220,7 +220,7 @@ function modal(title, content, options) {
         'class': 'sbd-modal',
         role: 'dialog',
         'aria-modal': 'true',
-        'aria-label': String(title || '对话框'),
+        'aria-label': String(title || 'Dialog'),
         style: opt.width ? 'width:min(' + opt.width + ', 100%)' : null
     }, [
         E('div', { 'class': 'sbd-modal-head' }, [
@@ -228,7 +228,7 @@ function modal(title, content, options) {
                 E('div', { 'class': 'sbd-modal-title' }, String(title || '')),
                 opt.subtitle ? E('div', { 'class': 'sbd-modal-sub' }, String(opt.subtitle)) : null
             ].filter(Boolean)),
-            opt.dismissable === false ? null : btn('', { icon: 'x', iconOnly: true, variant: 'ghost', title: '关闭', onClick: close })
+            opt.dismissable === false ? null : btn('', { icon: 'x', iconOnly: true, variant: 'ghost', title: 'Tutup', onClick: close })
         ].filter(Boolean)),
         body,
         footer.childNodes.length ? footer : null
@@ -253,8 +253,8 @@ function confirm(title, text, confirmText, danger) {
     return new Promise(resolve => {
         let answer = false;
         const ref = modal(title, E('div', { 'class': 'sbd-modal-text' }, text || ''), {
-            cancelText: '取消',
-            confirmText: confirmText || '确认',
+            cancelText: 'Batal',
+            confirmText: confirmText || 'Konfirmasi',
             danger: !!danger,
             onConfirm: () => { answer = true; },
             onClose: () => resolve(answer)

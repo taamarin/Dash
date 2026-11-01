@@ -19,7 +19,7 @@ class ProviderMixin:
             tag = urllib.parse.unquote(parsed.fragment or '').strip()
             if scheme == 'vless':
                 if not parsed.hostname or not parsed.username:
-                    raise Failure('VLESS 节点缺少服务器或 UUID')
+                    raise Failure('Node VLESS tidak memiliki server atau UUID')
                 outbound = {
                     'type': 'vless', 'tag': tag or parsed.hostname,
                     'server': parsed.hostname, 'server_port': int(parsed.port or 443),
@@ -37,7 +37,7 @@ class ProviderMixin:
                 return outbound
             if scheme == 'trojan':
                 if not parsed.hostname or parsed.username is None:
-                    raise Failure('Trojan 节点缺少服务器或密码')
+                    raise Failure('Node Trojan tidak memiliki server atau kata sandi')
                 outbound = {
                     'type': 'trojan', 'tag': tag or parsed.hostname,
                     'server': parsed.hostname, 'server_port': int(parsed.port or 443),
@@ -56,10 +56,10 @@ class ProviderMixin:
                     raw = base64.b64decode(encoded + '=' * (-len(encoded) % 4))
                     value = json.loads(raw.decode('utf-8'))
                 except (ValueError, UnicodeDecodeError) as exc:
-                    raise Failure('VMess 节点数据无效') from exc
+                    raise Failure('Data node VMess tidak valid') from exc
                 server = str(value.get('add') or '')
                 if not server or not value.get('id'):
-                    raise Failure('VMess 节点缺少服务器或 UUID')
+                    raise Failure('Node VMess tidak memiliki server atau UUID')
                 outbound = {
                     'type': 'vmess', 'tag': str(value.get('ps') or tag or server),
                     'server': server, 'server_port': int(value.get('port') or 443),
@@ -105,18 +105,18 @@ class ProviderMixin:
                         parts = urllib.parse.urlsplit('//' + server_part)
                     method, password = user.split(':', 1)
                 except (ValueError, UnicodeDecodeError) as exc:
-                    raise Failure('Shadowsocks 节点数据无效') from exc
+                    raise Failure('Data node Shadowsocks tidak valid') from exc
                 if not parts.hostname or not parts.port:
-                    raise Failure('Shadowsocks 节点缺少服务器或端口')
+                    raise Failure('Node Shadowsocks tidak memiliki server atau port')
                 return {'type': 'shadowsocks', 'tag': tag or parts.hostname,
                         'server': parts.hostname, 'server_port': int(parts.port),
                         'method': method, 'password': password}
-            raise Failure('暂不支持协议：' + (scheme or 'unknown'))
+            raise Failure('Protokol belum didukung: ' + (scheme or 'unknown'))
 
     def parse_provider_payload(self, source):
             value = str(source or '').strip().lstrip('\ufeff')
             if not value:
-                raise Failure('订阅内容为空')
+                raise Failure('Konten langganan kosong')
             candidates = [value]
             compact = re.sub(r'\s+', '', value)
             if '://' not in compact and compact:
@@ -152,7 +152,7 @@ class ProviderMixin:
             used = set()
             for index, item in enumerate(data):
                 if not isinstance(item, dict) or not item.get('type'):
-                    skipped.append({'line': 'item-%d' % (index + 1), 'error': '节点对象缺少 type'})
+                    skipped.append({'line': 'item-%d' % (index + 1), 'error': 'Objek node tidak memiliki type'})
                     continue
                 outbound = copy.deepcopy(item)
                 tag = str(outbound.get('tag') or '').strip() or 'node-%d' % (index + 1)
@@ -165,15 +165,15 @@ class ProviderMixin:
                 used.add(tag)
                 outbounds.append(outbound)
             if not outbounds:
-                detail = skipped[0]['error'] if skipped else '未识别到受支持的节点链接或 Provider JSON'
-                raise Failure('没有可导入的节点：' + detail)
+                detail = skipped[0]['error'] if skipped else 'Tidak ditemukan tautan node atau JSON Provider yang didukung'
+                raise Failure('Tidak ada node yang dapat diimpor: ' + detail)
             if len(outbounds) > 5000:
-                raise Failure('单次最多导入 5000 个节点')
+                raise Failure('Maksimal 5000 node dapat diimpor dalam satu kali proses')
             return outbounds, skipped
 
     def import_provider(self, request):
             if not isinstance(request, dict):
-                raise Failure('Provider 导入请求格式错误')
+                raise Failure('Format permintaan impor Provider tidak valid')
             tag = str(request.get('tag') or '').strip()
             path = self.provider_file_path(tag, request.get('path'))
             source_type = str(request.get('source_type') or 'text')
@@ -182,7 +182,7 @@ class ProviderMixin:
                 url = source.strip()
                 parsed = urllib.parse.urlsplit(url)
                 if parsed.scheme not in ('http', 'https') or not parsed.netloc:
-                    raise Failure('解析链接必须是 HTTP/HTTPS URL')
+                    raise Failure('Tautan penguraian harus berupa URL HTTP/HTTPS')
                 import urllib.error
                 import urllib.request
                 req = urllib.request.Request(url, headers={'User-Agent': 'singbox-dash/1.0'})
@@ -190,19 +190,19 @@ class ProviderMixin:
                     with urllib.request.urlopen(req, timeout=35) as response:
                         raw = response.read(MAX_CONFIG + 1)
                 except (urllib.error.URLError, OSError, ValueError) as exc:
-                    raise Failure('解析链接下载失败：' + clean_error(exc)) from exc
+                    raise Failure('Gagal mengunduh tautan penguraian: ' + clean_error(exc)) from exc
                 if len(raw) > MAX_CONFIG:
-                    raise Failure('解析链接内容超过 10 MB')
+                    raise Failure('Konten tautan penguraian melebihi 10 MB')
                 if raw[:2] == b'\x1f\x8b':
                     try:
                         raw = gzip.decompress(raw)
                     except OSError as exc:
-                        raise Failure('解析链接 gzip 内容损坏') from exc
+                        raise Failure('Konten gzip dari tautan penguraian rusak') from exc
                 source = raw.decode('utf-8-sig', 'replace')
             elif source_type != 'text':
-                raise Failure('Provider 导入方式不合法')
+                raise Failure('Metode impor Provider tidak valid')
             if len(source.encode('utf-8')) > MAX_CONFIG:
-                raise Failure('节点内容超过 10 MB')
+                raise Failure('Konten node melebihi 10 MB')
             outbounds, skipped = self.parse_provider_payload(source)
             payload = {'outbounds': outbounds}
             encoded = (json.dumps(payload, ensure_ascii=False, separators=(',', ':')) + '\n').encode('utf-8')
@@ -214,7 +214,7 @@ class ProviderMixin:
     def provider_status(self, config=None):
             active = self.active()
             if not active.is_file():
-                raise Failure('当前配置不存在')
+                raise Failure('Konfigurasi saat ini tidak ditemukan')
             if not isinstance(config, dict):
                 config = self.parse(active.read_bytes())
             providers = config.get('providers') if isinstance(config.get('providers'), list) else []
@@ -258,7 +258,7 @@ class ProviderMixin:
                                 'source': tag,
                             })
                     except (Failure, OSError, ValueError) as exc:
-                        error = clean_error(exc) or '节点文件读取失败'
+                        error = clean_error(exc) or 'Gagal membaca file node'
                 total_nodes += len(nodes)
                 manifests.append({
                     'tag': tag,
@@ -324,7 +324,7 @@ class ProviderMixin:
                     'port': outbound.get('server_port'),
                     'tls': bool(tls.get('enabled')),
                     'transport': str(transport.get('type') or ''),
-                    'source': '手动节点',
+                    'source': 'Node manual',
                 })
             total_nodes += len(manual)
             return {
@@ -340,4 +340,3 @@ class ProviderMixin:
                 'subscription': self.subscription_info(active),
                 'latest_update': latest,
             }
-

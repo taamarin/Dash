@@ -9,7 +9,7 @@ let chromium;
 try {
     ({ chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright'));
 } catch (error) {
-    console.error('缺少 Playwright。请先执行 npm install playwright，或设置 PLAYWRIGHT_PATH。');
+    console.error('Playwright tidak ditemukan. Jalankan npm install playwright atau atur PLAYWRIGHT_PATH.');
     process.exit(2);
 }
 
@@ -22,7 +22,7 @@ const OUTPUT = process.env.SBD_E2E_OUTPUT || path.resolve(__dirname, '../../outp
 const MANAGER = '/usr/bin/singbox-dash/singbox-dash';
 
 if (!PASSWORD) {
-    console.error('必须设置 SBD_E2E_PASSWORD。');
+    console.error('SBD_E2E_PASSWORD wajib diatur.');
     process.exit(2);
 }
 fs.mkdirSync(OUTPUT, { recursive: true });
@@ -51,7 +51,7 @@ async function login(page) {
     await password.fill(PASSWORD);
     await password.press('Enter');
     await page.waitForTimeout(2800);
-    if (await page.locator('input[type=password]').count()) throw new Error('LuCI 登录失败');
+    if (await page.locator('input[type=password]').count()) throw new Error('Login LuCI gagal');
 }
 
 async function go(page, name) {
@@ -68,9 +68,9 @@ async function manager(page, args) {
         return fs.exec(binary, argv);
     }, { binary: MANAGER, argv: args });
     const line = String(result.stdout || '').trim().split(/\r?\n/).filter(Boolean).pop();
-    if (!line) throw new Error('Manager 未返回数据：' + String(result.stderr || ''));
+    if (!line) throw new Error('Manager tidak mengembalikan data: ' + String(result.stderr || ''));
     const value = JSON.parse(line);
-    if (value.ok === false) throw new Error(value.error || 'Manager 命令失败');
+    if (value.ok === false) throw new Error(value.error || 'Perintah Manager gagal');
     return value;
 }
 
@@ -79,7 +79,7 @@ async function waitJob(page, id, timeout = 120000) {
     for (;;) {
         const job = (await manager(page, ['job', id])).job;
         if (job && ['done', 'failed', 'rolled_back', 'rollback_failed', 'cancelled'].includes(job.phase)) return job;
-        if (Date.now() - started > timeout) throw new Error('任务超时：' + id);
+        if (Date.now() - started > timeout) throw new Error('Waktu tugas habis: ' + id);
         await page.waitForTimeout(700);
     }
 }
@@ -102,7 +102,7 @@ async function restoreConfig(page, backup, expected) {
         for (let index = lines.length - 1; index >= 0; index--) {
             try { queued = JSON.parse(lines[index]); break; } catch (_) {}
         }
-        if (queued && queued.ok === false && /已有任务|正在执行/.test(queued.error || '')) {
+        if (queued && queued.ok === false && /Tugas lain sedang berjalan|Operasi lain sedang berlangsung/i.test(queued.error || '')) {
             await page.waitForTimeout(700);
             continue;
         }
@@ -127,7 +127,7 @@ async function waitForJobAction(page, action, previousId, timeout = 120000) {
         if (job && job.id !== previousId && job.action === action &&
                 ['done', 'failed', 'rolled_back', 'rollback_failed'].includes(job.phase))
             return job;
-        if (Date.now() - started > timeout) throw new Error('未观察到 ' + action + ' 任务完成');
+        if (Date.now() - started > timeout) throw new Error('Penyelesaian tugas ' + action + ' tidak teramati');
         await page.waitForTimeout(600);
     }
 }
@@ -138,7 +138,7 @@ async function submitMode(page, mode, timeout = 120000) {
         try {
             return await manager(page, ['mode-apply', 'config.yaml', mode]);
         } catch (error) {
-            if (!/已有任务|正在执行/.test(String(error.message || error))) throw error;
+            if (!/Tugas lain sedang berjalan|Operasi lain sedang berlangsung/i.test(String(error.message || error))) throw error;
             if (Date.now() - started > timeout) throw error;
             await page.waitForTimeout(900);
         }
@@ -190,23 +190,23 @@ async function runTest(name, fn) {
             await go(page, 'config');
             await page.locator('.sbd-config-page').waitFor({ state: 'visible', timeout: 30000 });
             await page.locator('[data-config-tile="providers"]').click();
-            await page.getByRole('button', { name: '新增提供者', exact: true }).click();
+            await page.getByRole('button', { name: 'Tambah Provider', exact: true }).click();
             const modal = page.locator('.sbd-modal').last();
-            await modal.getByLabel(/^类型/).selectOption('local');
+            await modal.getByLabel(/^Jenis/).selectOption('local');
             const tag = nowId();
-            await modal.getByLabel(/^Provider 标签/).fill(tag);
+            await modal.getByLabel(/^Label Provider/).fill(tag);
             await page.waitForTimeout(300);
-            const providerPath = await modal.getByLabel(/^节点文件/).inputValue();
-            assert.ok(providerPath.startsWith('/etc/sing-box/providers/'), '未找到 Provider 文件路径');
+            const providerPath = await modal.getByLabel(/^File node/).inputValue();
+            assert.ok(providerPath.startsWith('/etc/sing-box/providers/'), 'Path file Provider tidak ditemukan');
             const link = 'vless://11111111-1111-4111-8111-111111111111@127.0.0.1:443?type=tcp&security=tls&sni=example.com#E2E';
-            await modal.getByLabel(/^节点内容/).fill(link);
-            await modal.getByRole('button', { name: '解析并写入本地文件', exact: true }).click();
-            await page.waitForFunction(() => document.body.innerText.includes('已生成 ') || !!document.querySelector('.sbd-provider-import-status .sbd-note'), null, { timeout: 30000 });
+            await modal.getByLabel(/^Konten node/).fill(link);
+            await modal.getByRole('button', { name: 'Uraikan dan tulis ke file lokal', exact: true }).click();
+            await page.waitForFunction(() => document.body.innerText.includes('node lokal dibuat') || !!document.querySelector('.sbd-provider-import-status .sbd-note'), null, { timeout: 30000 });
             const exists = await page.evaluate(async path => {
                 const fs = await L.require('fs');
                 try { return !!(await fs.stat(path)); } catch (_) { return false; }
             }, providerPath);
-            assert.equal(exists, true, 'Provider 文件未写入：' + providerPath);
+            assert.equal(exists, true, 'File Provider tidak ditulis: ' + providerPath);
             await page.evaluate(async path => {
                 const fs = await L.require('fs');
                 try { await fs.remove(path); } catch (_) {}
@@ -223,37 +223,37 @@ async function runTest(name, fn) {
             const beforeCount = await page.locator('.sbd-rule-row').count();
             const domain = nowId() + '.invalid';
             const updated = 'updated-' + domain;
-            await page.getByRole('button', { name: '新增规则', exact: true }).click();
+            await page.getByRole('button', { name: 'Tambah aturan', exact: true }).click();
             let modal = page.locator('.sbd-modal').last();
             await modal.locator('select').nth(0).selectOption('domain_suffix');
             await modal.locator('textarea.sbd-rule-values').fill(domain);
             await modal.locator('select').nth(1).selectOption('__direct');
             await modal.locator('select').nth(2).selectOption('end');
-            await modal.getByRole('button', { name: '添加规则', exact: true }).click();
+            await modal.getByRole('button', { name: 'Tambah aturan', exact: true }).click();
             let row = page.locator('.sbd-rule-row').filter({ hasText: domain });
             await row.waitFor({ state: 'visible', timeout: 10000 });
             assert.equal(await page.locator('.sbd-rule-row').count(), beforeCount + 1);
-            await row.locator('[title="编辑规则"]').click();
+            await row.locator('[title="Edit aturan"]').click();
             modal = page.locator('.sbd-modal').last();
-            await modal.getByRole('button', { name: '保存修改', exact: true }).waitFor({ state: 'visible', timeout: 10000 });
+            await modal.getByRole('button', { name: 'Simpan perubahan', exact: true }).waitFor({ state: 'visible', timeout: 10000 });
             await modal.locator('textarea.sbd-rule-values').waitFor({ state: 'visible', timeout: 10000 });
             await modal.locator('textarea.sbd-rule-values').fill(updated);
-            await modal.getByRole('button', { name: '保存修改', exact: true }).click();
+            await modal.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
             row = page.locator('.sbd-rule-row').filter({ hasText: updated });
             await row.waitFor({ state: 'visible', timeout: 10000 });
-            await row.locator('[title="删除规则"]').click();
-            const confirm = page.locator('.sbd-modal').filter({ hasText: '删除规则' });
-            await confirm.getByRole('button', { name: '删除', exact: true }).click();
+            await row.locator('[title="Hapus aturan"]').click();
+            const confirm = page.locator('.sbd-modal').filter({ hasText: 'Hapus aturan' });
+            await confirm.getByRole('button', { name: 'Hapus', exact: true }).click();
             await page.waitForTimeout(500);
             assert.equal(await page.locator('.sbd-rule-row').count(), beforeCount);
             const previousJob = (await manager(page, ['job'])).job;
-            await page.getByRole('button', { name: '保存', exact: true }).click();
-            await waitToast(page, '规则已保存', 60000);
+            await page.getByRole('button', { name: 'Simpan', exact: true }).click();
+            await waitToast(page, 'Aturan disimpan', 60000);
             const saved = await manager(page, ['status']);
             const savedJob = await waitForJobAction(page, 'save', previousJob && previousJob.id, 120000);
             assert.equal(savedJob.action, 'save');
             assert.equal(savedJob.phase, 'done');
-            assert.ok(savedJob.backup, '保存任务未返回原始配置备份');
+            assert.ok(savedJob.backup, 'Tugas penyimpanan tidak mengembalikan cadangan konfigurasi asli');
             const originalBackup = savedJob.backup;
             const restoreJob = await restoreConfig(page, originalBackup, saved.active_hash);
             assert.equal(restoreJob.phase, 'done', restoreJob.error || restoreJob.phase);
@@ -290,11 +290,11 @@ async function runTest(name, fn) {
         });
 
         await runTest('backup-cleanup', async () => {
-            assert.equal(summary.tests.every(item => item.ok), true, '前置破坏性测试失败，跳过备份删除');
+            assert.equal(summary.tests.every(item => item.ok), true, 'Pengujian destruktif sebelumnya gagal; penghapusan cadangan dilewati');
             const before = (await manager(page, ['backups'])).backups;
-            assert.ok(before.length <= 10, '备份数量超过上限');
+            assert.ok(before.length <= 10, 'Jumlah cadangan melebihi batas');
             const candidate = before[0];
-            assert.ok(candidate, '没有可用于删除测试的备份');
+            assert.ok(candidate, 'Tidak ada cadangan untuk pengujian penghapusan');
             await manager(page, ['backup-delete', candidate.name]);
             const after = (await manager(page, ['backups'])).backups;
             assert.equal(after.length, Math.max(0, before.length - 1));
@@ -303,15 +303,15 @@ async function runTest(name, fn) {
 
         if (KERNEL_FILE) {
             await runTest('kernel-upload-rollback', async () => {
-                assert.ok(fs.existsSync(KERNEL_FILE), '内核文件不存在');
+                assert.ok(fs.existsSync(KERNEL_FILE), 'File kernel tidak ada');
                 await go(page, 'kernel');
                 await page.waitForFunction(() => document.body.innerText.includes('arm64 / musl / 64-bit') || document.body.innerText.includes('x86_64 / musl'), null, { timeout: 60000 });
                 await page.locator('input[type=file]').setInputFiles(KERNEL_FILE);
-                await page.locator('.sbd-toast').filter({ hasText: '内核已更新' }).first().waitFor({ state: 'visible', timeout: 180000 });
+                await page.locator('.sbd-toast').filter({ hasText: 'Kernel diperbarui' }).first().waitFor({ state: 'visible', timeout: 180000 });
                 const first = page.locator('.sbd-backup-list .sbd-row').first();
-                await first.getByRole('button', { name: '回滚', exact: true }).click();
-                const dialog = page.locator('.sbd-modal').filter({ hasText: '回滚内核' });
-                await dialog.getByRole('button', { name: '回滚', exact: true }).click();
+                await first.getByRole('button', { name: 'Rollback', exact: true }).click();
+                const dialog = page.locator('.sbd-modal').filter({ hasText: 'Rollback kernel' });
+                await dialog.getByRole('button', { name: 'Rollback', exact: true }).click();
                 await page.waitForTimeout(5000);
                 const status = await manager(page, ['status']);
                 assert.equal(status.core_count, 1);

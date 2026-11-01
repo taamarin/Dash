@@ -41,17 +41,19 @@ async function main() {
     });
     assert.equal((await transport.command('status', [])).value, 7);
     assert.equal(JSON.stringify(calls[0].args), JSON.stringify(['status']));
-    assert.match(transport.errorText(new Error('XHR request timed out')), /超时|后台/);
-    assert.equal(transport.errorInfo(new Error('内核 SHA256 校验失败')).kind, 'kernel');
-    assert.equal(transport.errorInfo(new Error('Clash API 端口无效')).kind, 'clash');
+    assert.match(transport.errorText(new Error('XHR request timed out')), /waktu habis|latar belakang/i);
+    assert.equal(transport.transientError(new Error('Operasi kehabisan waktu: sing-box')), true);
+    assert.equal(transport.errorInfo(new Error('Verifikasi checksum SHA256 kernel gagal')).kind, 'kernel');
+    assert.equal(transport.errorInfo(new Error('File kernel tidak ditemukan')).kind, 'kernel');
+    assert.equal(transport.errorInfo(new Error('Clash API memiliki Nomor port tidak valid')).kind, 'clash');
     assert.equal(transport.errorInfo(new Error('sing-box check: invalid JSON')).kind, 'config');
     assert.equal(transport.errorInfo(new Error('cgi-upload failed')).kind, 'upload');
     assert.equal(transport.errorInfo(new Error('GitHub download timeout')).kind, 'network');
-    assert.equal(transport.errorInfo(new Error('当前配置没有订阅地址')).kind, 'subscription');
-    assert.equal(transport.errorInfo(new Error('操作失败：未知命令：')).text, '操作失败：未知命令：');
-    await assert.rejects(() => transport.command('', []), /缺少操作命令/);
+    assert.equal(transport.errorInfo(new Error('Alamat langganan belum dikonfigurasi')).kind, 'subscription');
+    assert.equal(transport.errorInfo(new Error('Operasi gagal: Perintah tidak diketahui:')).text, 'Operasi gagal: Perintah tidak diketahui:');
+    await assert.rejects(() => transport.command('', []), /Permintaan halaman tidak memiliki perintah tindakan/);
     fsStub.exec = async () => ({ code: 0, stdout: '', stderr: '' });
-    await assert.rejects(() => transport.command('logs', []), /没有返回结果/);
+    await assert.rejects(() => transport.command('logs', []), /Layanan pengelolaan tidak memberikan hasil/);
 
 
     fsStub.exec = async () => ({ code: 2, stdout: '{"ok":false,"error":"bad request"}', stderr: '' });

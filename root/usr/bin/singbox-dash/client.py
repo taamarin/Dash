@@ -41,7 +41,7 @@ def request(args, timeout=300):
                     break
                 chunks.append(chunk)
         except (OSError, socket.timeout) as exc:
-            raise RequestSentError('命令已发送但响应中断，请刷新状态确认结果') from exc
+            raise RequestSentError('Perintah telah dikirim, tetapi respons terputus. Muat ulang status untuk memastikan hasilnya.') from exc
     return b''.join(chunks).decode('utf-8').strip()
 
 
@@ -76,7 +76,7 @@ def fallback(args):
 def main():
     args = sys.argv[1:]
     if not args or not str(args[0]).strip():
-        sys.stdout.write(json.dumps({'ok': False, 'error': '缺少操作命令'},
+        sys.stdout.write(json.dumps({'ok': False, 'error': 'Perintah tindakan tidak ada'},
                                     ensure_ascii=False, separators=(',', ':')) + '\n')
         return 2
     try:
@@ -88,10 +88,10 @@ def main():
         fallback_code = fallback(args)
         if fallback_code is not None:
             return fallback_code
-        output = json.dumps({'ok': False, 'error': '管理器服务不可用：' + str(exc)},
+        output = json.dumps({'ok': False, 'error': 'Layanan pengelolaan tidak tersedia: ' + str(exc)},
                             ensure_ascii=False, separators=(',', ':'))
     if not output:
-        output = json.dumps({'ok': False, 'error': '管理器没有返回结果，请重试'},
+        output = json.dumps({'ok': False, 'error': 'Layanan pengelolaan tidak memberikan hasil. Coba lagi.'},
                             ensure_ascii=False, separators=(',', ':'))
     sys.stdout.write(output + '\n')
     try:

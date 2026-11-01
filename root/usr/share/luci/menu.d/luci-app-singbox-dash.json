@@ -1,0 +1,16 @@
+{
+    "admin/services/singbox-dash": {
+        "title": "SingBox-Dash",
+        "order": 42,
+        "action": {
+            "type": "view",
+            "path": "singbox-dash/v70/index"
+        },
+        "depends": {
+            "acl": ["luci-app-singbox-dash"]
+        }
+    }
+}
+
+
+

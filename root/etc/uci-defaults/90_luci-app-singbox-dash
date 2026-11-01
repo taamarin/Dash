@@ -1,0 +1,100 @@
+#!/bin/sh
+# One-time migration from singbox-ui. The old UI is archived before its files are removed.
+set -eu
+STATE=/etc/sing-box/.dash-state
+ARCHIVE="$STATE/legacy-singbox-ui.tgz"
+mkdir -p "$STATE"
+chmod 700 "$STATE"
+
+if [ ! -f /etc/config/singbox-dash ]; then
+    touch /etc/config/singbox-dash
+fi
+
+if [ -f /etc/config/singbox-ui ]; then
+    old_page=$(uci -q get singbox-ui.main.default_page 2>/dev/null || true)
+    case "$old_page" in overview|proxies|config|kernel|tools) uci set singbox-dash.main.default_page="$old_page" ;; settings) uci set singbox-dash.main.default_page=overview ;; esac
+fi
+if [ -x /etc/init.d/sing-box ] && /etc/init.d/sing-box enabled >/dev/null 2>&1; then
+    uci set singbox-dash.main.enabled=1
+else
+    uci set singbox-dash.main.enabled=0
+fi
+uci -q set singbox-dash.main=main
+uci -q get singbox-dash.main.dns_failover >/dev/null 2>&1 || uci set singbox-dash.main.dns_failover=1
+uci -q get singbox-dash.main.dns_singbox_port >/dev/null 2>&1 || uci set singbox-dash.main.dns_singbox_port=''
+legacy_backup_port=$(uci -q get singbox-dash.main.dns_smartdns_port 2>/dev/null || true)
+uci -q get singbox-dash.main.dns_backup_port >/dev/null 2>&1 || uci set singbox-dash.main.dns_backup_port="${legacy_backup_port:-1153}"
+uci -q get singbox-dash.main.dns_fallback_server >/dev/null 2>&1 || uci set singbox-dash.main.dns_fallback_server=223.5.5.5
+uci -q get singbox-dash.main.dns_guard_interval >/dev/null 2>&1 || uci set singbox-dash.main.dns_guard_interval=5
+uci -q get singbox-dash.main.kernel_update_notice >/dev/null 2>&1 || uci set singbox-dash.main.kernel_update_notice=1
+uci -q get singbox-dash.main.kernel_update_skip >/dev/null 2>&1 || uci set singbox-dash.main.kernel_update_skip=''
+uci commit singbox-dash || true
+
+stop_legacy() {
+    for name in singbox-ui-autoupdater-service singbox-ui-health-autoupdater-service singbox-ui-memdoc-service; do
+        [ -x "/etc/init.d/$name" ] && "/etc/init.d/$name" stop >/dev/null 2>&1 || true
+        [ -x "/etc/init.d/$name" ] && "/etc/init.d/$name" disable >/dev/null 2>&1 || true
+    done
+}
+stop_legacy
+
+legacy_paths="/etc/config/singbox-ui
+/usr/bin/singbox-ui
+/www/luci-static/resources/view/singbox-ui
+/usr/share/luci/menu.d/luci-app-singbox-ui.json
+/usr/share/rpcd/acl.d/luci-app-singbox-ui.json
+/etc/init.d/singbox-ui-job
+/etc/init.d/singbox-ui-dl
+/etc/init.d/singbox-ui-autoupdater-service
+/etc/init.d/singbox-ui-health-autoupdater-service
+/etc/init.d/singbox-ui-memdoc-service"
+
+if [ ! -f "$ARCHIVE" ]; then
+    existing=""
+    for path in $legacy_paths; do
+        [ -e "$path" ] && existing="$existing $path"
+    done
+    if [ -n "$existing" ]; then
+        tar -czf "$ARCHIVE" $existing >/dev/null 2>&1 || true
+        chmod 600 "$ARCHIVE"
+    fi
+fi
+
+rm -f /etc/config/singbox-ui
+rm -f /usr/share/luci/menu.d/*singbox-ui* /usr/share/rpcd/acl.d/*singbox-ui*
+rm -rf /www/luci-static/resources/view/singbox-ui
+rm -rf /www/luci-static/resources/view/singbox-dash/current /www/luci-static/resources/view/singbox-dash/v2 /www/luci-static/resources/view/singbox-dash/v3 /www/luci-static/resources/view/singbox-dash/v4 /www/luci-static/resources/view/singbox-dash/v5 /www/luci-static/resources/view/singbox-dash/v6 /www/luci-static/resources/view/singbox-dash/v7 /www/luci-static/resources/view/singbox-dash/v8 /www/luci-static/resources/view/singbox-dash/v9 /www/luci-static/resources/view/singbox-dash/v10 /www/luci-static/resources/view/singbox-dash/v11 /www/luci-static/resources/view/singbox-dash/v12 /www/luci-static/resources/view/singbox-dash/v13 /www/luci-static/resources/view/singbox-dash/v14 /www/luci-static/resources/view/singbox-dash/v15 /www/luci-static/resources/view/singbox-dash/v16 /www/luci-static/resources/view/singbox-dash/v17 /www/luci-static/resources/view/singbox-dash/v18 /www/luci-static/resources/view/singbox-dash/v19 /www/luci-static/resources/view/singbox-dash/v20 /www/luci-static/resources/view/singbox-dash/v21 /www/luci-static/resources/view/singbox-dash/v22 /www/luci-static/resources/view/singbox-dash/v23 /www/luci-static/resources/view/singbox-dash/v24 /www/luci-static/resources/view/singbox-dash/v25 /www/luci-static/resources/view/singbox-dash/v26 /www/luci-static/resources/view/singbox-dash/v27 /www/luci-static/resources/view/singbox-dash/v28 /www/luci-static/resources/view/singbox-dash/v29 /www/luci-static/resources/view/singbox-dash/v30 /www/luci-static/resources/view/singbox-dash/lib /www/luci-static/resources/view/singbox-dash/pages
+rm -f /www/luci-static/resources/view/singbox-dash/index.js /www/luci-static/resources/view/singbox-dash/style.css
+rm -f /etc/init.d/singbox-ui-job /etc/init.d/singbox-ui-dl
+rm -f /etc/init.d/singbox-ui-autoupdater-service
+rm -f /etc/init.d/singbox-ui-health-autoupdater-service
+rm -f /etc/init.d/singbox-ui-memdoc-service
+rm -rf /usr/bin/singbox-ui
+rm -f /tmp/luci-indexcache /tmp/luci-indexcache.* /tmp/singbox-ui-* /etc/singbox-dash.nft /etc/nftables.d/30-singbox-dash.nft 2>/dev/null || true
+
+chmod 0755 /usr/bin/singbox-dash/singbox-dash \
+    /usr/bin/singbox-dash/mode.sh /usr/bin/singbox-dash/core.sh     /usr/bin/singbox-dash/dns-guard.py
+if [ -x /usr/bin/singbox-dash/singbox-dash ]; then
+    /usr/bin/singbox-dash/singbox-dash capabilities-init >/dev/null 2>&1 || true
+fi
+chmod 0700 /usr/bin/singbox-dash/manager.py
+BRIDGE_SRC=/usr/share/singbox-dash/zashboard-bridge.html
+if [ -d /etc/sing-box/dashboard ] && [ -f "$BRIDGE_SRC" ]; then
+    cp "$BRIDGE_SRC" /etc/sing-box/dashboard/zashboard-bridge.html
+    chmod 0644 /etc/sing-box/dashboard/zashboard-bridge.html
+fi
+/usr/bin/python3 /usr/bin/singbox-dash/argon-cls-patch.py patch >/dev/null 2>&1 || true
+/etc/init.d/singbox-dash-manager enable >/dev/null 2>&1 || true
+/etc/init.d/singbox-dash-manager restart >/dev/null 2>&1 || true
+/etc/init.d/singbox-dash-job enable >/dev/null 2>&1 || true
+/etc/init.d/singbox-dash-update enable >/dev/null 2>&1 || true
+/etc/init.d/singbox-dash-dns-guard enable >/dev/null 2>&1 || true
+/etc/init.d/singbox-dash-dns-guard restart >/dev/null 2>&1 || true
+if [ ! -x /etc/init.d/sing-box ] && [ -x /etc/init.d/singbox-dash-core ]; then
+    /etc/init.d/singbox-dash-core enable >/dev/null 2>&1 || true
+fi
+rm -rf /tmp/luci-indexcache /tmp/luci-indexcache.*
+/etc/init.d/rpcd reload >/dev/null 2>&1 || /etc/init.d/rpcd restart >/dev/null 2>&1 || true
+exit 0
+
+

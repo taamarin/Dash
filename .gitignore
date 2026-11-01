@@ -1,0 +1,22 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.ruff_cache/
+
+# Build outputs
+outputs/
+*.apk
+*.ipk
+*.zip
+*.tar.gz
+
+# Local state and logs
+*.log
+.env
+.env.*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

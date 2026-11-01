@@ -1,0 +1,20 @@
+{
+    "luci-app-singbox-dash": {
+        "description": "singbox-dash management",
+        "read": {
+            "session": ["access"],
+            "file": {
+                "/usr/bin/singbox-dash/singbox-dash": ["exec"],
+                "/tmp/singbox-dash-*": ["read"]
+            },
+            "uci": ["singbox-dash"]
+        },
+        "write": {
+            "file": {
+                "/usr/bin/singbox-dash/singbox-dash": ["exec"],
+                "/tmp/singbox-dash-*": ["read", "write"]
+            },
+            "uci": ["singbox-dash"]
+        }
+    }
+}

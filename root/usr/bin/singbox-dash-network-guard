@@ -1,0 +1,343 @@
+#!/usr/bin/python3
+"""Transactional sing-box core/config switch with self-probing network rollback."""
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import time
+import uuid
+
+BASE = Path('/etc/sing-box/.dash-state/network-guard')
+STATE = BASE / 'state.json'
+EVENTS = BASE / 'events.log'
+MONITOR_LOG = BASE / 'monitor.log'
+CORE = Path('/usr/bin/sing-box')
+CONFIG = Path('/etc/sing-box/config.yaml')
+SERVICE = Path('/etc/init.d/sing-box')
+KNOWN_GOOD_CORE = BASE / 'known-good-sing-box'
+KNOWN_GOOD_CONFIG = BASE / 'known-good-config.yaml'
+CANDIDATE_CORE = BASE / 'candidate-sing-box'
+CANDIDATE_CONFIG = BASE / 'candidate-config.yaml'
+PROBE_URLS = (
+    'https://223.5.5.5/',
+    'https://1.1.1.1/cdn-cgi/trace',
+    'https://www.baidu.com/robots.txt',
+    'https://www.cloudflare.com/cdn-cgi/trace',
+)
+
+
+def now():
+    return int(time.time())
+
+
+def run(args, timeout=30, cwd=None, env=None):
+    try:
+        return subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              timeout=timeout, cwd=cwd, env=env)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return subprocess.CompletedProcess(args, 124, b'', str(exc).encode())
+
+
+def text(result):
+    return (result.stdout + b'\n' + result.stderr).decode('utf-8', 'replace').strip()
+
+
+def digest(path):
+    value = hashlib.sha256()
+    with open(path, 'rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            value.update(block)
+    return value.hexdigest()
+
+
+def atomic_copy(source, target, mode):
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temp = target.with_name(target.name + '.tmp-' + uuid.uuid4().hex)
+    with open(source, 'rb') as src, open(temp, 'wb') as dst:
+        shutil.copyfileobj(src, dst, 1024 * 1024)
+        dst.flush()
+        os.fsync(dst.fileno())
+    os.chmod(temp, mode)
+    os.replace(temp, target)
+
+
+def read_state():
+    try:
+        value = json.loads(STATE.read_text(encoding='utf-8'))
+        return value if isinstance(value, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def write_state(value):
+    BASE.mkdir(parents=True, exist_ok=True, mode=0o700)
+    temp = STATE.with_name(STATE.name + '.tmp')
+    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    os.chmod(temp, 0o600)
+    os.replace(temp, STATE)
+
+
+def event(message, state=None):
+    BASE.mkdir(parents=True, exist_ok=True, mode=0o700)
+    line = '%s %s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), message)
+    with open(EVENTS, 'a', encoding='utf-8') as stream:
+        stream.write(line)
+    if state is not None:
+        state['message'] = message
+        state['updated'] = now()
+        write_state(state)
+
+
+def pid_running():
+    result = run(['pidof', 'sing-box'], timeout=5)
+    return result.returncode == 0 and bool(result.stdout.strip())
+
+
+def wait_process(want_running, timeout=45):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if pid_running() == want_running:
+            return True
+        time.sleep(1)
+    return False
+
+
+def service_action(action, state=None):
+    if state is not None:
+        event('service %s requested' % action, state)
+    result = run([str(SERVICE), action], timeout=90)
+    if result.returncode:
+        raise RuntimeError('service %s failed: %s' % (action, text(result)[-500:]))
+    if action in ('stop', 'restart') and not wait_process(False, 25):
+        raise RuntimeError('sing-box process remained after ' + action)
+    if action in ('start', 'restart') and not wait_process(True, 45):
+        raise RuntimeError('sing-box process did not start')
+
+
+def wan_route_ready():
+    network = run(['ubus', 'call', 'network.interface.wan', 'status'], timeout=8)
+    if network.returncode:
+        return False
+    try:
+        if not json.loads(network.stdout.decode('utf-8', 'replace')).get('up'):
+            return False
+    except (ValueError, OSError):
+        return False
+    route = run(['ip', '-4', 'route', 'show', 'default'], timeout=5)
+    return route.returncode == 0 and b'default ' in route.stdout
+
+
+def probe_network():
+    if not pid_running():
+        return False, 'sing-box process is not running', []
+    if not wan_route_ready():
+        return None, 'WAN/default route is not ready; probe skipped', []
+    env = os.environ.copy()
+    for key in ('http_proxy', 'https_proxy', 'all_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY'):
+        env.pop(key, None)
+    env['NO_PROXY'] = '*'
+    env['no_proxy'] = '*'
+    results = []
+    for url in PROBE_URLS:
+        result = run([
+            '/usr/bin/curl', '-4', '-k', '-sS', '--noproxy', '*',
+            '--connect-timeout', '5', '--max-time', '10', '-o', '/dev/null',
+            '-w', '%{http_code}', url
+        ], timeout=14, env=env)
+        code = result.stdout.decode('utf-8', 'replace').strip()
+        ready = result.returncode == 0 and bool(re.fullmatch(r'[1-5][0-9]{2}', code))
+        results.append({'url': url, 'code': code, 'ready': ready})
+    successes = sum(1 for item in results if item['ready'])
+    return successes >= 2, 'network probes passed %d/%d' % (successes, len(results)), results
+
+
+def wait_network(timeout=90, interval=8):
+    deadline = time.time() + timeout
+    latest = (None, 'not probed', [])
+    while time.time() < deadline:
+        latest = probe_network()
+        if latest[0] is True:
+            return latest
+        if latest[0] is None:
+            time.sleep(interval)
+            continue
+        time.sleep(interval)
+    return latest
+
+
+def rollback(state):
+    state['status'] = 'rolling_back'
+    event('network failure threshold reached; rolling back to known-good core/config', state)
+    try:
+        if pid_running():
+            service_action('stop', state)
+        if not KNOWN_GOOD_CORE.is_file() or not KNOWN_GOOD_CONFIG.is_file():
+            raise RuntimeError('known-good core/config is missing')
+        atomic_copy(KNOWN_GOOD_CORE, CORE, 0o755)
+        atomic_copy(KNOWN_GOOD_CONFIG, CONFIG, 0o600)
+        service_action('start', state)
+        ok, detail, probes = wait_network(120, 8)
+        state['rollback_probe'] = {'ok': ok, 'detail': detail, 'probes': probes, 'time': now()}
+        state['status'] = 'rolled_back' if ok is True else 'rollback_unverified'
+        state['finished'] = now()
+        event('rollback ' + ('verified online' if ok is True else 'completed but network is unverified'), state)
+        return ok is True
+    except Exception as exc:
+        state['status'] = 'rollback_failed'
+        state['error'] = str(exc)
+        state['finished'] = now()
+        event('rollback failed: ' + str(exc), state)
+        return False
+
+
+def monitor(args):
+    state = read_state()
+    if not state or state.get('token') != args.token:
+        return 2
+    event('trial monitor started', state)
+    time.sleep(max(0, int(state.get('grace') or 0)))
+    failures = 0
+    successes = 0
+    deadline = int(state.get('deadline') or (now() + 180))
+    interval = max(3, int(state.get('interval') or 8))
+    threshold = max(1, int(state.get('threshold') or 3))
+    while time.time() < deadline:
+        if state.get('status') not in ('monitoring', 'verified'):
+            return 0
+        ok, detail, probes = probe_network()
+        state['last_probe'] = {'ok': ok, 'detail': detail, 'probes': probes, 'time': now()}
+        if ok is True:
+            successes += 1
+            failures = 0
+            state['successful_rounds'] = successes
+            state['first_success'] = state.get('first_success') or now()
+            state['status'] = 'verified'
+            event('network verified: ' + detail, state)
+        elif ok is False:
+            failures += 1
+            state['failed_rounds'] = failures
+            event('network probe failed (%d/%d): %s' % (failures, threshold, detail), state)
+            if failures >= threshold:
+                return 0 if rollback(state) else 1
+        else:
+            state['skipped_rounds'] = int(state.get('skipped_rounds') or 0) + 1
+            event('network probe skipped: ' + detail, state)
+        time.sleep(interval)
+    if state.get('first_success'):
+        state['status'] = 'accepted'
+        state['finished'] = now()
+        event('trial completed with stable connectivity; candidate retained', state)
+        return 0
+    state['status'] = 'inconclusive'
+    state['finished'] = now()
+    event('trial finished without a verified internet connection; rollback not triggered because WAN was unavailable', state)
+    return 3
+
+
+def apply(args):
+    candidate_core = Path(args.candidate_core).resolve(strict=True)
+    candidate_config = Path(args.candidate_config).resolve(strict=True)
+    if not candidate_core.is_file() or candidate_core.is_symlink():
+        raise SystemExit('candidate core is invalid')
+    if not candidate_config.is_file() or candidate_config.is_symlink():
+        raise SystemExit('candidate config is invalid')
+    if not CORE.is_file() or not CONFIG.is_file():
+        raise SystemExit('current core or config is missing')
+    version = run([str(candidate_core), 'version'], timeout=15)
+    if version.returncode or 'sing-box version' not in text(version):
+        raise SystemExit('candidate core cannot run: ' + text(version)[-500:])
+    check = run([str(candidate_core), 'check', '-c', str(candidate_config)],
+                timeout=90, cwd='/etc/sing-box')
+    if check.returncode:
+        raise SystemExit('candidate config validation failed: ' + text(check)[-1000:])
+
+    BASE.mkdir(parents=True, exist_ok=True, mode=0o700)
+    atomic_copy(CORE, KNOWN_GOOD_CORE, 0o755)
+    atomic_copy(CONFIG, KNOWN_GOOD_CONFIG, 0o600)
+    atomic_copy(candidate_core, CANDIDATE_CORE, 0o755)
+    atomic_copy(candidate_config, CANDIDATE_CONFIG, 0o600)
+    state = {
+        'token': uuid.uuid4().hex,
+        'status': 'preparing',
+        'created': now(),
+        'updated': now(),
+        'trial': max(30, int(args.trial)),
+        'grace': max(0, int(args.grace)),
+        'interval': max(3, int(args.interval)),
+        'threshold': max(1, int(args.threshold)),
+        'known_good_core_hash': digest(KNOWN_GOOD_CORE),
+        'known_good_config_hash': digest(KNOWN_GOOD_CONFIG),
+        'candidate_core_hash': digest(CANDIDATE_CORE),
+        'candidate_config_hash': digest(CANDIDATE_CONFIG),
+        'candidate_core_version': text(version).splitlines()[0],
+        'message': 'prepared',
+    }
+    state['deadline'] = now() + state['trial']
+    write_state(state)
+    try:
+        service_action('stop', state)
+        atomic_copy(CANDIDATE_CORE, CORE, 0o755)
+        atomic_copy(CANDIDATE_CONFIG, CONFIG, 0o600)
+        service_action('start', state)
+    except Exception as exc:
+        state['error'] = str(exc)
+        rollback(state)
+        return 1
+    state['status'] = 'monitoring'
+    event('candidate installed; detached watchdog armed', state)
+    with open(MONITOR_LOG, 'ab', buffering=0) as log:
+        subprocess.Popen([sys.executable, str(Path(__file__).resolve()), 'monitor', '--token', state['token']],
+                         stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                         cwd='/', close_fds=True, start_new_session=True)
+    print(json.dumps(state, ensure_ascii=False, indent=2))
+    return 0
+
+
+def status(_args):
+    state = read_state()
+    if not state:
+        print(json.dumps({'ok': False, 'message': 'network guard has no state'}, ensure_ascii=False))
+        return 1
+    print(json.dumps(state, ensure_ascii=False, indent=2))
+    return 0
+
+
+def manual_rollback(_args):
+    state = read_state()
+    if not state:
+        state = {'token': uuid.uuid4().hex, 'created': now(), 'status': 'rolling_back'}
+    ok = rollback(state)
+    print(json.dumps(read_state(), ensure_ascii=False, indent=2))
+    return 0 if ok else 1
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest='command', required=True)
+    p_apply = sub.add_parser('apply')
+    p_apply.add_argument('--candidate-core', required=True)
+    p_apply.add_argument('--candidate-config', required=True)
+    p_apply.add_argument('--trial', type=int, default=180)
+    p_apply.add_argument('--grace', type=int, default=20)
+    p_apply.add_argument('--interval', type=int, default=8)
+    p_apply.add_argument('--threshold', type=int, default=3)
+    p_apply.set_defaults(func=apply)
+    p_monitor = sub.add_parser('monitor')
+    p_monitor.add_argument('--token', required=True)
+    p_monitor.set_defaults(func=monitor)
+    p_status = sub.add_parser('status')
+    p_status.set_defaults(func=status)
+    p_rollback = sub.add_parser('rollback')
+    p_rollback.set_defaults(func=manual_rollback)
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

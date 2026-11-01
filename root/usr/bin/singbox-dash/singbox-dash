@@ -1,0 +1,42 @@
+#!/bin/sh
+SOCKET=/var/run/singbox-dash-manager.sock
+SERVICE=/etc/init.d/singbox-dash-manager
+
+if [ "$#" -eq 0 ] || [ -z "$1" ]; then
+    printf '%s\n' '{"ok":false,"error":"缺少操作命令"}'
+    exit 2
+fi
+
+if [ ! -S "$SOCKET" ]; then
+    [ -x "$SERVICE" ] && "$SERVICE" start >/dev/null 2>&1
+    count=0
+    while [ ! -S "$SOCKET" ] && [ "$count" -lt 40 ]; do
+        sleep 0.05
+        count=$((count + 1))
+    done
+fi
+
+if ! command -v base64 >/dev/null 2>&1; then
+    exec /usr/bin/python3 /usr/bin/singbox-dash/client.py "$@"
+fi
+
+case "${1:-}" in
+    version|bootstrap|status|overview|job|settings-get|subscription-info) ;;
+    *)
+        exec /usr/bin/python3 /usr/bin/singbox-dash/client.py "$@"
+        ;;
+esac
+
+if command -v socat >/dev/null 2>&1 && [ -S "$SOCKET" ]; then
+    {
+        printf 'SBD1\n'
+        for arg in "$@"; do
+            printf '%s' "$arg" | base64 | tr -d '\n'
+            printf '\n'
+        done
+        printf 'END\n'
+    } | socat -t 5 -,shut-none UNIX-CONNECT:"$SOCKET"
+    exit $?
+fi
+
+exec /usr/bin/python3 /usr/bin/singbox-dash/client.py "$@"

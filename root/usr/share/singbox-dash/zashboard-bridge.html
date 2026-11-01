@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>singbox-dash zashboard bridge</title></head>
+<body>
+<script>
+(function () {
+    function send() {
+        if (window.parent === window) return;
+        var raw = null;
+        var error = '';
+        try {
+            raw = window.localStorage.getItem('config/proxy-folders');
+        } catch (exc) {
+            error = String(exc && exc.message || exc);
+        }
+        window.parent.postMessage({
+            type: 'singbox-dash:zashboard-folders',
+            raw: raw,
+            error: error
+        }, '*');
+    }
+    window.addEventListener('DOMContentLoaded', send);
+    window.setTimeout(send, 60);
+})();
+</script>
+</body>
+</html>

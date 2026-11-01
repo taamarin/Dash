@@ -1,0 +1,151 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build IPK payload
+        run: python3 tools/build_packages.py --output release-assets
+
+      - name: Build APK payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(cat release-assets/version.txt)"
+          docker run --rm \
+            -e VERSION="$VERSION" \
+            -v "$PWD/release-assets/apk-input:/input:ro" \
+            -v "$PWD/release-assets:/out" \
+            alpine:edge sh -eu -c '
+              apk mkpkg \
+                --files /input/root \
+                --info name:luci-app-singbox-dash \
+                --info version:"$VERSION" \
+                --info description:"OpenWrt LuCI 的 Sing-box 运行、配置、规则、订阅与内核管理面板。" \
+                --info arch:noarch \
+                --info license:MIT \
+                --info origin:luci-app-singbox-dash \
+                --info maintainer:singbox-dash \
+                --info "depends:python3 python3-yaml luci-base nftables ip-full cgi-io socat" \
+                --script post-install:/input/postinst \
+                --script post-upgrade:/input/postinst \
+                --output "/out/luci-app-singbox-dash-${VERSION}.apk"
+            '
+          rm -rf release-assets/apk-input
+          test -s release-assets/*.apk
+
+      - name: Verify IPK on OpenWrt 24.10.2
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network host --entrypoint /bin/sh \
+            -v "$PWD/release-assets:/pkg:ro" \
+            ghcr.io/openwrt/rootfs:x86_64-24.10.2 -c '
+              set -eu
+              mkdir -p /var/lock /var/run
+              if [ -f ./setup.sh ]; then ./setup.sh; fi
+              opkg update
+              opkg install /pkg/*.ipk
+              opkg install uci
+              VERSION="$(cat /pkg/version.txt)"
+              APP_VERSION="${VERSION%-r*}"
+              opkg status luci-app-singbox-dash | grep -q "Version: $VERSION"
+              python3 /usr/bin/singbox-dash/daemon.py > /tmp/sbd-daemon.log 2>&1 &
+              DAEMON_PID=$!
+              trap "kill $DAEMON_PID 2>/dev/null || true" EXIT
+              i=0
+              while [ ! -S /var/run/singbox-dash-manager.sock ] && [ "$i" -lt 10 ]; do
+                sleep 1
+                i=$((i + 1))
+              done
+              [ -S /var/run/singbox-dash-manager.sock ] || { cat /tmp/sbd-daemon.log; exit 1; }
+              mkdir -p /tmp/sbd-no-base64
+              PATH=/tmp/sbd-no-base64 /usr/bin/singbox-dash/singbox-dash version > /tmp/sbd-version.json
+              PATH=/tmp/sbd-no-base64 /usr/bin/singbox-dash/singbox-dash settings-get > /tmp/sbd-settings.json
+              PATH=/tmp/sbd-no-base64 /usr/bin/singbox-dash/singbox-dash diag > /tmp/sbd-diag.json
+              grep -q "\"version\":\"$APP_VERSION\"" /tmp/sbd-version.json
+              grep -q "\"ok\":true" /tmp/sbd-settings.json
+              grep -q "\"ok\":true" /tmp/sbd-diag.json
+              ! grep -q "\"ok\":false" /tmp/sbd-version.json /tmp/sbd-settings.json /tmp/sbd-diag.json
+              cat /tmp/sbd-version.json
+              cat /tmp/sbd-settings.json
+              head -c 500 /tmp/sbd-diag.json
+              printf '\n'
+            '
+
+      - name: Create checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release-assets
+          sha256sum *.ipk *.apk | sort -k2 > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: singbox-dash
+          path: |
+            release-assets/*.ipk
+            release-assets/*.apk
+            release-assets/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release notes
+        uses: actions/checkout@v5
+
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          name: singbox-dash
+          path: release-assets
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          TITLE="SingBox-Dash ${TAG}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/*.ipk release-assets/*.apk release-assets/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" --notes-file docs/RELEASE_NOTES.md --latest
+          else
+            gh release create "$TAG" release-assets/*.ipk release-assets/*.apk release-assets/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" --title "$TITLE" --notes-file docs/RELEASE_NOTES.md --verify-tag --latest
+          fi

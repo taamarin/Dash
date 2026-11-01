@@ -1,0 +1,123 @@
+/* Argon compatibility and typography parity. */
+
+/* ===== Argon parity with Vantage geometry and typography ===== */
+body:not(.vt-auth) {
+  --sbd-radius: 8px;
+  --sbd-radius-sm: 6px;
+  --sbd-radius-xs: 4px;
+  --sbd-card-shadow: 0 1px 2px rgba(20, 23, 26, .06), 0 1px 0 rgba(20, 23, 26, .03);
+  --sbd-card-head-padding: 12px 18px;
+  --sbd-card-body-padding: 16px 20px;
+  --sbd-card-foot-padding: 12px 20px;
+  --sbd-card-foot-bg: var(--sbd-card);
+  --sbd-card-head-icon-size: 17px;
+  --sbd-card-head-icon-radius: 0;
+  --sbd-card-head-icon-glyph: 17px;
+  --sbd-card-head-icon-bg: transparent;
+  --sbd-card-head-icon-color: var(--sbd-muted);
+  --sbd-card-head-icon-orange-bg: transparent;
+  --sbd-card-head-icon-orange-color: var(--sbd-muted);
+  --sbd-card-head-icon-green-bg: transparent;
+  --sbd-card-head-icon-green-color: var(--sbd-muted);
+  --sbd-card-head-icon-purple-bg: transparent;
+  --sbd-card-head-icon-purple-color: var(--sbd-muted);
+  --sbd-card-head-icon-red-bg: transparent;
+  --sbd-card-head-icon-red-color: var(--sbd-muted);
+  --sbd-card-title-size: 14px;
+  --sbd-card-title-weight: 600;
+  --sbd-card-sub-size: 12px;
+  --sbd-control-radius: var(--sbd-radius-sm);
+  --sbd-control-pad-x: 12px;
+  --sbd-control-font-weight: 600;
+  --sbd-badge-font-weight: 600;
+}
+
+body:not(.vt-auth) .sbd-sub-summary-tile,
+body:not(.vt-auth) .sbd-subscription-source-card,
+body:not(.vt-auth) .sbd-node-source-section,
+body:not(.vt-auth) .sbd-rule-row {
+  border-radius: var(--sbd-radius);
+  box-shadow: 0 1px 2px rgba(20, 23, 26, .06), 0 1px 0 rgba(20, 23, 26, .03);
+}
+
+body:not(.vt-auth) .sbd-sub-source-meta,
+body:not(.vt-auth) .sbd-node-source-count,
+body:not(.vt-auth) .sbd-managed-node-server,
+body:not(.vt-auth) .sbd-trace-hop-kind,
+body:not(.vt-auth) .sbd-sub-traffic-meta { font-size: 11px; }
+body:not(.vt-auth) .sbd-sub-summary-tile { padding: 12px 16px; }
+body:not(.vt-auth) .sbd-sub-summary-value { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+body:not(.vt-auth) .sbd-sub-tabs { background: var(--sbd-card-2); }
+body:not(.vt-auth) .sbd-sub-tab { height: 36px; min-height: 36px; font-size: 12px; font-weight: 600; line-height: 1; }
+body:not(.vt-auth) .sbd-sub-source-head,
+body:not(.vt-auth) .sbd-node-source-head { padding: 12px 16px; }
+body:not(.vt-auth) .sbd-sub-source-title,
+body:not(.vt-auth) .sbd-node-source-title,
+body:not(.vt-auth) .sbd-proxy-name,
+body:not(.vt-auth) .sbd-managed-node-name { font-size: 14px; font-weight: 600; }
+body:not(.vt-auth) .sbd-sub-source-body { padding: 12px 16px; }
+body:not(.vt-auth) .sbd-managed-node-card { min-height: 54px; padding: 8px 12px; border-radius: var(--sbd-radius-sm); }
+body:not(.vt-auth) .sbd-managed-node-name,
+body:not(.vt-auth) .sbd-node-name { font-size: 13px; font-weight: 600; }
+body:not(.vt-auth) .sbd-node { padding: 8px 10px; border-radius: var(--sbd-radius-sm); }
+body:not(.vt-auth) .sbd-sub-traffic,
+body:not(.vt-auth) .sbd-home-sub-stat,
+body:not(.vt-auth) .sbd-home-sub-traffic,
+body:not(.vt-auth) .sbd-trace-hop { border-radius: var(--sbd-radius-sm); }
+body:not(.vt-auth) .sbd-sub-traffic-bar,
+body:not(.vt-auth) .sbd-home-sub-traffic .sbd-sub-traffic-bar { height: 5px; }
+body:not(.vt-auth) .sbd-home-sub-stat { padding: 8px 12px; }
+body:not(.vt-auth) .sbd-home-sub-stat strong { font-size: 16px; font-weight: 600; }
+body:not(.vt-auth) .sbd-trace-hop-name,
+body:not(.vt-auth) .sbd-trace-rule-payload { font-weight: 600; }
+body:not(.vt-auth) .sbd-trace-hop-name { font-size: 13px; }
+body:not(.vt-auth) .sbd-trace-rule-meta { font-size: 12px; }
+body:not(.vt-auth) .sbd-rule-row { padding: 10px 12px; }
+body:not(.vt-auth) .sbd-rule-title { font-weight: 600; }
+body:not(.vt-auth) .sbd-rule-meta { font-size: 12px; }
+body:not(.vt-auth) .sbd-name-letter { font-weight: 700; }
+
+
+/* Argon parity: controls not covered by the shared radius token. */
+body:not(.vt-auth) { --sbd-btn-h: 36px; }
+body:not(.vt-auth) .sbd-input,
+body:not(.vt-auth) .sbd-select,
+body:not(.vt-auth) .sbd-textarea {
+  border-radius: var(--sbd-radius-sm);
+}
+body:not(.vt-auth) .sbd-sub-summary-tile,
+body:not(.vt-auth) .sbd-subscription-source-card,
+body:not(.vt-auth) .sbd-subscription-source-card.legacy { border-color: var(--sbd-line); }
+
+
+
+
+
+/* Argon uses theme-level anchor colors that are lighter than the dashboard palette. */
+body:not(.vt-auth) .sbd-brand-title { color: #9A3D00; }
+body:not(.vt-auth) .sbd-tabs .sbd-tab { color: #4F5D72; }
+body:not(.vt-auth) .sbd-tabs .sbd-tab.active { color: #FFFFFF; }
+html[data-argon-mode="dark"] body:not(.vt-auth) .sbd-brand-title { color: #FFB077; }
+html[data-argon-mode="dark"] body:not(.vt-auth) .sbd-tabs .sbd-tab { color: #C4CBD6; }
+html[data-argon-mode="dark"] body:not(.vt-auth) .sbd-tabs .sbd-tab.active { color: #FFFFFF; }
+
+/* Active theme navigation keeps Argon's palette while meeting WCAG AA. */
+html[data-argon-mode] #mainmenu .menu.active { background-color: #5364D8; }
+
+/* Cross-page text contrast on Argon's light surfaces. */
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-badge.warn,
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-badge.orange { color: #9A4A14; }
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-badge.purple,
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-rule-chip.more,
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-rule-chip.advanced { color: #5B3ACB; }
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-filter-pill.active .sbd-rule-pill-count { background-color: #5364D8; }
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-check-value.good,
+html[data-argon-mode]:not([data-argon-mode="dark"]) .sbd-mode-diag-check.good .sbd-mode-diag-check-value { color: #0B6B3B; }
+
+html[data-argon-mode="dark"] .sbd-badge.warn,
+html[data-argon-mode="dark"] .sbd-badge.orange { color: #FFB077; }
+html[data-argon-mode="dark"] .sbd-badge.purple,
+html[data-argon-mode="dark"] .sbd-rule-chip.more,
+html[data-argon-mode="dark"] .sbd-rule-chip.advanced { color: #C4B5FD; }
+html[data-argon-mode="dark"] .sbd-check-value.good,
+html[data-argon-mode="dark"] .sbd-mode-diag-check.good .sbd-mode-diag-check-value { color: #6EE7A0; }

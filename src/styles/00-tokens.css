@@ -1,0 +1,190 @@
+/* deslop-ignore-file 06 19 26 34: gradients, glass, progress transition and mono log/code type are explicit product choices. */
+:root {
+  /* Loon / Nexus Apple HIG Design System Tokens */
+  --sbd-bg: #F5F6F8;
+  --sbd-card: #FFFFFF;
+  --sbd-card-2: #F7F8FA;
+  --sbd-card-hover: #F0F3F8;
+  --sbd-text: #11141A;
+  --sbd-muted: #636B78;
+  --sbd-faint: #5F6978;
+  --sbd-line: rgba(17, 20, 26, 0.065);
+  --sbd-line-strong: rgba(17, 20, 26, 0.12);
+  --sbd-input: #F2F4F8;
+
+  /* Core Brand & Semantic Accents */
+  --sbd-orange: #EA7826;
+  --sbd-orange-soft: rgba(234, 120, 38, 0.13);
+  --sbd-accent: #2B5AED;
+  --sbd-accent-2: #1E47CC;
+  --sbd-accent-soft: rgba(43, 90, 237, 0.11);
+  --sbd-accent-border: rgba(43, 90, 237, 0.28);
+  --sbd-green: #2ECC71;
+  --sbd-green-soft: rgba(46, 204, 113, 0.14);
+  --sbd-purple: #7B5CFA;
+  --sbd-purple-soft: rgba(123, 92, 250, 0.13);
+  --sbd-red: #B42323;
+  --sbd-red-soft: rgba(242, 72, 72, 0.12);
+  --sbd-amber: #EA7826;
+  --sbd-amber-soft: rgba(234, 120, 38, 0.13);
+
+  /* Dual Data Gradients (Mint Upload & Electric Purple Download) */
+  --sbd-grad-mint: linear-gradient(135deg, #DDF8EC 0%, #B8F0D6 100%);
+  --sbd-grad-mint-border: rgba(46, 204, 113, 0.28);
+  --sbd-grad-mint-text: #0C4727;
+  --sbd-grad-purple: linear-gradient(135deg, #E8E6FF 0%, #CFCBFF 100%);
+  --sbd-grad-purple-border: rgba(123, 92, 250, 0.28);
+  --sbd-grad-purple-text: #251B5A;
+
+  /* Glassmorphism & Soft Ambient Shadows */
+  --sbd-glass: rgba(255, 255, 255, 0.78);
+  --sbd-glass-border: rgba(255, 255, 255, 0.72);
+  --sbd-circle-bg: linear-gradient(180deg, #FFFFFF 0%, #F4F6FA 100%);
+  --sbd-circle-shadow: 0 2px 6px rgba(17, 20, 26, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --sbd-shadow: 0 2px 8px -2px rgba(17, 20, 26, 0.04), 0 10px 26px -12px rgba(17, 20, 26, 0.07);
+  --sbd-shadow-lg: 0 20px 52px -14px rgba(17, 20, 26, 0.18);
+  --sbd-radius: 18px;
+  --sbd-radius-sm: 12px;
+  --sbd-radius-xs: 999px;
+  --sbd-btn-h: 38px;
+  --sbd-icon-size: 18px;
+
+  /* Spacing, type and motion scale */
+  --sbd-space-1: 4px;
+  --sbd-space-2: 8px;
+  --sbd-space-3: 12px;
+  --sbd-space-4: 16px;
+  --sbd-space-5: 20px;
+  --sbd-space-6: 24px;
+  --sbd-font-micro: 10.5px;
+  --sbd-font-sm: 11.5px;
+  --sbd-font-base: 13px;
+  --sbd-font-md: 15px;
+  --sbd-font-lg: 16px;
+  --sbd-font-xl: 20px;
+  --sbd-motion-fast: 120ms;
+  --sbd-motion-base: 160ms;
+  --sbd-ease-standard: ease;
+
+  /* Card component tokens */
+  --sbd-card-shadow: var(--sbd-shadow);
+  --sbd-card-head-gap: var(--sbd-space-3);
+  --sbd-card-head-main-gap: 10px;
+  --sbd-card-head-padding: 14px 18px;
+  --sbd-card-head-bg: transparent;
+  --sbd-card-head-icon-size: 30px;
+  --sbd-card-head-icon-radius: 9px;
+  --sbd-card-head-icon-glyph: 16px;
+  --sbd-card-head-icon-bg: var(--sbd-accent-soft);
+  --sbd-card-head-icon-color: var(--sbd-accent);
+  --sbd-card-head-icon-orange-bg: var(--sbd-orange-soft);
+  --sbd-card-head-icon-orange-color: var(--sbd-orange);
+  --sbd-card-head-icon-green-bg: var(--sbd-green-soft);
+  --sbd-card-head-icon-green-color: var(--sbd-green);
+  --sbd-card-head-icon-purple-bg: var(--sbd-purple-soft);
+  --sbd-card-head-icon-purple-color: var(--sbd-purple);
+  --sbd-card-head-icon-red-bg: var(--sbd-red-soft);
+  --sbd-card-head-icon-red-color: var(--sbd-red);
+  --sbd-card-title-color: var(--sbd-text);
+  --sbd-card-title-size: var(--sbd-font-md);
+  --sbd-card-title-weight: 740;
+  --sbd-card-sub-size: var(--sbd-font-sm);
+  --sbd-card-body-padding: 16px 18px;
+  --sbd-card-foot-padding: 12px 18px;
+  --sbd-card-foot-bg: var(--sbd-card-2);
+
+  /* Button component tokens */
+  --sbd-control-bg: var(--sbd-circle-bg);
+  --sbd-control-border: var(--sbd-line-strong);
+  --sbd-control-radius: 999px;
+  --sbd-control-color: var(--sbd-text);
+  --sbd-control-pad-x: 15px;
+  --sbd-control-font-size: var(--sbd-font-base);
+  --sbd-control-font-weight: 660;
+  --sbd-control-shadow: var(--sbd-circle-shadow);
+  --sbd-control-transition: all 140ms var(--sbd-ease-standard);
+  --sbd-control-hover-border: var(--sbd-accent-border);
+  --sbd-control-hover-bg: var(--sbd-circle-bg);
+  --sbd-control-hover-color: var(--sbd-accent);
+  --sbd-control-active-transform: scale(0.975);
+  --sbd-control-icon-radius: 50%;
+  --sbd-btn-small-height: 32px;
+  --sbd-btn-small-pad-x: 12px;
+  --sbd-btn-small-font-size: 12px;
+  --sbd-on-accent: #FFFFFF;
+  --sbd-primary-border: var(--sbd-accent);
+  --sbd-primary-shadow: 0 5px 14px -4px rgba(43, 90, 237, 0.5);
+  --sbd-primary-hover-bg: var(--sbd-accent-2);
+  --sbd-primary-hover-border: var(--sbd-accent-2);
+  --sbd-primary-hover-color: #FFFFFF;
+  --sbd-danger-border: rgba(242, 72, 72, 0.24);
+  --sbd-danger-hover-bg: rgba(242, 72, 72, 0.2);
+
+  /* Badge component tokens */
+  --sbd-badge-border: 1px solid transparent;
+  --sbd-badge-radius: 999px;
+  --sbd-badge-pad: 2px 9px;
+  --sbd-badge-bg: var(--sbd-input);
+  --sbd-badge-color: var(--sbd-muted);
+  --sbd-badge-font-size: 11px;
+  --sbd-badge-font-weight: 700;
+  --sbd-badge-spacing: 0.01em;
+  --sbd-badge-transform: none;
+  --sbd-badge-accent-border: transparent;
+  --sbd-badge-green-border: transparent;
+  --sbd-badge-orange-border: transparent;
+  --sbd-badge-purple-border: transparent;
+  --sbd-badge-red-border: transparent;
+  --sbd-green-text: #0B6B3B;
+  color-scheme: light;
+}
+
+html[data-argon-mode="dark"],
+html[data-theme="dark"],
+html[data-darkmode="true"],
+html.dark,
+body[data-theme="dark"],
+body.dark {
+  --sbd-bg: #0C0E13;
+  --sbd-card: #161922;
+  --sbd-card-2: #1D212D;
+  --sbd-card-hover: #252A38;
+  --sbd-text: #F2F4F8;
+  --sbd-muted: #98A1B3;
+  --sbd-faint: #A6AFBF;
+  --sbd-line: rgba(255, 255, 255, 0.07);
+  --sbd-line-strong: rgba(255, 255, 255, 0.14);
+  --sbd-input: #11141C;
+
+  --sbd-orange: #FF8C3B;
+  --sbd-orange-soft: rgba(255, 140, 59, 0.16);
+  --sbd-accent: #4772FF;
+  --sbd-accent-2: #2B5AED;
+  --sbd-accent-soft: rgba(71, 114, 255, 0.17);
+  --sbd-accent-border: rgba(71, 114, 255, 0.36);
+  --sbd-green: #38D97A;
+  --sbd-green-soft: rgba(56, 217, 122, 0.16);
+  --sbd-purple: #9A82FF;
+  --sbd-purple-soft: rgba(154, 130, 255, 0.16);
+  --sbd-red: #FF6464;
+  --sbd-red-soft: rgba(255, 100, 100, 0.16);
+  --sbd-amber: #FF8C3B;
+  --sbd-amber-soft: rgba(255, 140, 59, 0.16);
+  --sbd-green-text: #38D97A;
+
+  --sbd-grad-mint: linear-gradient(135deg, rgba(24, 92, 55, 0.55) 0%, rgba(18, 66, 40, 0.72) 100%);
+  --sbd-grad-mint-border: rgba(56, 217, 122, 0.3);
+  --sbd-grad-mint-text: #D8FCE8;
+  --sbd-grad-purple: linear-gradient(135deg, rgba(58, 45, 128, 0.55) 0%, rgba(39, 30, 92, 0.75) 100%);
+  --sbd-grad-purple-border: rgba(154, 130, 255, 0.3);
+  --sbd-grad-purple-text: #EAE6FF;
+
+  --sbd-glass: rgba(22, 25, 34, 0.8);
+  --sbd-glass-border: rgba(255, 255, 255, 0.12);
+  --sbd-circle-bg: linear-gradient(180deg, #222735 0%, #191D27 100%);
+  --sbd-circle-shadow: 0 3px 8px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --sbd-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), 0 12px 30px -14px rgba(0, 0, 0, 0.55);
+  --sbd-shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.75);
+  color-scheme: dark;
+}
+

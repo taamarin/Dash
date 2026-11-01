@@ -16,13 +16,13 @@ function setBusy(scope, value, options) {
 function errorCard(title, error, retry, options) {
     const opt = options || {};
     const actions = [].concat(opt.actions || []);
-    if (retry) actions.unshift(ui.btn(opt.retryText || '重试', {
+    if (retry) actions.unshift(ui.btn(opt.retryText || 'Coba lagi', {
         icon: 'refresh', variant: opt.retryPrimary === false ? null : 'primary', onClick: retry
     }));
-    const children = [ui.note(opt.errorText || String(error || '未知错误'), 'bad')];
+    const children = [ui.note(opt.errorText || String(error || 'Kesalahan tidak diketahui'), 'bad')];
     if (opt.hint) children.push(ui.note(opt.hint, 'info'));
     if (actions.length) children.push(ui.E('div', { 'class': 'sbd-btn-row' }, actions));
-    return ui.card(title || '加载失败', children, {
+    return ui.card(title || 'Gagal memuat', children, {
         className: opt.className || '',
         icon: opt.icon || 'info',
         iconTone: 'red'
@@ -32,7 +32,7 @@ function errorCard(title, error, retry, options) {
 function saveBar(buttons, options) {
     const opt = options || {};
     const dot = ui.E('span', { 'class': 'sbd-dot ' + (opt.dirty ? 'off' : 'on') });
-    const stateText = ui.E('span', { 'class': 'sbd-config-state' }, opt.emptyText || '加载配置');
+    const stateText = ui.E('span', { 'class': 'sbd-config-state' }, opt.emptyText || 'Memuat konfigurasi');
     const node = ui.E('div', { 'class': 'sbd-config-savebar ' + (opt.className || '') }, [
         ui.E('div', { 'class': 'sbd-config-save-state' }, [dot, stateText]),
         ui.E('div', { 'class': 'sbd-config-save-actions' }, buttons || [])
@@ -46,9 +46,9 @@ function saveBar(buttons, options) {
         node.classList.toggle('unavailable', !available);
         node.classList.toggle('dirty', available && dirty);
         dot.className = 'sbd-dot ' + (dirty ? 'off' : 'on');
-        stateText.textContent = !available ? (opt.emptyText || '加载配置')
-            : busy ? '处理中'
-            : state.validationText || (dirty ? '有未保存修改' : (opt.idleText || '已同步'));
+        stateText.textContent = !available ? (opt.emptyText || 'Memuat konfigurasi')
+            : busy ? 'Memproses'
+            : state.validationText || (dirty ? 'Ada perubahan yang belum disimpan' : (opt.idleText || 'Tersinkron'));
         (buttons || []).forEach(button => {
             button.disabled = busy || !dirty || !available;
         });

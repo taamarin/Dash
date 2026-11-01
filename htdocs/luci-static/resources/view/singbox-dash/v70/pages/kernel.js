@@ -28,10 +28,10 @@ async function kernelFileKind(file) {
     if (!file || file.size < 4) return '';
     const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
     if (head[0] === 0x7f && head[1] === 0x45 && head[2] === 0x4c && head[3] === 0x46)
-        return 'ELF 内核';
-    if (head[0] === 0x1f && head[1] === 0x8b) return 'gzip 压缩包';
-    if (head[0] === 0x50 && head[1] === 0x4b) return 'zip 压缩包';
-    if (/\.tar$/i.test(file.name || '')) return 'tar 压缩包';
+        return 'Kernel ELF';
+    if (head[0] === 0x1f && head[1] === 0x8b) return 'Arsip gzip';
+    if (head[0] === 0x50 && head[1] === 0x4b) return 'Arsip zip';
+    if (/\.tar$/i.test(file.name || '')) return 'Arsip tar';
     return '';
 }
 
@@ -42,7 +42,7 @@ async function render(host, ctx) {
     let infoRequest = 0;
     let releases = [];
     let releasesLoading = true;
-    let releasesLoadingLabel = '获取版本列表';
+    let releasesLoadingLabel = 'Memuat daftar versi';
     let releasesError = '';
     let releasesRequest = 0;
     let channel = 'all';
@@ -89,15 +89,15 @@ async function render(host, ctx) {
     function renderInfo() {
         infoHost.innerHTML = '';
         if (infoLoading && !info) {
-            infoHost.appendChild(ui.card('当前内核', [ui.loading('读取内核信息')], {
+            infoHost.appendChild(ui.card('Kernel saat ini', [ui.loading('Memuat informasi kernel')], {
                 icon: 'kernel', iconTone: 'purple'
             }));
             return;
         }
         if (!info) {
-            infoHost.appendChild(ui.card('内核信息不可用', [
-                ui.note(infoError || '管理服务没有返回内核信息', 'bad'),
-                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重新读取', {
+            infoHost.appendChild(ui.card('Informasi kernel tidak tersedia', [
+                ui.note(infoError || 'Layanan pengelolaan tidak memberikan informasi kernel', 'bad'),
+                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Baca kembali', {
                     icon: 'refresh', onClick: () => loadInfo(true)
                 }))
             ], { icon: 'kernel', iconTone: 'red' }));
@@ -105,52 +105,52 @@ async function render(host, ctx) {
         }
         const platform = info.platform || {};
         const probe = info.ebpf || {};
-        infoHost.appendChild(ui.card('当前内核', [
+        infoHost.appendChild(ui.card('Kernel saat ini', [
             ui.E('div', { 'class': 'sbd-kernel-grid' }, [
                 ui.E('div', { 'class': 'sbd-row-left' }, [
                     ui.appIcon('kernel', 'purple'),
                     ui.E('div', { 'class': 'sbd-kernel-main' }, [
-                        ui.E('div', { 'class': 'sbd-kernel-version' }, info.version ? shortVersion(info.version) : '未安装'),
+                        ui.E('div', { 'class': 'sbd-kernel-version' }, info.version ? shortVersion(info.version) : 'Belum dipasang'),
                         ui.E('div', { 'class': 'sbd-row-sub' }, info.path || '/usr/bin/sing-box'),
                         ui.E('div', { 'class': 'sbd-btn-row' }, [
-                            ui.badge(info.exists ? '已安装' : '未安装', info.exists ? 'green' : 'bad'),
-                            ui.badge('内核：' + (info.core_family_label || '未知'), 'green'),
-                            info.ebpf_build ? ui.badge('eBPF 构建', 'orange') : ui.badge('标准构建', 'blue'),
-                            ui.badge(platform.distrib_arch || platform.machine || '未知架构', 'purple')
+                            ui.badge(info.exists ? 'Terpasang' : 'Belum dipasang', info.exists ? 'green' : 'bad'),
+                            ui.badge('Kernel: ' + (info.core_family_label || 'Tidak diketahui'), 'green'),
+                            info.ebpf_build ? ui.badge('Build eBPF', 'orange') : ui.badge('Build standar', 'blue'),
+                            ui.badge(platform.distrib_arch || platform.machine || 'Arsitektur tidak diketahui', 'purple')
                         ])
                     ])
                 ]),
                 ui.E('div', { 'class': 'sbd-kernel-actions' }, [
                     fileInput,
-                    ui.btn('本地安装', { icon: 'upload', variant: 'primary', onClick: () => fileInput.click() }),
-                    ui.btn('', { icon: 'refresh', iconOnly: true, title: '刷新', onClick: () => loadInfo(true) })
+                    ui.btn('Instal lokal', { icon: 'upload', variant: 'primary', onClick: () => fileInput.click() }),
+                    ui.btn('', { icon: 'refresh', iconOnly: true, title: 'Segarkan', onClick: () => loadInfo(true) })
                 ])
             ]),
-            infoError ? ui.note('刷新失败：' + infoError, 'warn') : null,
+            infoError ? ui.note('Penyegaran gagal: ' + infoError, 'warn') : null,
             ui.E('div', { 'class': 'sbd-stat-grid sbd-stat-grid-4' }, [
                 ui.E('div', { 'class': 'sbd-stat' }, [
-                    ui.E('div', { 'class': 'sbd-stat-label' }, '设备平台'),
+                    ui.E('div', { 'class': 'sbd-stat-label' }, 'Platform perangkat'),
                     ui.E('div', { 'class': 'sbd-stat-value' }, platformName(platform)),
                     ui.E('div', { 'class': 'sbd-stat-sub' }, platform.kernel || '')
                 ]),
                 ui.E('div', { 'class': 'sbd-stat' }, [
-                    ui.E('div', { 'class': 'sbd-stat-label' }, '文件体积'),
+                    ui.E('div', { 'class': 'sbd-stat-label' }, 'Ukuran file'),
                     ui.E('div', { 'class': 'sbd-stat-value' }, api.formatBytes(info.size)),
                     ui.E('div', { 'class': 'sbd-stat-sub' }, 'SHA256 ' + (info.hash || '—'))
                 ]),
                 ui.E('div', { 'class': 'sbd-stat' }, [
-                    ui.E('div', { 'class': 'sbd-stat-label' }, 'eBPF 支持'),
-                    ui.E('div', { 'class': 'sbd-stat-value' }, probe.deferred ? (probe.supported ? '构建支持' : '不支持') : (probe.supported ? '可用' : '不可用')),
-                    ui.E('div', { 'class': 'sbd-stat-sub' }, probe.deferred ? '请到诊断工具验证运行能力' : (probe.summary ? '已完成探测' : '未探测'))
+                    ui.E('div', { 'class': 'sbd-stat-label' }, 'Dukungan eBPF'),
+                    ui.E('div', { 'class': 'sbd-stat-value' }, probe.deferred ? (probe.supported ? 'Didukung build' : 'Tidak didukung') : (probe.supported ? 'Tersedia' : 'Tidak tersedia')),
+                    ui.E('div', { 'class': 'sbd-stat-sub' }, probe.deferred ? 'Verifikasi kemampuan runtime melalui alat diagnostik' : (probe.summary ? 'Pemeriksaan selesai' : 'Belum diperiksa'))
                 ]),
                 ui.E('div', { 'class': 'sbd-stat' }, [
-                    ui.E('div', { 'class': 'sbd-stat-label' }, '历史备份'),
-                    ui.E('div', { 'class': 'sbd-stat-value' }, String((info.backups || []).length) + ' 个'),
-                    ui.E('div', { 'class': 'sbd-stat-sub' }, '异常时自动回滚')
+                    ui.E('div', { 'class': 'sbd-stat-label' }, 'Cadangan tersimpan'),
+                    ui.E('div', { 'class': 'sbd-stat-value' }, String((info.backups || []).length) + ' item'),
+                    ui.E('div', { 'class': 'sbd-stat-sub' }, 'Rollback otomatis jika terjadi masalah')
                 ])
             ]),
             probe.summary ? ui.E('details', { 'class': 'sbd-details' }, [
-                ui.E('summary', {}, 'eBPF 环境详情'),
+                ui.E('summary', {}, 'Detail lingkungan eBPF'),
                 ui.E('pre', { 'class': 'sbd-pre' }, probe.summary)
             ]) : null
         ].filter(Boolean), { icon: 'kernel', iconTone: 'purple' }));
@@ -163,7 +163,7 @@ async function render(host, ctx) {
         renderInfo();
         renderBackups();
         try {
-            const value = await withTimeout(api.kernelInfo(force === true), 25000, '读取内核信息超时');
+            const value = await withTimeout(api.kernelInfo(force === true), 25000, 'Waktu membaca informasi kernel habis');
             if (request !== infoRequest) return;
             info = value;
             if (!buildType) {
@@ -174,7 +174,7 @@ async function render(host, ctx) {
         } catch (error) {
             if (request !== infoRequest) return;
             infoError = api.errorText(error);
-            if (!info) ui.notify('内核信息读取失败：' + infoError, 'error', 7000);
+            if (!info) ui.notify('Gagal membaca informasi kernel: ' + infoError, 'error', 7000);
         } finally {
             if (request === infoRequest) {
                 infoLoading = false;
@@ -187,15 +187,15 @@ async function render(host, ctx) {
     function renderBackups() {
         backupHost.innerHTML = '';
         if (infoLoading && !info) {
-            backupHost.appendChild(ui.card('内核备份', [ui.loading('读取备份信息')], {
+            backupHost.appendChild(ui.card('Cadangan kernel', [ui.loading('Memuat informasi cadangan')], {
                 icon: 'backup', iconTone: 'orange'
             }));
             return;
         }
         if (!info) {
-            backupHost.appendChild(ui.card('内核备份', [
-                ui.note(infoError || '内核信息不可用，无法读取备份列表', 'bad'),
-                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重新读取', {
+            backupHost.appendChild(ui.card('Cadangan kernel', [
+                ui.note(infoError || 'Informasi kernel tidak tersedia; daftar cadangan tidak dapat dibaca', 'bad'),
+                ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Baca kembali', {
                     icon: 'refresh', onClick: () => loadInfo(true)
                 }))
             ], { icon: 'backup', iconTone: 'orange' }));
@@ -203,25 +203,25 @@ async function render(host, ctx) {
         }
         const backups = info.backups || [];
         const body = ui.E('div', { 'class': 'sbd-backup-list' });
-        if (!backups.length) body.appendChild(ui.empty('暂无内核备份'));
+        if (!backups.length) body.appendChild(ui.empty('Belum ada cadangan kernel'));
         backups.forEach(item => {
             body.appendChild(ui.row(shortVersion(item.version) || item.name, [
                 api.formatDate(item.time), ' · ', api.formatBytes(item.size)
             ], [
-                ui.btn('回滚', {
+                ui.btn('Rollback', {
                     icon: 'backup', small: true, onClick: () => rollback(item)
                 }),
                 ui.btn('', {
                     icon: 'trash', iconOnly: true, small: true, variant: 'danger',
-                    title: '删除此内核备份', onClick: () => deleteBackup(item)
+                    title: 'Hapus cadangan kernel ini', onClick: () => deleteBackup(item)
                 })
             ], { icon: 'backup', color: 'orange' }));
         });
-        backupHost.appendChild(ui.card('内核备份', [body], {
+        backupHost.appendChild(ui.card('Cadangan kernel', [body], {
             icon: 'backup',
             iconTone: 'orange',
-            subtitle: '最多保留 10 份，超出后自动删除最旧的内核',
-            actions: [ui.btn('', { icon: 'refresh', iconOnly: true, title: '刷新内核备份', onClick: () => loadInfo(true) })]
+            subtitle: 'Simpan maksimal 10 cadangan; kernel terlama akan dihapus otomatis jika batas terlampaui',
+            actions: [ui.btn('', { icon: 'refresh', iconOnly: true, title: 'Segarkan cadangan kernel', onClick: () => loadInfo(true) })]
         }));
     }
 
@@ -270,8 +270,8 @@ async function render(host, ctx) {
 
     function buildSwitcher() {
         if (source === 'ref1nd') return null;
-        const wrap = ui.E('div', { 'class': 'sbd-build-switch', role: 'group', 'aria-label': '构建类型' });
-        [['ebpf', 'eBPF'], ['standard', '非 eBPF']].forEach(item => {
+        const wrap = ui.E('div', { 'class': 'sbd-build-switch', role: 'group', 'aria-label': 'Jenis build' });
+        [['ebpf', 'eBPF'], ['standard', 'Non-eBPF']].forEach(item => {
             const button = ui.E('button', {
                 type: 'button',
                 'class': item[0] === buildType ? 'active' : '',
@@ -299,22 +299,22 @@ async function render(host, ctx) {
                 ]),
                 ui.E('div', { 'class': 'sbd-release-badges' }, [
                     ui.badge(release.channel === 'preview' ? 'PREVIEW' : 'STABLE', release.channel === 'preview' ? 'orange' : 'blue'),
-                    ui.badge(assets.length ? assets.length + ' 个构建' : '无匹配构建', assets.length ? '' : 'warn')
+                    ui.badge(assets.length ? assets.length + ' build' : 'Tidak ada build yang cocok', assets.length ? '' : 'warn')
                 ]),
                 ui.E('span', { 'class': 'sbd-chevron' }, ui.icon('chevron'))
             ])
         ]));
         const assetSelect = ui.E('select', { 'class': 'sbd-select' });
         assets.forEach(asset => assetSelect.appendChild(ui.E('option', { value: asset.name }, asset.name)));
-        const installButton = ui.btn('安装', {
+        const installButton = ui.btn('Instal', {
             icon: 'download', variant: 'primary', onClick: () => installRelease(release, assetSelect.value)
         });
         installButton.disabled = !assets.length;
         details.appendChild(ui.E('div', { 'class': 'sbd-release-body' }, [
-            ui.field('构建包', assetSelect, source === 'ref1nd'
-                ? 'reF1nd 统一构建包'
-                : (buildType === 'ebpf' ? 'MiChongs eBPF 构建包' : 'MiChongs 非 eBPF 构建包')),
-            source === 'ref1nd' ? ui.note('reF1nd 构建不区分 eBPF 后缀，构建标签由发布版本决定。', 'info') : null,
+            ui.field('Paket build', assetSelect, source === 'ref1nd'
+                ? 'Build terpadu reF1nd'
+                : (buildType === 'ebpf' ? 'Build eBPF MiChongs' : 'Build non-eBPF MiChongs')),
+            source === 'ref1nd' ? ui.note('Build reF1nd tidak membedakan sufiks eBPF; label build ditentukan oleh versi rilis.', 'info') : null,
             ui.E('div', { 'class': 'sbd-btn-row' }, installButton)
         ].filter(Boolean)));
         return details;
@@ -324,7 +324,7 @@ async function render(host, ctx) {
         releaseHost.innerHTML = '';
         const sourceSelect = ui.E('select', {
             'class': 'sbd-select',
-            'aria-label': '内核来源',
+            'aria-label': 'Sumber kernel',
             style: 'width:auto;min-width:118px;border-radius:999px',
             change: event => {
                 if (!KERNEL_SOURCES[event.target.value]) return;
@@ -341,13 +341,13 @@ async function render(host, ctx) {
         sourceSelect.classList.add('sbd-release-source');
         const channelSelect = ui.E('select', {
             'class': 'sbd-select',
-            'aria-label': '版本频道',
+            'aria-label': 'Kanal versi',
             style: 'width:auto;min-width:110px;border-radius:999px',
             change: event => { channel = event.target.value; loadReleases(); }
         }, [
-            ui.E('option', { value: 'all', selected: channel === 'all' ? '' : null }, '全部版本'),
-            ui.E('option', { value: 'stable', selected: channel === 'stable' ? '' : null }, '稳定版'),
-            ui.E('option', { value: 'preview', selected: channel === 'preview' ? '' : null }, '预览版')
+            ui.E('option', { value: 'all', selected: channel === 'all' ? '' : null }, 'Semua versi'),
+            ui.E('option', { value: 'stable', selected: channel === 'stable' ? '' : null }, 'Stabil'),
+            ui.E('option', { value: 'preview', selected: channel === 'preview' ? '' : null }, 'Pratinjau')
         ]);
         channelSelect.disabled = releasesLoading;
         channelSelect.classList.add('sbd-release-channel');
@@ -355,25 +355,25 @@ async function render(host, ctx) {
         if (releasesLoading) {
             body.appendChild(ui.loading(releasesLoadingLabel));
         } else if (releasesError) {
-            body.appendChild(ui.note('版本列表获取失败：' + releasesError, 'bad'));
+            body.appendChild(ui.note('Gagal memuat daftar versi: ' + releasesError, 'bad'));
             if (releases.length) releases.forEach(release => body.appendChild(releaseNode(release)));
-            body.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重试获取版本', {
+            body.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Coba muat versi lagi', {
                 icon: 'refresh', onClick: () => loadReleases(true)
             })));
         } else if (!releases.length) {
-            body.appendChild(ui.empty('未获取到可用版本'));
-            body.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重新获取', {
+            body.appendChild(ui.empty('Tidak ada versi yang tersedia'));
+            body.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Muat kembali', {
                 icon: 'refresh', onClick: () => loadReleases(true)
             })));
         } else {
             releases.forEach(release => body.appendChild(releaseNode(release)));
         }
         const refreshButton = ui.btn('', {
-            icon: 'refresh', iconOnly: true, title: '刷新版本列表',
+            icon: 'refresh', iconOnly: true, title: 'Segarkan daftar versi',
             disabled: releasesLoading, onClick: () => loadReleases(true)
         });
         refreshButton.classList.add('sbd-release-refresh');
-        releaseHost.appendChild(ui.card('在线版本订阅', [body], {
+        releaseHost.appendChild(ui.card('Rilis versi online', [body], {
             className: 'sbd-release-card',
             icon: 'download',
             iconTone: 'blue',
@@ -385,14 +385,14 @@ async function render(host, ctx) {
     async function loadReleases(refresh) {
         const request = ++releasesRequest;
         releasesLoading = true;
-        releasesLoadingLabel = refresh ? '刷新在线版本' : '获取版本列表';
+        releasesLoadingLabel = refresh ? 'Menyegarkan rilis online' : 'Memuat daftar versi';
         releasesError = '';
         renderReleases();
         try {
-            const result = await withTimeout(api.kernelReleases(source, channel, !!refresh), 45000, '获取版本列表超时');
+            const result = await withTimeout(api.kernelReleases(source, channel, !!refresh), 45000, 'Waktu memuat daftar versi habis');
             if (request !== releasesRequest) return;
             if (!result || !Array.isArray(result.releases))
-                throw new Error('版本列表响应为空，请重试');
+                throw new Error('Respons daftar versi kosong. Coba lagi.');
             releases = result.releases;
             releasesError = '';
             repository = result.repository || KERNEL_SOURCES[source].repo;
@@ -401,7 +401,7 @@ async function render(host, ctx) {
         } catch (error) {
             if (request !== releasesRequest) return;
             releasesError = api.errorText(error);
-            if (!releases.length) ui.notify('版本列表读取失败：' + releasesError, 'error', 7000);
+            if (!releases.length) ui.notify('Gagal membaca daftar versi: ' + releasesError, 'error', 7000);
         } finally {
             if (request === releasesRequest) {
                 releasesLoading = false;
@@ -411,14 +411,14 @@ async function render(host, ctx) {
     }
 
     async function installRelease(release, asset) {
-        const ok = await ui.confirm('安装内核', '将安装 ' + release.tag + ' 的所选构建，并自动备份当前内核。', '安装');
+        const ok = await ui.confirm('Instal kernel', 'Build yang dipilih dari ' + release.tag + ' akan dipasang dan kernel saat ini akan dicadangkan secara otomatis.', 'Instal');
         if (!ok) return;
         setBusy(true);
         try {
             const job = await api.installRelease(source, release.tag, asset);
-            await ctx.watchJob(job, '安装 ' + release.tag);
+            await ctx.watchJob(job, 'Memasang ' + release.tag);
             await loadInfo();
-            ui.notify('内核已更新', 'success');
+            ui.notify('Kernel diperbarui', 'success');
         } catch (error) {
             ui.notify(api.errorText(error), 'error', 7000);
         } finally {
@@ -427,15 +427,15 @@ async function render(host, ctx) {
     }
 
     async function installFile(file) {
-        if (file.size > 160 * 1024 * 1024) return ui.notify('内核文件不能超过 160 MB', 'error');
+        if (file.size > 160 * 1024 * 1024) return ui.notify('File kernel tidak boleh melebihi 160 MB', 'error');
         let kind = '';
         try { kind = await kernelFileKind(file); }
-        catch (_) { return ui.notify('无法读取所选文件', 'error'); }
-        if (!kind) return ui.notify('请选择 ELF 内核文件或 tar.gz / zip 内核压缩包', 'error', 7000);
-        const status = ui.E('div', { 'class': 'sbd-modal-text' }, '准备通过流式通道上传 · ' + kind);
+        catch (_) { return ui.notify('Tidak dapat membaca file yang dipilih', 'error'); }
+        if (!kind) return ui.notify('Pilih file kernel ELF atau arsip kernel tar.gz / zip', 'error', 7000);
+        const status = ui.E('div', { 'class': 'sbd-modal-text' }, 'Menyiapkan unggahan melalui kanal streaming · ' + kind);
         const percent = ui.E('div', { 'class': 'sbd-modal-text' }, '0%');
         const bar = ui.E('div', { 'class': 'sbd-progress' }, ui.E('i'));
-        const ref = ui.modal('安装本地内核', [
+        const ref = ui.modal('Instal kernel lokal', [
             status, ui.E('div', { 'class': 'sbd-upload-meta' }, [ui.E('span', {}, file.name), ui.E('span', {}, api.formatBytes(file.size))]),
             bar, percent
         ], { dismissable: false, width: '480px' });
@@ -444,13 +444,13 @@ async function render(host, ctx) {
                 bar.firstChild.style.width = value + '%';
                 percent.textContent = value + '%';
                 if (meta && meta.mode === 'stream') {
-                    status.textContent = '流式上传 ' + api.formatBytes(part) + ' / ' +
+                    status.textContent = 'Unggahan streaming ' + api.formatBytes(part) + ' / ' +
                         api.formatBytes(total) + ' · ' + api.formatBytes(meta.speed || 0) + '/s';
                 } else {
-                    status.textContent = '兼容模式上传分片 ' + part + '/' + total;
+                    status.textContent = 'Unggahan potongan mode kompatibilitas ' + part + '/' + total;
                 }
             });
-            status.textContent = '上传完成，正在校验内核并创建安装任务';
+            status.textContent = 'Unggahan selesai; memvalidasi kernel dan membuat tugas instalasi';
             let job;
             try {
                 job = await api.installKernel(upload.path);
@@ -459,9 +459,9 @@ async function render(host, ctx) {
                 throw error;
             }
             ref.close();
-            await ctx.watchJob(job, '安装 ' + file.name);
+            await ctx.watchJob(job, 'Memasang ' + file.name);
             await loadInfo();
-            ui.notify('内核已更新', 'success');
+            ui.notify('Kernel diperbarui', 'success');
         } catch (error) {
             ref.close();
             ui.notify(api.errorText(error), 'error', 8000);
@@ -469,14 +469,14 @@ async function render(host, ctx) {
     }
 
     async function deleteBackup(item) {
-        const ok = await ui.confirm('删除内核备份',
-            '将永久删除 ' + (shortVersion(item.version) || item.name) + ' 的内核备份。当前正在使用的内核不会被删除。',
-            '删除', true);
+        const ok = await ui.confirm('Hapus cadangan kernel',
+            'Cadangan kernel ' + (shortVersion(item.version) || item.name) + ' akan dihapus permanen. Kernel yang sedang digunakan tidak akan dihapus.',
+            'Hapus', true);
         if (!ok) return;
         setBusy(true);
         try {
             await api.deleteKernelBackup(item.name);
-            ui.notify('内核备份已删除', 'success');
+            ui.notify('Cadangan kernel dihapus', 'success');
             await loadInfo();
         } catch (error) {
             ui.notify(api.errorText(error), 'error', 7000);
@@ -486,12 +486,12 @@ async function render(host, ctx) {
     }
 
     async function rollback(item) {
-        const ok = await ui.confirm('回滚内核', '将恢复至 ' + (shortVersion(item.version) || item.name) + ' 并重启服务。', '回滚', true);
+        const ok = await ui.confirm('Rollback kernel', 'Kernel akan dipulihkan ke ' + (shortVersion(item.version) || item.name) + ' dan layanan dimulai ulang.', 'Rollback', true);
         if (!ok) return;
         setBusy(true);
         try {
             const result = await api.rollbackKernel(item.name);
-            ui.notify(result.message || '内核已回滚', 'success');
+            ui.notify(result.message || 'Kernel berhasil di-rollback', 'success');
             await loadInfo();
             await ctx.refreshStatus();
         } catch (error) {
@@ -508,6 +508,5 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
 
 

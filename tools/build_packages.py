@@ -193,7 +193,7 @@ def main():
             'Maintainer: singbox-dash',
             'Architecture: all',
             f'Installed-Size: {max(1, (installed_size + 1023) // 1024)}',
-            'Description: OpenWrt LuCI 的 Sing-box 运行、配置、规则、订阅与内核管理面板。',
+            'Description: Panel OpenWrt LuCI untuk mengelola operasi Sing-box, konfigurasi, aturan, langganan, dan kernel.',
             '',
         )),
         encoding='utf-8',

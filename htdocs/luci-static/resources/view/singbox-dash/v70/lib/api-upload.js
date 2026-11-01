@@ -12,11 +12,11 @@ function create(dependencies) {
     function blobBase64(blob) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onerror = () => reject(new Error('读取文件失败'));
+            reader.onerror = () => reject(new Error('Gagal membaca file'));
             reader.onload = () => {
                 const value = String(reader.result || '');
                 const comma = value.indexOf(',');
-                if (comma < 0) reject(new Error('读取文件失败'));
+                if (comma < 0) reject(new Error('Gagal membaca file'));
                 else resolve(value.slice(comma + 1));
             };
             reader.readAsDataURL(blob);
@@ -46,12 +46,12 @@ function create(dependencies) {
             });
             let reply = null;
             try { reply = response.json(); }
-            catch (_) { throw new Error('上传接口返回了无效结果'); }
+            catch (_) { throw new Error('Antarmuka unggah memberikan hasil yang tidak valid'); }
             if (reply && reply.failure)
-                throw new Error(reply.message || reply.failure || '快速上传失败');
+                throw new Error(reply.message || reply.failure || 'Unggah cepat gagal');
             const size = Number(reply && reply.size);
             if (!Number.isFinite(size) || size !== blob.size)
-                throw new Error('上传文件大小校验失败');
+                throw new Error('Validasi ukuran file unggahan gagal');
             if (onProgress) onProgress(98, blob.size, blob.size, {
                 mode: 'stream', speed: blob.size / Math.max(0.001, (Date.now() - started) / 1000)
             });
@@ -61,14 +61,14 @@ function create(dependencies) {
             };
         } catch (error) {
             try { await fs.remove(path); } catch (_) {}
-            throw new Error('快速上传失败：' + errorText(error));
+            throw new Error('Unggah cepat gagal: ' + errorText(error));
         }
     }
 
     async function uploadBlobChunked(blob, kind, onProgress) {
         const session = await command('upload-session', [kind]);
         const token = String((session && session.token) || '');
-        if (!/^[a-f0-9]{32}$/.test(token)) throw new Error('无法创建上传会话');
+        if (!/^[a-f0-9]{32}$/.test(token)) throw new Error('Tidak dapat membuat sesi unggah');
         const chunkSize = Math.max(64 * 1024,
             Math.min(CHUNK, Number(session.max_chunk) || CHUNK));
         const total = Math.ceil(blob.size / chunkSize);
@@ -87,8 +87,8 @@ function create(dependencies) {
     }
 
     async function uploadBlob(blob, kind, onProgress) {
-        if (!blob || !blob.size) throw new Error('文件为空');
-        if (kind !== 'config' && kind !== 'kernel') throw new Error('上传类型错误');
+        if (!blob || !blob.size) throw new Error('File kosong');
+        if (kind !== 'config' && kind !== 'kernel') throw new Error('Jenis unggahan tidak valid');
         try {
             if (kind === 'kernel') {
                 // Kernel images are large: stream them through cgi-io instead of

@@ -43,7 +43,7 @@ jobs:
                 --files /input/root \
                 --info name:luci-app-singbox-dash \
                 --info version:"$VERSION" \
-                --info description:"OpenWrt LuCI 的 Sing-box 运行、配置、规则、订阅与内核管理面板。" \
+                --info description:"Panel OpenWrt LuCI untuk mengelola operasi Sing-box, konfigurasi, aturan, langganan, dan kernel." \
                 --info arch:noarch \
                 --info license:MIT \
                 --info origin:luci-app-singbox-dash \

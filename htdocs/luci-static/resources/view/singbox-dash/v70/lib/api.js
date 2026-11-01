@@ -387,7 +387,7 @@ async function kernelReleases(source, channel, refresh) {
         if (refresh) args.push('refresh');
         const value = await command('kernel-releases', args, { retries: 1 });
         if (!value || !Array.isArray(value.releases))
-            throw new Error('版本列表响应为空，请重试');
+            throw new Error('Respons daftar versi kosong. Coba lagi.');
         return value;
     }, !!refresh, true);
 }
@@ -485,19 +485,19 @@ function formatBytes(value) {
 
 function formatUptime(seconds) {
     let value = Math.max(0, Number(seconds || 0));
-    if (value < 60) return value + ' 秒';
+    if (value < 60) return value + ' dtk';
     const days = Math.floor(value / 86400);
     value %= 86400;
     const hours = Math.floor(value / 3600);
     value %= 3600;
     const minutes = Math.floor(value / 60);
-    if (days) return days + ' 天 ' + hours + ' 小时';
-    if (hours) return hours + ' 小时 ' + minutes + ' 分';
-    return minutes + ' 分钟';
+    if (days) return days + ' hari ' + hours + ' jam';
+    if (hours) return hours + ' jam ' + minutes + ' mnt';
+    return minutes + ' menit';
 }
 
 function formatDate(value, withTime) {
-    if (!value) return '未知';
+    if (!value) return 'Tidak diketahui';
     const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
     const options = withTime === false
@@ -515,4 +515,3 @@ return baseclass.extend({
     installRelease, installKernel, rollbackKernel, deleteConfigBackup, deleteKernelBackup, randomHex, tempPath,
     formatBytes, formatUptime, formatDate, errorText
 });
-

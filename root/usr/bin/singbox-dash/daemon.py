@@ -52,7 +52,7 @@ def decode_request(stream):
 def execute(args):
     action = str(args[0]).strip() if args else ''
     if not action:
-        return {'ok': False, 'error': '缺少操作命令'}
+        return {'ok': False, 'error': 'Perintah tindakan tidak ada'}
     try:
         return manager_module.command_result(args)
     except manager_module.Failure as exc:
@@ -60,7 +60,7 @@ def execute(args):
         manager_module.append_error_log(action, message)
         return {'ok': False, 'error': message}
     except Exception as exc:
-        message = '内部错误：' + manager_module.clean_error(exc)
+        message = 'Kesalahan internal: ' + manager_module.clean_error(exc)
         manager_module.append_error_log(action, message)
         return {'ok': False, 'error': message}
 
@@ -79,7 +79,7 @@ class Handler(socketserver.StreamRequestHandler):
             self.wfile.flush()
         except Exception as exc:
             manager_module.append_error_log('daemon-protocol', exc)
-            payload = json.dumps({'ok': False, 'error': '管理器请求格式错误'},
+            payload = json.dumps({'ok': False, 'error': 'Format permintaan pengelola tidak valid'},
                                  ensure_ascii=False, separators=(',', ':')) + '\n'
             try:
                 self.wfile.write(payload.encode('utf-8'))

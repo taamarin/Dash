@@ -7,7 +7,7 @@ PKG_LICENSE:=MIT
 PKG_MAINTAINER:=singbox-dash
 
 LUCI_TITLE:=SingBox-Dash
-LUCI_DESCRIPTION:=OpenWrt LuCI 的 Sing-box 运行、配置、规则、订阅与内核管理面板。
+LUCI_DESCRIPTION:=Panel OpenWrt LuCI untuk mengelola operasi Sing-box, konfigurasi, aturan, langganan, dan kernel.
 LUCI_DEPENDS:=+python3 +python3-yaml +cgi-io +socat
 LUCI_PKGARCH:=all
 
@@ -35,4 +35,3 @@ exit 0
 endef
 
 $(eval $(call BuildPackage,luci-app-singbox-dash))
-

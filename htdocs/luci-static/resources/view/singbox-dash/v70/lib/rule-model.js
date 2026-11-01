@@ -4,142 +4,142 @@
 
 const MATCH_FIELDS = [
     {
-        key: 'rule_set', label: '规则集', group: '常用匹配', common: true,
-        summary: '引用 route.rule_set 中已经定义的规则集标签。',
+        key: 'rule_set', label: 'Kumpulan aturan', group: 'Pencocokan umum', common: true,
+        summary: 'Mengacu pada label kumpulan aturan yang telah ditentukan di route.rule_set.',
         example: 'geosite-google\ngeoip-cn',
-        placeholder: '每行一个规则集 tag',
-        hint: '可填写多个 tag，命中任意一个即可。规则集必须先存在于路由设置中。',
-        note: '这是最常用的分流方式，适合服务分类、地区规则和广告规则。'
+        placeholder: 'Satu tag kumpulan aturan per baris',
+        hint: 'Beberapa tag dapat dimasukkan; cocok jika salah satunya terpenuhi. Kumpulan aturan harus sudah ada di pengaturan perutean.',
+        note: 'Ini cara perutean yang paling umum, cocok untuk kategori layanan, aturan wilayah, dan aturan iklan.'
     },
     {
-        key: 'domain_suffix', label: '域名及子域名', group: '常用匹配', common: true,
-        summary: '匹配一个域名本身及其所有子域名。',
+        key: 'domain_suffix', label: 'Domain dan subdomain', group: 'Pencocokan umum', common: true,
+        summary: 'Cocokkan domain dan semua subdomainnya.',
         example: 'openai.com\nyoutube.com',
-        placeholder: '每行一个域名，例如 openai.com',
-        hint: '不要填写协议、路径或通配符；openai.com 会同时匹配 api.openai.com。',
-        note: '适合按服务域名分流，是最常用的域名匹配方式。'
+        placeholder: 'Satu domain per baris, misalnya openai.com',
+        hint: 'Jangan masukkan protokol, path, atau wildcard; openai.com juga akan cocok dengan api.openai.com.',
+        note: 'Cocok untuk merutekan berdasarkan domain layanan dan merupakan metode pencocokan domain yang paling umum.'
     },
     {
-        key: 'ip_cidr', label: '目标 IP / CIDR', group: '常用匹配', common: true,
-        summary: '匹配目标地址是否属于指定 IP 网段。',
+        key: 'ip_cidr', label: 'IP tujuan / CIDR', group: 'Pencocokan umum', common: true,
+        summary: 'Cocokkan apakah alamat tujuan termasuk dalam rentang IP yang ditentukan.',
         example: '1.1.1.1/32\n2001:db8::/32',
-        placeholder: '每行一个 CIDR，例如 1.1.1.1/32',
-        hint: '必须使用 CIDR 格式；IPv4 和 IPv6 可以混合填写。',
-        note: '适合没有域名信息或需要按地址段分流的连接。'
+        placeholder: 'Satu CIDR per baris, misalnya 1.1.1.1/32',
+        hint: 'Gunakan format CIDR; IPv4 dan IPv6 boleh dicampur.',
+        note: 'Cocok untuk koneksi tanpa informasi domain atau yang perlu dirutekan berdasarkan rentang alamat.'
     },
     {
-        key: 'domain', label: '完整域名', group: '域名匹配',
-        summary: '只匹配完全相同的域名，不包含其子域名。',
+        key: 'domain', label: 'Domain lengkap', group: 'Pencocokan domain',
+        summary: 'Hanya cocok dengan domain yang sama persis, tidak termasuk subdomainnya.',
         example: 'www.example.com',
-        placeholder: '每行一个完整域名',
-        hint: '不会自动包含子域名；需要子域名时请使用“域名及子域名”。'
+        placeholder: 'Satu domain lengkap per baris',
+        hint: 'Subdomain tidak disertakan secara otomatis; untuk menyertakan subdomain, gunakan “Domain dan subdomain”.'
     },
     {
-        key: 'domain_keyword', label: '域名包含文字', group: '域名匹配',
-        summary: '匹配域名中是否包含指定文字。',
+        key: 'domain_keyword', label: 'Kata dalam domain', group: 'Pencocokan domain',
+        summary: 'Cocokkan apakah domain mengandung teks yang ditentukan.',
         example: 'openai\ngoogle',
-        placeholder: '每行一个关键字',
-        hint: '按文字包含关系匹配，星号不会自动变成通配符。'
+        placeholder: 'Satu kata kunci per baris',
+        hint: 'Pencocokan menggunakan keberadaan teks; tanda bintang tidak otomatis menjadi wildcard.'
     },
     {
-        key: 'domain_regex', label: '域名正则', group: '域名匹配',
-        summary: '使用正则表达式匹配完整域名。',
+        key: 'domain_regex', label: 'Regex domain', group: 'Pencocokan domain',
+        summary: 'Gunakan ekspresi reguler untuk mencocokkan domain lengkap.',
         example: '(?i)^.*\\.example\\.com$',
-        placeholder: '每行一个 Go RE2 正则',
-        hint: '使用 Go RE2 语法；普通分流优先使用域名或规则集。',
-        note: '正则过于宽泛时容易误匹配，建议先在链路查询中验证。'
+        placeholder: 'Satu regex Go RE2 per baris',
+        hint: 'Gunakan sintaks Go RE2; untuk perutean biasa, utamakan domain atau kumpulan aturan.',
+        note: 'Regex yang terlalu umum dapat menyebabkan kecocokan yang salah; sebaiknya verifikasi terlebih dahulu melalui penelusuran rute.'
     },
     {
-        key: 'network', label: '传输类型', group: '网络匹配',
-        summary: '区分 TCP 与 UDP 连接。',
+        key: 'network', label: 'Jenis transport', group: 'Pencocokan jaringan',
+        summary: 'Bedakan koneksi TCP dan UDP.',
         example: 'tcp\nudp',
-        placeholder: 'tcp 或 udp，每行一个',
-        hint: '只填写 tcp 或 udp；需要同时限制端口时请使用高级规则。'
+        placeholder: 'tcp atau udp, satu per baris',
+        hint: 'Masukkan hanya tcp atau udp; gunakan aturan lanjutan untuk membatasi port sekaligus.'
     },
     {
-        key: 'port', label: '目标端口', group: '网络匹配',
-        summary: '匹配连接的目标端口。',
+        key: 'port', label: 'Port tujuan', group: 'Pencocokan jaringan',
+        summary: 'Cocokkan port tujuan koneksi.',
         example: '443\n8443',
-        placeholder: '每行一个端口，例如 443',
-        hint: '端口范围 1–65535；和传输类型、协议是两个不同条件。'
+        placeholder: 'Satu port per baris, misalnya 443',
+        hint: 'Rentang port 1–65535; ini adalah kondisi terpisah dari jenis transport dan protokol.'
     },
     {
-        key: 'port_range', label: '目标端口范围', group: '网络匹配',
-        summary: '匹配一个连续的目标端口区间。',
+        key: 'port_range', label: 'Rentang port tujuan', group: 'Pencocokan jaringan',
+        summary: 'Cocokkan rentang port tujuan yang berurutan.',
         example: '6881:6999\n:3000\n4000:',
-        placeholder: '每行一个范围，例如 6881:6999',
-        hint: '支持单边范围 :3000、4000:；宽范围容易误命中普通流量。'
+        placeholder: 'Satu rentang per baris, misalnya 6881:6999',
+        hint: 'Mendukung rentang satu sisi seperti :3000 dan 4000:; rentang yang lebar dapat salah mencocokkan lalu lintas biasa.'
     },
     {
-        key: 'source_ip_cidr', label: '来源 IP / CIDR', group: '网络匹配',
-        summary: '按客户端来源地址匹配流量。',
+        key: 'source_ip_cidr', label: 'IP sumber / CIDR', group: 'Pencocokan jaringan',
+        summary: 'Cocokkan lalu lintas berdasarkan alamat sumber klien.',
         example: '192.168.1.20/32\n10.0.0.0/8',
-        placeholder: '每行一个来源 CIDR',
-        hint: '这里匹配的是发起连接的设备地址，不是目标网站地址。'
+        placeholder: 'Satu CIDR sumber per baris',
+        hint: 'Alamat yang dicocokkan adalah perangkat pemulai koneksi, bukan alamat situs tujuan.'
     },
     {
-        key: 'source_port', label: '来源端口', group: '网络匹配',
-        summary: '匹配客户端使用的来源端口。',
+        key: 'source_port', label: 'Port sumber', group: 'Pencocokan jaringan',
+        summary: 'Cocokkan port sumber yang digunakan klien.',
         example: '12345',
-        placeholder: '每行一个来源端口',
-        hint: '来源端口通常由系统随机分配，普通分流很少使用。'
+        placeholder: 'Satu port sumber per baris',
+        hint: 'Port sumber biasanya dialokasikan secara acak oleh sistem dan jarang digunakan untuk perutean biasa.'
     },
     {
-        key: 'source_port_range', label: '来源端口范围', group: '网络匹配',
-        summary: '匹配客户端来源端口区间。',
+        key: 'source_port_range', label: 'Rentang port sumber', group: 'Pencocokan jaringan',
+        summary: 'Cocokkan rentang port sumber klien.',
         example: '1000:2000',
-        placeholder: '每行一个来源端口范围',
-        hint: '格式与目标端口范围一致，支持单边范围。'
+        placeholder: 'Satu rentang port sumber per baris',
+        hint: 'Format sama dengan rentang port tujuan dan mendukung rentang satu sisi.'
     },
     {
-        key: 'ip_version', label: 'IP 版本', group: '网络匹配',
-        summary: '只匹配 IPv4 或 IPv6 连接。',
-        example: '4 或 6',
-        placeholder: '填写 4 或 6',
-        hint: '该字段只能填写一个值。'
+        key: 'ip_version', label: 'Versi IP', group: 'Pencocokan jaringan',
+        summary: 'Hanya cocokkan koneksi IPv4 atau IPv6.',
+        example: '4 atau 6',
+        placeholder: 'Masukkan 4 atau 6',
+        hint: 'Kolom ini hanya dapat berisi satu nilai.'
     },
     {
-        key: 'protocol', label: '嗅探协议', group: '应用与系统',
-        summary: '匹配内核嗅探到的应用层协议。',
+        key: 'protocol', label: 'Protokol hasil sniffing', group: 'Aplikasi dan sistem',
+        summary: 'Cocokkan protokol lapisan aplikasi yang dideteksi kernel.',
         example: 'tls\nhttp\nquic\nstun',
-        placeholder: '每行一个协议，例如 tls',
-        hint: '依赖协议嗅探；未嗅探到协议时该条件不会命中。'
+        placeholder: 'Satu protokol per baris, misalnya tls',
+        hint: 'Memerlukan sniffing protokol; kondisi ini tidak cocok jika protokol tidak terdeteksi.'
     },
     {
-        key: 'inbound', label: '入站标签', group: '应用与系统',
-        summary: '只匹配来自指定入站监听器的连接。',
+        key: 'inbound', label: 'Label inbound', group: 'Aplikasi dan sistem',
+        summary: 'Hanya cocokkan koneksi dari listener inbound yang ditentukan.',
         example: 'mixed-in\ntun-in',
-        placeholder: '每行一个 inbound tag',
-        hint: '可从当前配置的入站标签中多选；多个标签按任意一个命中。'
+        placeholder: 'Satu tag inbound per baris',
+        hint: 'Pilih beberapa label dari tag inbound di konfigurasi saat ini; koneksi cocok jika salah satunya sesuai.'
     },
     {
-        key: 'process_name', label: '本机进程名', group: '应用与系统',
-        summary: '按发起连接的本机进程名匹配。',
+        key: 'process_name', label: 'Nama proses lokal', group: 'Aplikasi dan sistem',
+        summary: 'Cocokkan berdasarkan nama proses lokal yang memulai koneksi.',
         example: 'curl\naria2c',
-        placeholder: '每行一个进程名',
-        hint: '仅适用于运行 sing-box 的本机进程；网关无法识别局域网设备上的进程。',
-        note: '在路由器透明代理场景通常不是首选条件。'
+        placeholder: 'Satu nama proses per baris',
+        hint: 'Hanya berlaku untuk proses lokal yang menjalankan sing-box; gateway tidak dapat mengenali proses pada perangkat LAN.',
+        note: 'Biasanya bukan kondisi utama untuk proxy transparan router.'
     },
     {
-        key: 'process_path', label: '本机进程路径', group: '应用与系统',
-        summary: '按本机进程可执行文件路径匹配。',
+        key: 'process_path', label: 'Path proses lokal', group: 'Aplikasi dan sistem',
+        summary: 'Cocokkan berdasarkan path file executable proses lokal.',
         example: '/usr/bin/curl',
-        placeholder: '每行一个完整进程路径',
-        hint: '仅支持本机进程，并需要内核能够读取进程信息。'
+        placeholder: 'Satu path proses lengkap per baris',
+        hint: 'Hanya mendukung proses lokal dan memerlukan kernel untuk membaca informasi proses.'
     },
     {
-        key: 'process_path_regex', label: '进程路径正则', group: '应用与系统',
-        summary: '使用正则表达式匹配本机进程路径。',
+        key: 'process_path_regex', label: 'Regex path proses', group: 'Aplikasi dan sistem',
+        summary: 'Gunakan ekspresi reguler untuk mencocokkan path proses lokal.',
         example: '^/usr/bin/.+',
-        placeholder: '每行一个 Go RE2 正则',
-        hint: '仅适合高级场景，建议优先使用进程名或路径。'
+        placeholder: 'Satu regex Go RE2 per baris',
+        hint: 'Hanya cocok untuk penggunaan lanjutan; sebaiknya utamakan nama atau path proses.'
     },
     {
-        key: 'clash_mode', label: 'Clash 运行模式', group: '应用与系统',
-        summary: '仅在 rule、global 或 direct 模式下生效。',
+        key: 'clash_mode', label: 'Mode operasi Clash', group: 'Aplikasi dan sistem',
+        summary: 'Hanya berlaku dalam mode rule, global, atau direct.',
         example: 'global',
-        placeholder: 'rule、global 或 direct',
-        hint: '该字段只能填写一个模式；规则模式是 rule。'
+        placeholder: 'rule, global, atau direct',
+        hint: 'Kolom ini hanya dapat berisi satu mode; mode aturan adalah rule.'
     }
 ];
 
@@ -148,16 +148,16 @@ const MATCH_KEYS = MATCH_FIELDS.map(field => field.key);
 const SINGLE_FIELDS = new Set(['ip_version', 'clash_mode']);
 const NUMERIC_FIELDS = new Set(['port', 'source_port']);
 const CATEGORY_DEFS = [
-    { id: 'all', label: '全部', tone: '', icon: 'rules' },
-    { id: 'proxy', label: '代理', tone: 'blue', icon: 'route' },
-    { id: 'direct', label: '直连', tone: 'green', icon: 'link' },
-    { id: 'block', label: '拦截', tone: 'red', icon: 'shield' },
-    { id: 'advanced', label: '高级/系统', tone: 'purple', icon: 'sliders' }
+    { id: 'all', label: 'Semua', tone: '', icon: 'rules' },
+    { id: 'proxy', label: 'Proxy', tone: 'blue', icon: 'route' },
+    { id: 'direct', label: 'Langsung', tone: 'green', icon: 'link' },
+    { id: 'block', label: 'Blokir', tone: 'red', icon: 'shield' },
+    { id: 'advanced', label: 'Lanjutan/sistem', tone: 'purple', icon: 'sliders' }
 ];
 const ACTION_LABELS = {
-    route: '代理出站', direct: '直连', reject: '拦截', bypass: '绕过',
-    sniff: '协议嗅探', 'hijack-dns': 'DNS 劫持', resolve: 'DNS 预解析',
-    'route-options': '路由选项', 'sniff-override-destination': '覆盖目标'
+    route: 'Proxy outbound', direct: 'Langsung', reject: 'Blokir', bypass: 'Lewati',
+    sniff: 'Sniffing protokol', 'hijack-dns': 'Pembajakan DNS', resolve: 'Resolusi DNS awal',
+    'route-options': 'Opsi perutean', 'sniff-override-destination': 'Timpa tujuan'
 };
 const PROTOCOLS = ['tls', 'http', 'quic', 'stun', 'bittorrent', 'dtls', 'ssh', 'rdp', 'ntp', 'dns'];
 function clone(value) {
@@ -229,49 +229,49 @@ function targetKey(rule) {
 }
 
 function targetLabel(rule, outbounds) {
-    if (!rule) return '未设置';
+    if (!rule) return 'Belum diatur';
     const action = rule.action || (rule.outbound ? 'route' : '');
-    if (action === 'direct') return '直连';
-    if (action === 'reject') return '拦截';
+    if (action === 'direct') return 'Langsung';
+    if (action === 'reject') return 'Blokir';
     if (rule.outbound) {
         const type = outbounds[String(rule.outbound)];
         return String(rule.outbound) + (type ? ' · ' + type : '');
     }
-    return ACTION_LABELS[action] || action || '高级规则';
+    return ACTION_LABELS[action] || action || 'Aturan lanjutan';
 }
 
 function matchLabel(rule) {
-    if (!isObject(rule)) return '未知条件';
+    if (!isObject(rule)) return 'Kondisi tidak diketahui';
     const keys = MATCH_KEYS.filter(key => Object.prototype.hasOwnProperty.call(rule, key));
-    if (rule.type === 'logical' || Array.isArray(rule.rules)) return '组合条件';
+    if (rule.type === 'logical' || Array.isArray(rule.rules)) return 'Kondisi gabungan';
     if (keys.length === 1) return FIELD_BY_KEY[keys[0]].label;
     if (keys.length) return keys.slice(0, 3).map(key => (FIELD_BY_KEY[key] && FIELD_BY_KEY[key].label) || key).join(' + ');
     const extras = Object.keys(rule).filter(key => !['type', 'action', 'outbound'].includes(key));
-    if (extras.length) return '高级条件 · ' + extras.slice(0, 3).join(', ');
-    return '兜底规则';
+    if (extras.length) return 'Kondisi lanjutan · ' + extras.slice(0, 3).join(', ');
+    return 'Aturan fallback';
 }
 
 function ruleTitle(rule, simple, index) {
-    if (!isObject(rule)) return '无效规则';
+    if (!isObject(rule)) return 'Aturan tidak valid';
     if (simple) {
-        const first = simple.values[0] || '未设置';
+        const first = simple.values[0] || 'Belum diatur';
         return first + (simple.values.length > 1 ? ' +' + (simple.values.length - 1) : '');
     }
-    if (rule.type === 'logical' || Array.isArray(rule.rules)) return '组合规则 #' + (index + 1);
+    if (rule.type === 'logical' || Array.isArray(rule.rules)) return 'Aturan gabungan #' + (index + 1);
     const action = rule.action || (rule.outbound ? 'route' : '');
     const keys = MATCH_KEYS.filter(key => Object.prototype.hasOwnProperty.call(rule, key));
     const extras = Object.keys(rule).filter(key => !['type', 'action', 'outbound'].includes(key));
-    if (!keys.length && !extras.length && !rule.type) return '兜底规则';
+    if (!keys.length && !extras.length && !rule.type) return 'Aturan fallback';
     if (!['route', 'direct', 'reject'].includes(action)) {
         const value = keys.length ? valuesOf(rule, keys[0])[0] : '';
-        return (ACTION_LABELS[action] || '高级规则') + (value ? ' · ' + (value.length > 48 ? value.slice(0, 46) + '…' : value) : '');
+        return (ACTION_LABELS[action] || 'Aturan lanjutan') + (value ? ' · ' + (value.length > 48 ? value.slice(0, 46) + '…' : value) : '');
     }
     if (keys.length > 1) return matchLabel(rule);
     if (keys.length === 1) {
         const label = FIELD_BY_KEY[keys[0]].label;
-        return label + ' → ' + (action === 'reject' ? '拦截' : action === 'direct' ? '直连' : targetLabel(rule, outbounds));
+        return label + ' → ' + (action === 'reject' ? 'Blokir' : action === 'direct' ? 'Langsung' : targetLabel(rule, outbounds));
     }
-    return ACTION_LABELS[action] || '高级规则 #' + (index + 1);
+    return ACTION_LABELS[action] || 'Aturan lanjutan #' + (index + 1);
 }
 
 function isCatchAll(rule) {
@@ -317,39 +317,39 @@ function validPortRange(value) {
 
 function validateValues(field, text) {
     const values = splitValues(text);
-    if (!values.length) throw new Error('至少填写一个匹配值');
-    if (SINGLE_FIELDS.has(field) && values.length > 1) throw new Error('该匹配方式只能填写一个值');
+    if (!values.length) throw new Error('Masukkan setidaknya satu nilai pencocokan');
+    if (SINGLE_FIELDS.has(field) && values.length > 1) throw new Error('Metode pencocokan ini hanya dapat menggunakan satu nilai');
     if (field === 'domain' || field === 'domain_suffix') {
         const bad = values.find(value => /\s|[:/@*]/.test(value));
-        if (bad) throw new Error('域名格式不正确：' + bad + '。请去掉协议、路径和通配符');
+        if (bad) throw new Error('Format domain tidak valid: ' + bad + '. Hapus protokol, path, dan wildcard.');
     }
     if (field === 'ip_cidr' || field === 'source_ip_cidr') {
         const bad = values.find(value => !validCidr(value));
-        if (bad) throw new Error('CIDR 格式不正确：' + bad + '，例如 1.1.1.1/32');
+        if (bad) throw new Error('Format CIDR tidak valid: ' + bad + ', misalnya 1.1.1.1/32');
     }
     if (field === 'port' || field === 'source_port') {
         const bad = values.find(value => !/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 65535);
-        if (bad) throw new Error('端口无效：' + bad + '，范围应为 1–65535');
+        if (bad) throw new Error('Port tidak valid: ' + bad + ', rentangnya harus 1–65535');
     }
     if (field === 'port_range' || field === 'source_port_range') {
         const bad = values.find(value => !validPortRange(value));
-        if (bad) throw new Error('端口范围无效：' + bad + '，例如 6881:6999');
+        if (bad) throw new Error('Rentang port tidak valid: ' + bad + ', misalnya 6881:6999');
     }
     if (field === 'network') {
         const bad = values.find(value => !['tcp', 'udp'].includes(value.toLowerCase()));
-        if (bad) throw new Error('传输类型只能是 tcp 或 udp：' + bad);
+        if (bad) throw new Error('Jenis transport hanya boleh tcp atau udp: ' + bad);
     }
     if (field === 'ip_version') {
         const bad = values.find(value => !['4', '6'].includes(value));
-        if (bad) throw new Error('IP 版本只能是 4 或 6：' + bad);
+        if (bad) throw new Error('Versi IP hanya boleh 4 atau 6: ' + bad);
     }
     if (field === 'clash_mode') {
         const bad = values.find(value => !['rule', 'global', 'direct'].includes(value.toLowerCase()));
-        if (bad) throw new Error('运行模式只能是 rule、global 或 direct：' + bad);
+        if (bad) throw new Error('Mode operasi hanya boleh rule, global, atau direct: ' + bad);
     }
     if (field === 'process_path') {
         const bad = values.find(value => !value.startsWith('/'));
-        if (bad) throw new Error('进程路径必须使用绝对路径：' + bad);
+        if (bad) throw new Error('Path proses harus berupa path absolut: ' + bad);
     }
     return values.map(value => ['network', 'protocol', 'clash_mode'].includes(field) ? value.toLowerCase() : value);
 }
@@ -361,7 +361,7 @@ function buildRule(target, field, values) {
     else if (target.indexOf('route::') === 0) {
         rule.action = 'route';
         rule.outbound = target.slice(7);
-    } else throw new Error('请选择有效的动作或出站');
+    } else throw new Error('Pilih tindakan atau outbound yang valid');
     if (field === 'ip_version') rule[field] = Number(values[0]);
     else if (NUMERIC_FIELDS.has(field)) rule[field] = values.map(Number);
     else rule[field] = values;

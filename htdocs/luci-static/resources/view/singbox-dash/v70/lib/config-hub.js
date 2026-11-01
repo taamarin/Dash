@@ -34,7 +34,7 @@ function render(options) {
                 let iconName;
                 let colorName;
                 if (id === 'advanced') {
-                    title = '源码改写与高级编辑';
+                    title = 'Edit kode sumber dan pengeditan lanjutan';
                     badges = [ui.badge('YAML / JSON', '')];
                     iconName = 'terminal';
                     colorName = 'green';
@@ -72,7 +72,7 @@ function render(options) {
         });
         host.appendChild(list);
     });
-    host.appendChild(ui.E('div', { 'class': 'sbd-config-group-label' }, '规则订阅与配置备份 (Subscriptions & Backups)'));
+    host.appendChild(ui.E('div', { 'class': 'sbd-config-group-label' }, 'Langganan aturan dan cadangan konfigurasi (Subscriptions & Backups)'));
     host.appendChild(ui.E('div', { 'class': 'sbd-grid sbd-config-maintenance' }, [
         opt.subscriptionCard ? opt.subscriptionCard() : null,
         opt.backupCard ? opt.backupCard() : null

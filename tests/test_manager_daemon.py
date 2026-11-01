@@ -21,9 +21,9 @@ assert client.encode_request(args).endswith(b'END\n')
 assert daemon.decode_request(io.BytesIO(client.encode_request(args))) == args
 assert daemon.execute(['version']) == {'ok': True, 'app': 'singbox-dash', 'version': '1.0.4'}
 empty_command = daemon.execute([])
-assert empty_command['ok'] is False and '缺少操作命令' in empty_command['error']
+assert empty_command['ok'] is False and 'Perintah tindakan tidak ada' in empty_command['error']
 unknown = daemon.execute(['not-a-command'])
-assert unknown['ok'] is False and '未知命令' in unknown['error']
+assert unknown['ok'] is False and 'Perintah tidak diketahui' in unknown['error']
 
 assert daemon.decode_request(io.BytesIO(b'')) is None
 for invalid in (b'BAD\nEND\n', b'SBD1\n%%%\nEND\n', b'SBD1\n' + base64.b64encode(b'x') + b'\n'):
@@ -39,7 +39,7 @@ assert 'socat -t 5 -,shut-none' in wrapper
 assert 'version|bootstrap|status|overview|job|settings-get|subscription-info' in wrapper
 assert 'command -v base64' in wrapper
 assert 'exec /usr/bin/python3 /usr/bin/singbox-dash/client.py' in wrapper
-assert '缺少操作命令' in module_path.with_name('client.py').read_text(encoding='utf-8')
+assert 'Perintah tindakan tidak ada' in module_path.with_name('client.py').read_text(encoding='utf-8')
 init_script = (root / 'root/etc/init.d/singbox-dash-manager').read_text(encoding='utf-8')
 assert '/usr/bin/singbox-dash/daemon.py' in init_script
 

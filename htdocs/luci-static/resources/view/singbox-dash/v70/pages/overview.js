@@ -4,11 +4,11 @@
 'require view.singbox-dash.v70.lib.api as api';
 
 const MODES = [
-    { id: 'tun', name: 'TUN', tag: 'L3 VIF', detail: '虚拟网卡全流量接管', icon: 'shield', color: 'blue' },
-    { id: 'tproxy', name: 'TProxy', tag: 'NFTABLES', detail: '四层透明代理转发', icon: 'network', color: 'green' },
-    { id: 'redirect', name: 'Redirect', tag: 'TCP NAT', detail: 'TCP 端口重定向', icon: 'route', color: 'purple' },
-    { id: 'ebpf_cgroup', name: 'eBPF-Cgroup', tag: 'CGROUP V2', detail: 'cgroup v2 本机接管 + LAN packet_rewrite', icon: 'cpu', color: 'purple' },
-    { id: 'ebpf', name: 'eBPF-TC', tag: 'SOCKET ASSIGN', detail: '版本自适应 TC 本机接管 + LAN packet_rewrite', icon: 'zap', color: 'orange' }
+    { id: 'tun', name: 'TUN', tag: 'L3 VIF', detail: 'Pengambilalihan seluruh lalu lintas melalui kartu jaringan virtual', icon: 'shield', color: 'blue' },
+    { id: 'tproxy', name: 'TProxy', tag: 'NFTABLES', detail: 'Penerusan proxy transparan lapisan 4', icon: 'network', color: 'green' },
+    { id: 'redirect', name: 'Redirect', tag: 'TCP NAT', detail: 'Pengalihan port TCP', icon: 'route', color: 'purple' },
+    { id: 'ebpf_cgroup', name: 'eBPF-Cgroup', tag: 'CGROUP V2', detail: 'Pengambilalihan lokal cgroup v2 + LAN packet_rewrite', icon: 'cpu', color: 'purple' },
+    { id: 'ebpf', name: 'eBPF-TC', tag: 'SOCKET ASSIGN', detail: 'Pengambilalihan lokal TC adaptif versi + LAN packet_rewrite', icon: 'zap', color: 'orange' }
 ];
 
 function shortVersion(value) {
@@ -20,7 +20,7 @@ async function applyMode(mode, status, ctx) {
     ctx.setBusy(true);
     try {
         const job = await api.command('mode-apply', [status.active, mode.id]);
-        if (job && job.id) await ctx.watchJob(job, '切换 ' + mode.name);
+        if (job && job.id) await ctx.watchJob(job, 'Beralih ke ' + mode.name);
         await ctx.refreshStatus();
         ctx.refreshPage();
     } catch (error) {
@@ -38,7 +38,7 @@ function openModeSelector(status, ctx) {
     const buttons = [];
 
     function capabilityFor(id) {
-        return capabilities[id] || { available: false, reason: '尚未获取到该模式的能力检测结果' };
+        return capabilities[id] || { available: false, reason: 'Hasil pemeriksaan kemampuan untuk mode ini belum diperoleh' };
     }
     function modeTag(mode, capability) {
         if (mode.id !== 'ebpf') return mode.tag;
@@ -47,7 +47,7 @@ function openModeSelector(status, ctx) {
     function modeDetail(mode, capability) {
         if (mode.id !== 'ebpf') return mode.detail;
         const plane = capability.local_data_plane || 'TC';
-        return plane + ' 本机接管 + LAN packet_rewrite';
+        return plane + ' pengambilalihan lokal + LAN packet_rewrite';
     }
     const options = MODES.map(mode => {
         const capability = capabilityFor(mode.id);
@@ -56,7 +56,7 @@ function openModeSelector(status, ctx) {
         const button = ui.E('button', {
             type: 'button',
             'class': 'sbd-mode-option' + (unavailable ? ' disabled' : ''),
-            title: unavailable ? (capability.reason || '当前系统不支持') : detailText,
+            title: unavailable ? (capability.reason || 'Tidak didukung oleh sistem saat ini') : detailText,
             disabled: unavailable ? '' : null,
             click: () => {
                 selected = mode.id;
@@ -70,11 +70,11 @@ function openModeSelector(status, ctx) {
             ui.appIcon(mode.icon, mode.color),
             ui.E('div', { 'class': 'sbd-mode-option-main' }, [
                 ui.E('div', { 'class': 'sbd-mode-option-title' }, mode.name),
-                ui.E('div', { 'class': 'sbd-mode-option-desc' }, unavailable ? (capability.reason || '当前系统不支持') : detailText)
+                ui.E('div', { 'class': 'sbd-mode-option-desc' }, unavailable ? (capability.reason || 'Tidak didukung oleh sistem saat ini') : detailText)
             ]),
-            mode.id === active ? ui.badge('当前', 'green')
-                : unavailable ? ui.badge('不可用', 'red')
-                : ui.badge('可用', 'green'),
+            mode.id === active ? ui.badge('Aktif', 'green')
+                : unavailable ? ui.badge('Tidak tersedia', 'red')
+                : ui.badge('Tersedia', 'green'),
             ui.E('span', { 'class': 'sbd-mode-option-check' }, ui.icon('check'))
         ]);
         if (mode.id === active) button.classList.add('active');
@@ -86,19 +86,19 @@ function openModeSelector(status, ctx) {
     const unavailableCount = options.filter((item, index) =>
         capabilityFor(MODES[index].id).available !== true).length;
     const content = ui.E('div', { 'class': 'sbd-mode-options' }, [
-        ui.note('核心当前已停止，切换后只保存配置，下次启动时生效。', 'info'),
+        ui.note('Inti saat ini berhenti; setelah beralih, konfigurasi hanya disimpan dan berlaku saat mulai berikutnya.', 'info'),
         unavailableCount
-            ? ui.note('有 ' + unavailableCount + ' 种模式不适用于当前系统，原因已显示在对应选项中。', 'warn')
+            ? ui.note(unavailableCount + ' mode tidak berlaku untuk sistem saat ini; alasannya ditampilkan pada opsi terkait.', 'warn')
             : null,
         ui.E('div', { 'class': 'sbd-mode-option-list' }, options)
     ]);
-    modal = ui.modal('切换接管模式', content, {
-        subtitle: '选择下次启动使用的数据平面',
-        cancelText: '取消', confirmText: '切换模式', width: '560px',
+    modal = ui.modal('Alih mode pengambilalihan', content, {
+        subtitle: 'Pilih data plane yang digunakan pada mulai berikutnya',
+        cancelText: 'Batal', confirmText: 'Alih mode', width: '560px',
         onConfirm: async () => {
             const mode = MODES.find(item => item.id === selected);
             if (!mode || selected === active) {
-                ui.notify('当前已经是 ' + (mode ? mode.name : '所选') + ' 模式', 'info');
+                ui.notify('Mode ' + (mode ? mode.name : 'yang dipilih') + ' sudah aktif', 'info');
                 return;
             }
             modal.close();
@@ -113,40 +113,40 @@ function trafficCard(ctx, snapshotPromise) {
     const totalUp = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
     const totalDown = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
     const active = ui.E('div', { 'class': 'sbd-stat-value' }, '—');
-    const note = ui.E('div', { 'class': 'sbd-dashboard-note' }, '正在读取实时流量');
+    const note = ui.E('div', { 'class': 'sbd-dashboard-note' }, 'Memuat lalu lintas langsung');
     let previous = null;
     let pending = false;
     let snapshotPending = snapshotPromise || null;
     let snapshotRate = null;
 
-    const card = ui.card('实时流量', [
+    const card = ui.card('Lalu lintas langsung', [
         ui.E('div', { 'class': 'sbd-stat-grid sbd-stat-grid-5 sbd-dashboard-traffic-grid' }, [
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '上传速率'), upRate,
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '实时')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Kecepatan unggah'), upRate,
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Langsung')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '下载速率'), downRate,
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '实时')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Kecepatan unduh'), downRate,
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Langsung')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '累计上传'), totalUp,
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '本次内核运行')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Total unggahan'), totalUp,
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Operasi kernel saat ini')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '累计下载'), totalDown,
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '本次内核运行')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Total unduhan'), totalDown,
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Operasi kernel saat ini')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '活动连接'), active,
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '当前快照')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Koneksi aktif'), active,
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Snapshot saat ini')
             ])
         ]),
         note
     ], {
         className: 'sbd-span-12 sbd-dashboard-traffic',
         icon: 'activity', iconTone: 'blue',
-        actions: [ui.btn('查看连接', {
+        actions: [ui.btn('Lihat koneksi', {
             icon: 'link', small: true, onClick: () => ctx.navigate('connections')
         })]
     });
@@ -156,7 +156,7 @@ function trafficCard(ctx, snapshotPromise) {
         if (!ctx.status || !ctx.status.running || !(ctx.status.api && ctx.status.api.port)) {
             previous = null;
             upRate.textContent = downRate.textContent = totalUp.textContent = totalDown.textContent = active.textContent = '—';
-            note.textContent = '受管内核未运行，实时流量暂不可用。';
+            note.textContent = 'Kernel terkelola tidak berjalan; lalu lintas langsung untuk sementara tidak tersedia.';
             return;
         }
         pending = true;
@@ -195,10 +195,10 @@ function trafficCard(ctx, snapshotPromise) {
             }
             const firstSample = !previous && !sampledRate;
             previous = { at: now, uploadTotal, downloadTotal };
-            note.textContent = '统计来自当前内核，重启后重新计数 · 每 3 秒刷新';
+            note.textContent = 'Statistik berasal dari kernel saat ini, dihitung ulang setelah mulai ulang · diperbarui setiap 3 detik';
             if (firstSample) window.setTimeout(() => { if (!document.hidden) load(); }, 600);
         } catch (error) {
-            note.textContent = '实时流量读取失败：' + api.errorText(error);
+            note.textContent = 'Gagal membaca lalu lintas langsung: ' + api.errorText(error);
         } finally {
             pending = false;
         }
@@ -209,17 +209,17 @@ function trafficCard(ctx, snapshotPromise) {
 
 function serviceCard(status, ctx) {
     const stateMeta = {
-        stopped: { label: '已停止', code: 'INACTIVE', tone: 'red', dot: 'off' },
-        starting: { label: '正在启动', code: 'STARTING', tone: 'orange', dot: 'starting' },
-        running: { label: '运行中', code: 'ACTIVE', tone: 'green', dot: 'on' },
-        stopping: { label: '正在停止', code: 'STOPPING', tone: 'orange', dot: 'stopping' },
-        restarting: { label: '正在重启', code: 'RESTARTING', tone: 'orange', dot: 'starting' }
+        stopped: { label: 'Berhenti', code: 'INACTIVE', tone: 'red', dot: 'off' },
+        starting: { label: 'Memulai', code: 'STARTING', tone: 'orange', dot: 'starting' },
+        running: { label: 'Berjalan', code: 'ACTIVE', tone: 'green', dot: 'on' },
+        stopping: { label: 'Menghentikan', code: 'STOPPING', tone: 'orange', dot: 'stopping' },
+        restarting: { label: 'Memulai ulang', code: 'RESTARTING', tone: 'orange', dot: 'starting' }
     };
     let current = status;
     let phase = current.running ? 'running' : 'stopped';
     let busy = false;
     const body = ui.E('div', { 'class': 'sbd-dashboard-service-body' });
-    const card = ui.card('Sing-Box 内核服务', [body], {
+    const card = ui.card('Layanan inti Sing-Box', [body], {
         className: 'sbd-span-12 sbd-dashboard-service',
         icon: 'kernel', iconTone: 'blue'
     });
@@ -230,8 +230,8 @@ function serviceCard(status, ctx) {
         return {
             id,
             mode,
-            name: (mode && mode.name) || id || '自定义',
-            detail: (mode && mode.detail) || '自定义数据平面分流',
+            name: (mode && mode.name) || id || 'Kustom',
+            detail: (mode && mode.detail) || 'Perutean data plane kustom',
             tag: (mode && mode.tag) || 'CUSTOM'
         };
     }
@@ -248,7 +248,7 @@ function serviceCard(status, ctx) {
         const stopping = phase === 'stopping';
         const transitioning = phase === 'starting' || phase === 'stopping' || phase === 'restarting';
         const mode = modeInfo();
-        const reviewButton = ui.btn('审阅与应用配置', {
+        const reviewButton = ui.btn('Tinjau dan terapkan konfigurasi', {
             icon: 'config', disabled: transitioning,
             onClick: () => ctx.navigate('config')
         });
@@ -258,31 +258,31 @@ function serviceCard(status, ctx) {
         } else if (running) {
             actions = [
                 reviewButton,
-                ui.btn('重启', { icon: 'restart', onClick: () => runAction('restart') }),
-                ui.btn('停止', { icon: 'stop', variant: 'danger', onClick: () => runAction('stop') })
+                ui.btn('Mulai ulang', { icon: 'restart', onClick: () => runAction('restart') }),
+                ui.btn('Berhenti', { icon: 'stop', variant: 'danger', onClick: () => runAction('stop') })
             ];
         } else {
             actions = [
                 reviewButton,
-                ui.btn('启动', { icon: 'play', variant: 'primary', onClick: () => runAction('start') })
+                ui.btn('Mulai', { icon: 'play', variant: 'primary', onClick: () => runAction('start') })
             ];
         }
 
-        const switchButton = phase === 'stopped' ? ui.btn('切换模式', {
+        const switchButton = phase === 'stopped' ? ui.btn('Alih mode', {
             icon: 'sliders', small: true,
             onClick: () => openModeSelector(current, ctx)
         }) : null;
 
         const subtitle = running
             ? 'PID ' + (current.pid || '—') +
-              (current.process && current.process.uptime ? ' · 在线 ' + api.formatUptime(current.process.uptime) : '')
+              (current.process && current.process.uptime ? ' · Online ' + api.formatUptime(current.process.uptime) : '')
             : phase === 'starting'
-                ? '正在拉起 sing-box 进程并等待接口就绪'
+                ? 'Memulai proses sing-box dan menunggu antarmuka siap'
                 : phase === 'stopping'
-                    ? '正在停止 sing-box 进程并释放接管资源'
+                    ? 'Menghentikan proses sing-box dan melepaskan sumber daya pengambilalihan'
                     : phase === 'restarting'
-                        ? '正在重启 sing-box 进程并重新应用运行配置'
-                        : (current.enabled ? '开机自启已启用，服务当前未运行' : '服务当前未启动');
+                        ? 'Memulai ulang proses sing-box dan menerapkan kembali konfigurasi runtime'
+                        : (current.enabled ? 'Mulai otomatis saat boot aktif, tetapi layanan tidak berjalan' : 'Layanan belum dimulai');
 
         body.innerHTML = '';
         body.appendChild(ui.E('div', { 'class': 'sbd-dashboard-service-main' }, [
@@ -299,25 +299,25 @@ function serviceCard(status, ctx) {
         ]));
         const externalPids = Array.isArray(current.external_pids) ? current.external_pids : [];
         const externalNote = externalPids.length
-            ? ui.note('检测到另有 ' + externalPids.length + ' 个非当前配置的 sing-box 进程：PID ' + externalPids.join(', '), 'warn')
+            ? ui.note('Terdeteksi ' + externalPids.length + ' proses sing-box lain yang tidak menggunakan konfigurasi saat ini: PID ' + externalPids.join(', '), 'warn')
             : null;
         if (externalNote) body.appendChild(externalNote);
         body.appendChild(ui.E('div', { 'class': 'sbd-dashboard-service-meta' }, [
             ui.E('div', { 'class': 'sbd-dashboard-fact sbd-dashboard-fact-version' }, [
-                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, '版本'),
+                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, 'Versi'),
                 ui.E('strong', { 'class': 'sbd-dashboard-fact-value' }, shortVersion(current.version_line))
             ]),
             ui.E('div', { 'class': 'sbd-dashboard-fact' }, [
-                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, '进程'),
+                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, 'Proses'),
                 ui.E('strong', { 'class': 'sbd-dashboard-fact-value' },
                     (running || stopping || phase === 'restarting') && current.pid ? '#' + current.pid : '—')
             ]),
             ui.E('div', { 'class': 'sbd-dashboard-fact' }, [
-                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, '状态'),
+                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, 'Status'),
                 ui.E('strong', { 'class': 'sbd-dashboard-fact-value' }, meta.label)
             ]),
             ui.E('div', { 'class': 'sbd-dashboard-fact sbd-dashboard-fact-mode' }, [
-                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, '运行模式'),
+                ui.E('span', { 'class': 'sbd-dashboard-fact-label' }, 'Mode operasi'),
                 ui.E('strong', { 'class': 'sbd-dashboard-fact-value sbd-dashboard-mode-value' }, mode.name)
             ]),
             switchButton
@@ -327,7 +327,7 @@ function serviceCard(status, ctx) {
     async function runAction(action) {
         if (busy) return;
         if (action === 'stop') {
-            const ok = await ui.confirm('停止 sing-box', '停止后透明代理和 Clash API 将中断。', '停止', true);
+            const ok = await ui.confirm('Hentikan sing-box', 'Proxy transparan dan Clash API akan terputus setelah dihentikan.', 'Berhenti', true);
             if (!ok) return;
         }
         const previous = phase;
@@ -342,7 +342,7 @@ function serviceCard(status, ctx) {
             const minimum = action === 'restart' ? 900 : 650;
             if (Date.now() - started < minimum) await ui.sleep(minimum - (Date.now() - started));
             await ctx.refreshStatus();
-            ui.notify(action === 'stop' ? '服务已停止' : action === 'start' ? '服务已启动' : '服务已重启', 'success');
+            ui.notify(action === 'stop' ? 'Layanan dihentikan' : action === 'start' ? 'Layanan dimulai' : 'Layanan dimulai ulang', 'success');
             ctx.refreshPage();
         } catch (error) {
             phase = previous;
@@ -361,27 +361,27 @@ function serviceCard(status, ctx) {
 function summaryCard(status, ctx) {
     const rss = status.process && status.process.rss_kb;
     const interval = ctx.settings ? Number(ctx.settings.update_interval) || 0 : 0;
-    return ui.card('运行预览', [
+    return ui.card('Pratinjau operasi', [
         ui.E('div', { 'class': 'sbd-stat-grid sbd-stat-grid-2 sbd-home-runtime-stats' }, [
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '配置槽'),
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Slot konfigurasi'),
                 ui.E('div', { 'class': 'sbd-stat-value' }, String((status.slots || []).length || 1)),
-                ui.E('div', { 'class': 'sbd-stat-sub' }, status.active || '默认配置')
+                ui.E('div', { 'class': 'sbd-stat-sub' }, status.active || 'Konfigurasi default')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '核心内存'),
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Memori inti'),
                 ui.E('div', { 'class': 'sbd-stat-value' }, rss ? api.formatBytes(rss * 1024) : '—'),
-                ui.E('div', { 'class': 'sbd-stat-sub' }, 'sing-box 进程')
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Proses sing-box')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '订阅更新'),
-                ui.E('div', { 'class': 'sbd-stat-value' }, interval ? interval + ' 分钟' : '已关闭'),
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '自动同步周期')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Pembaruan langganan'),
+                ui.E('div', { 'class': 'sbd-stat-value' }, interval ? interval + ' menit' : 'Nonaktif'),
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Interval sinkronisasi otomatis')
             ]),
             ui.E('div', { 'class': 'sbd-stat' }, [
-                ui.E('div', { 'class': 'sbd-stat-label' }, '内核校验'),
-                ui.E('div', { 'class': 'sbd-stat-value' }, status.process && status.process.exe_match ? '正常' : '待检查'),
-                ui.E('div', { 'class': 'sbd-stat-sub' }, '可执行文件路径')
+                ui.E('div', { 'class': 'sbd-stat-label' }, 'Verifikasi kernel'),
+                ui.E('div', { 'class': 'sbd-stat-value' }, status.process && status.process.exe_match ? 'Normal' : 'Perlu diperiksa'),
+                ui.E('div', { 'class': 'sbd-stat-sub' }, 'Path file executable')
             ])
         ])
     ], { className: 'sbd-dashboard-summary sbd-home-runtime-tile', icon: 'overview', iconTone: 'green' });
@@ -389,17 +389,17 @@ function summaryCard(status, ctx) {
 
 function subscriptionTile(status, ctx, snapshotPromise) {
     const body = ui.E('div', { 'class': 'sbd-stack sbd-home-subscription-body' });
-    const card = ui.card('订阅与节点', [body], {
+    const card = ui.card('Langganan dan node', [body], {
         className: 'sbd-home-subscription-tile',
         icon: 'database', iconTone: 'blue',
         actions: [
-            ui.btn('管理', { icon: 'sliders', small: true, onClick: () => ctx.navigate('subscriptions') }),
-            ui.btn('', { icon: 'settings', iconOnly: true, small: true, title: '订阅设置', onClick: () => ctx.navigate('settings') })
+            ui.btn('Kelola', { icon: 'sliders', small: true, onClick: () => ctx.navigate('subscriptions') }),
+            ui.btn('', { icon: 'settings', iconOnly: true, small: true, title: 'Pengaturan langganan', onClick: () => ctx.navigate('settings') })
         ]
     });
     async function load() {
         body.innerHTML = '';
-        body.appendChild(ui.empty('正在读取订阅源…'));
+        body.appendChild(ui.empty('Memuat sumber langganan…'));
         try {
             const snapshot = await snapshotPromise;
             if (snapshot.error) throw snapshot.error;
@@ -411,13 +411,13 @@ function subscriptionTile(status, ctx, snapshotPromise) {
             body.innerHTML = '';
             body.appendChild(ui.E('div', { 'class': 'sbd-home-sub-stats' }, [
                 ui.E('div', { 'class': 'sbd-home-sub-stat' }, [
-                    ui.E('span', {}, '订阅源'), ui.E('strong', {}, String(counts.providers || 0))
+                    ui.E('span', {}, 'Sumber langganan'), ui.E('strong', {}, String(counts.providers || 0))
                 ]),
                 ui.E('div', { 'class': 'sbd-home-sub-stat' }, [
-                    ui.E('span', {}, '节点总数'), ui.E('strong', {}, String(counts.nodes || 0))
+                    ui.E('span', {}, 'Total node'), ui.E('strong', {}, String(counts.nodes || 0))
                 ]),
                 ui.E('div', { 'class': 'sbd-home-sub-stat' }, [
-                    ui.E('span', {}, '自动更新'), ui.E('strong', {}, interval ? interval + ' 分' : '关闭')
+                    ui.E('span', {}, 'Pembaruan otomatis'), ui.E('strong', {}, interval ? interval + ' mnt' : 'Nonaktif')
                 ])
             ]));
             const trafficProviders = (data.providers || []).filter(provider => provider.traffic && Number(provider.traffic.total) > 0);
@@ -428,7 +428,7 @@ function subscriptionTile(status, ctx, snapshotPromise) {
                 const tone = percent >= 90 ? 'bad' : percent >= 75 ? 'warn' : 'good';
                 body.appendChild(ui.E('div', { 'class': 'sbd-home-sub-traffic' }, [
                     ui.E('div', { 'class': 'sbd-home-sub-traffic-head' }, [
-                        ui.E('span', {}, '远程订阅流量'),
+                        ui.E('span', {}, 'Lalu lintas langganan jarak jauh'),
                         ui.E('strong', {}, api.formatBytes(used) + ' / ' + api.formatBytes(total))
                     ]),
                     ui.E('div', { 'class': 'sbd-sub-traffic-bar ' + tone }, [
@@ -436,16 +436,16 @@ function subscriptionTile(status, ctx, snapshotPromise) {
                     ])
                 ]));
             }
-            const lastUpdate = data.latest_update ? api.formatDate(data.latest_update) : '尚未更新';
+            const lastUpdate = data.latest_update ? api.formatDate(data.latest_update) : 'Belum diperbarui';
             body.appendChild(ui.E('div', { 'class': 'sbd-home-sub-foot' }, [
-                ui.E('span', {}, '最近更新：' + lastUpdate),
-                ui.badge(status.process && status.process.exe_match ? '进程正常' : '待校验',
+                ui.E('span', {}, 'Pembaruan terakhir: ' + lastUpdate),
+                ui.badge(status.process && status.process.exe_match ? 'Proses normal' : 'Perlu divalidasi',
                     status.process && status.process.exe_match ? 'green' : 'orange')
             ]));
         } catch (error) {
             body.innerHTML = '';
-            body.appendChild(ui.note('订阅状态读取失败：' + api.errorText(error), 'bad'));
-            body.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('重试', { icon: 'refresh', small: true, onClick: load })));
+            body.appendChild(ui.note('Gagal membaca status langganan: ' + api.errorText(error), 'bad'));
+            body.appendChild(ui.E('div', { 'class': 'sbd-btn-row' }, ui.btn('Coba lagi', { icon: 'refresh', small: true, onClick: load })));
         }
     }
     load();
@@ -454,7 +454,7 @@ function subscriptionTile(status, ctx, snapshotPromise) {
 
 async function render(host, ctx) {
     if (!ctx.status) {
-        host.appendChild(ui.empty('无法读取运行状态'));
+        host.appendChild(ui.empty('Tidak dapat membaca status operasi'));
         return;
     }
     const initialOverview = ctx.consumeInitialOverview ? ctx.consumeInitialOverview() : null;
@@ -490,7 +490,6 @@ async function render(host, ctx) {
 }
 
 return baseclass.extend({ render });
-
 
 
 

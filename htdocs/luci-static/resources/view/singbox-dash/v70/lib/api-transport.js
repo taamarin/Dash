@@ -6,32 +6,32 @@
 const BIN = '/usr/bin/singbox-dash/singbox-dash';
 
 function errorInfo(error) {
-    if (!error) return { kind: 'unknown', text: '操作失败，请刷新页面后重试。' };
+    if (!error) return { kind: 'unknown', text: 'Operasi gagal. Muat ulang halaman dan coba lagi.' };
     const raw = (typeof error === 'string' ? error : String(
         error.message || error.stdout || error.stderr || error
     )).replace(/^Error:\s*/, '').trim();
-    if (!raw) return { kind: 'unknown', text: '操作失败，请刷新页面后重试。' };
+    if (!raw) return { kind: 'unknown', text: 'Operasi gagal. Muat ulang halaman dan coba lagi.' };
     if (/XHR request timed out/i.test(raw))
-        return { kind: 'timeout', text: '请求超时：后台任务可能仍在执行。请稍候刷新，或到“诊断与日志”查看 sing-box 错误。' };
+        return { kind: 'timeout', text: 'Waktu permintaan habis: tugas latar belakang mungkin masih berjalan. Muat ulang nanti atau periksa kesalahan sing-box di “Diagnostik & Log”.' };
     if (/XHR request aborted by browser/i.test(raw))
-        return { kind: 'aborted', text: '请求被浏览器中断：请保持页面打开并重试；若持续发生，请到“诊断与日志”确认后台任务状态。' };
-    if (/没有订阅地址|未配置订阅|subscription URL/i.test(raw))
-        return { kind: 'subscription', text: '尚未配置订阅地址。请先在配置中心填写订阅 URL 并保存。' };
-    if (/内核|SHA256|架构|ABI|ELF|glibc|musl/i.test(raw))
-        return { kind: 'kernel', text: '内核问题：' + raw + '。请确认文件与当前设备架构、libc 和构建类型匹配，然后重新下载或上传。' };
+        return { kind: 'aborted', text: 'Permintaan dihentikan oleh browser. Biarkan halaman tetap terbuka dan coba lagi; jika terus terjadi, periksa status tugas latar belakang di “Diagnostik & Log”.' };
+    if (/alamat langganan|subscription URL/i.test(raw))
+        return { kind: 'subscription', text: 'Alamat langganan belum dikonfigurasi. Isi URL langganan di pusat konfigurasi, lalu simpan.' };
+    if (/内核|kernel|inti|SHA256|架构|arsitektur|ABI|ELF|glibc|musl/i.test(raw))
+        return { kind: 'kernel', text: 'Masalah kernel: ' + raw + '. Pastikan file cocok dengan arsitektur perangkat, libc, dan jenis build saat ini, lalu unduh atau unggah ulang.' };
     if (/Clash API|external_controller|clash_api/i.test(raw))
-        return { kind: 'clash', text: 'Clash API 配置问题：' + raw + '。请检查配置中的 external_controller、端口和 secret。' };
-    if (/上传|cgi-upload|文件大小|文件为空/i.test(raw))
-        return { kind: 'upload', text: '上传失败：' + raw + '。请确认文件未超过限制，保持页面打开后重试。' };
-    if (/配置|sing-box check|JSON|YAML|入站|出站|规则/i.test(raw))
-        return { kind: 'config', text: '配置问题：' + raw + '。请修正后重新校验；原配置不会被覆盖。' };
-    if (/network|fetch|timeout|TLS|certificate|HTTP|URL|GitHub|DNS|连接|证书/i.test(raw))
-        return { kind: 'network', text: '网络问题：' + raw + '。请检查路由器上游网络、代理和 DNS 后重试。' };
-    if (/进程|启动|停止|重启|service/i.test(raw))
-        return { kind: 'service', text: '服务问题：' + raw + '。请刷新状态；若进程异常，请到诊断页面检查日志。' };
-    if (/^(?:操作失败|Error)[：:]\s*/.test(raw))
+        return { kind: 'clash', text: 'Masalah konfigurasi Clash API: ' + raw + '. Periksa external_controller, port, dan secret dalam konfigurasi.' };
+    if (/unggah|cgi-upload|ukuran file|file kosong/i.test(raw))
+        return { kind: 'upload', text: 'Pengunggahan gagal: ' + raw + '. Pastikan ukuran file tidak melebihi batas, biarkan halaman terbuka, lalu coba lagi.' };
+    if (/konfigurasi|sing-box check|JSON|YAML|inbound|outbound|aturan/i.test(raw))
+        return { kind: 'config', text: 'Masalah konfigurasi: ' + raw + '. Perbaiki lalu validasi kembali; konfigurasi asli tidak akan ditimpa.' };
+    if (/network|fetch|timeout|TLS|certificate|HTTP|URL|GitHub|DNS|koneksi|sertifikat/i.test(raw))
+        return { kind: 'network', text: 'Masalah jaringan: ' + raw + '. Periksa jaringan upstream router, proxy, dan DNS, lalu coba lagi.' };
+    if (/proses|mulai|berhenti|mulai ulang|service/i.test(raw))
+        return { kind: 'service', text: 'Masalah layanan: ' + raw + '. Muat ulang status; jika proses bermasalah, periksa log di halaman diagnostik.' };
+    if (/^(?:Operasi gagal|Error)[：:]\s*/.test(raw))
         return { kind: 'unknown', text: raw };
-    return { kind: 'unknown', text: '操作失败：' + raw };
+    return { kind: 'unknown', text: 'Operasi gagal: ' + raw };
 }
 
 function errorText(error) {
@@ -43,36 +43,36 @@ function sleep(ms) {
 }
 
 function transientError(error) {
-    return errorText(error).search(/timed out|timeout|超时|aborted|Resource temporarily unavailable/i) >= 0;
+    return errorText(error).search(/timed out|timeout|waktu habis|aborted|Resource temporarily unavailable/i) >= 0;
 }
 
 async function commandOnce(action, args) {
     const name = String(action == null ? '' : action).trim();
     if (!name)
-        throw new Error('页面请求缺少操作命令，请刷新页面后重试');
+        throw new Error('Permintaan halaman tidak memiliki perintah tindakan. Muat ulang halaman dan coba lagi.');
     const result = await fs.exec(BIN, [name].concat((args || []).map(String)));
     const stdout = String((result && result.stdout) || '').trim();
     const stderr = String((result && result.stderr) || '').trim();
     if (!stdout)
-        throw new Error(stderr || '管理服务没有返回结果，请重试');
+        throw new Error(stderr || 'Layanan pengelolaan tidak memberikan hasil. Coba lagi.');
     let value = null;
     if (stdout) {
         const lines = stdout.split(/\r?\n/).filter(Boolean);
         try {
             value = JSON.parse(lines[lines.length - 1]);
         } catch (_) {
-            throw new Error(stderr || stdout.slice(-500) || '管理服务返回了无效结果');
+            throw new Error(stderr || stdout.slice(-500) || 'Layanan pengelolaan memberikan hasil yang tidak valid');
         }
     }
     if ((result && Number(result.code || 0) !== 0) || (value && value.ok === false))
-        throw new Error((value && value.error) || stderr || '管理操作失败');
+        throw new Error((value && value.error) || stderr || 'Operasi pengelolaan gagal');
     return value;
 }
 
 async function command(action, args, options) {
     const name = String(action == null ? '' : action).trim();
     if (!name)
-        throw new Error('页面请求缺少操作命令，请刷新页面后重试');
+        throw new Error('Permintaan halaman tidak memiliki perintah tindakan. Muat ulang halaman dan coba lagi.');
     const retries = Math.max(0, Number(options && options.retries) || 0);
     let lastError = null;
     for (let attempt = 0; attempt <= retries; attempt++) {
